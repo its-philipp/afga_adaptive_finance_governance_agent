@@ -1,0 +1,33 @@
+{
+  "invoice_id": "INV-0036",
+  "vendor": "Global Services Group",
+  "vendor_reputation": 72,
+  "amount": 3341.57,
+  "currency": "USD",
+  "category": "Hardware",
+  "date": "2025-10-11",
+  "po_number": null,
+  "line_items": [
+    {
+      "description": "Hardware item 1",
+      "quantity": 1,
+      "unit_price": 835.39
+    },
+    {
+      "description": "Hardware item 2",
+      "quantity": 2,
+      "unit_price": 1113.86
+    },
+    {
+      "description": "Hardware item 3",
+      "quantity": 4,
+      "unit_price": 1113.86
+    }
+  ],
+  "tax": 267.33,
+  "total": 3608.9,
+  "payment_terms": "Net 30",
+  "notes": "Non-compliant: Missing purchase order number",
+  "compliance_status": "non_compliant",
+  "non_compliance_reason": "Missing purchase order number"
+}

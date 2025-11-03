@@ -1,0 +1,66 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# Environment variables and secrets
+.env
+*.env
+!.env.example
+
+# Logs
+*.log
+backend.log
+*.out
+
+# IDE
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+!data/memory.db
+
+# Azure Terraform environment variables
+azure-terraform-env.sh
+
+# Azure Terraform
+azure_extension/azure-terraform-env.sh
+azure_extension/infra/terraform/**/.terraform/
+azure_extension/infra/terraform/**/.terraform.lock.hcl
+azure_extension/infra/terraform/**/terraform.tfstate
+azure_extension/infra/terraform/**/terraform.tfstate.backup
+azure_extension/infra/terraform/**/.terraform.tfstate.lock.info
+
+# Test scripts (local testing only)
+test_*.py
+!tests/
+

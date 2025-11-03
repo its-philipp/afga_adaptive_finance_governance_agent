@@ -1,0 +1,22 @@
+{
+  "invoice_id": "INV-0028",
+  "vendor": "Marketing Solutions Co",
+  "vendor_reputation": 70,
+  "amount": 4217.24,
+  "currency": "USD",
+  "category": "Facilities",
+  "date": "2025-10-15",
+  "po_number": "PO-1619",
+  "line_items": [
+    {
+      "description": "Facilities item 1",
+      "quantity": 1,
+      "unit_price": 1054.31
+    }
+  ],
+  "tax": 337.38,
+  "total": 4554.62,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

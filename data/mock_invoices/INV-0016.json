@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0016",
+  "vendor": "Acme Corporation",
+  "vendor_reputation": 70,
+  "amount": 2591.64,
+  "currency": "USD",
+  "category": "Hardware",
+  "date": "2025-10-22",
+  "po_number": "PO-4413",
+  "line_items": [
+    {
+      "description": "Hardware item 1",
+      "quantity": 2,
+      "unit_price": 863.88
+    },
+    {
+      "description": "Hardware item 2",
+      "quantity": 5,
+      "unit_price": 647.91
+    },
+    {
+      "description": "Hardware item 3",
+      "quantity": 2,
+      "unit_price": 1295.82
+    }
+  ],
+  "tax": 207.33,
+  "total": 2798.97,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

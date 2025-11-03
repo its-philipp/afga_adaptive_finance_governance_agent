@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0035",
+  "vendor": "Global Services Group",
+  "vendor_reputation": 72,
+  "amount": 1639.96,
+  "currency": "USD",
+  "category": "Facilities",
+  "date": "2025-10-11",
+  "po_number": "PO-2421",
+  "line_items": [
+    {
+      "description": "Facilities item 1",
+      "quantity": 9,
+      "unit_price": 819.98
+    },
+    {
+      "description": "Facilities item 2",
+      "quantity": 1,
+      "unit_price": 327.99
+    },
+    {
+      "description": "Facilities item 3",
+      "quantity": 6,
+      "unit_price": 546.65
+    }
+  ],
+  "tax": 131.2,
+  "total": 1771.16,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

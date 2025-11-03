@@ -1,0 +1,27 @@
+{
+  "invoice_id": "INV-0030",
+  "vendor": "IT Infrastructure Pro",
+  "vendor_reputation": 61,
+  "amount": 6765.45,
+  "currency": "USD",
+  "category": "Utilities",
+  "date": "2025-10-30",
+  "po_number": "PO-3472",
+  "line_items": [
+    {
+      "description": "Utilities item 1",
+      "quantity": 1,
+      "unit_price": 1353.09
+    },
+    {
+      "description": "Utilities item 2",
+      "quantity": 8,
+      "unit_price": 1691.36
+    }
+  ],
+  "tax": 541.24,
+  "total": 7306.69,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

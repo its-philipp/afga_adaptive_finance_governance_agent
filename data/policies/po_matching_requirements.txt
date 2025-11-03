@@ -1,0 +1,27 @@
+PURCHASE ORDER MATCHING REQUIREMENTS
+
+This policy defines the requirements for PO matching and invoice validation.
+
+1. MANDATORY PO REQUIREMENT
+All invoices over $500 must have a valid purchase order (PO) number.
+
+2. PO VALIDATION RULES
+- PO number must exist in the system
+- PO must be approved and active
+- Invoice amount must not exceed PO amount by more than 5%
+- Vendor on invoice must match PO vendor
+- Invoice date must be within PO validity period
+
+3. PO EXCEPTIONS
+The following categories may proceed without a PO with manager approval:
+- Utilities (under $2,000)
+- Recurring subscriptions (pre-approved)
+- Emergency repairs (under $3,000)
+
+4. THREE-WAY MATCH
+For amounts over $5,000, three-way match is required:
+- Purchase order
+- Receipt/delivery confirmation
+- Invoice
+
+Missing any component triggers HITL review.

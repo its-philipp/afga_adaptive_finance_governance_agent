@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0027",
+  "vendor": "Acme Corporation",
+  "vendor_reputation": 70,
+  "amount": 4179.22,
+  "currency": "USD",
+  "category": "Office Supplies",
+  "date": "2025-11-02",
+  "po_number": "PO-4174",
+  "line_items": [
+    {
+      "description": "Office Supplies item 1",
+      "quantity": 4,
+      "unit_price": 2089.61
+    },
+    {
+      "description": "Office Supplies item 2",
+      "quantity": 6,
+      "unit_price": 1044.81
+    },
+    {
+      "description": "Office Supplies item 3",
+      "quantity": 6,
+      "unit_price": 1044.81
+    }
+  ],
+  "tax": 334.34,
+  "total": 4513.56,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

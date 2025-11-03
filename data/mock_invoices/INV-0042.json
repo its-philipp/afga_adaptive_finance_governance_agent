@@ -1,0 +1,28 @@
+{
+  "invoice_id": "INV-0042",
+  "vendor": "Facilities Management Inc",
+  "vendor_reputation": 56,
+  "amount": 3273.71,
+  "currency": "USD",
+  "category": "Facilities",
+  "date": "2025-10-26",
+  "po_number": null,
+  "line_items": [
+    {
+      "description": "Facilities item 1",
+      "quantity": 8,
+      "unit_price": 3273.71
+    },
+    {
+      "description": "Facilities item 2",
+      "quantity": 8,
+      "unit_price": 1636.86
+    }
+  ],
+  "tax": 261.9,
+  "total": 3535.61,
+  "payment_terms": "Net 30",
+  "notes": "Non-compliant: Missing purchase order number",
+  "compliance_status": "non_compliant",
+  "non_compliance_reason": "Missing purchase order number"
+}

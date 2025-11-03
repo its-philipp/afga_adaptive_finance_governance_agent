@@ -1,0 +1,29 @@
+VENDOR APPROVAL POLICY
+
+This policy outlines the requirements for vendor approval and engagement.
+
+1. APPROVED VENDOR LIST
+All transactions must be conducted with vendors on the approved vendor list. The current approved vendors are:
+- Acme Corporation
+- TechSupply Inc
+- Office Essentials Ltd
+- Global Services Group
+- Consulting Partners LLC
+- Marketing Solutions Co
+- IT Infrastructure Pro
+- Software Licensing Corp
+- Facilities Management Inc
+- Training Academy Ltd
+
+2. VENDOR REPUTATION REQUIREMENTS
+All vendors must maintain a minimum reputation score of 60/100. Vendors below this threshold require additional approval.
+
+3. NEW VENDOR ONBOARDING
+New vendors must complete the following:
+- Business verification
+- Tax ID validation
+- Insurance certificate submission
+- Reference checks
+- Compliance review
+
+Transactions with unapproved vendors will be automatically rejected.

@@ -1,0 +1,30 @@
+INTERNATIONAL TRANSACTION POLICY
+
+This policy governs cross-border payments and foreign currency transactions.
+
+1. SUPPORTED CURRENCIES
+Primary currencies: USD, EUR, GBP, CAD, AUD
+Secondary currencies require treasury approval: JPY, CHF, SGD
+
+2. FOREIGN EXCHANGE REQUIREMENTS
+- All foreign transactions must use current exchange rates
+- Exchange rate variance over 2% requires reapproval
+- Forward contracts available for transactions over $50,000
+
+3. COMPLIANCE REQUIREMENTS
+International transactions require:
+- Tax treaty verification
+- Export control compliance check
+- OFAC/sanctions screening
+- VAT/GST validation where applicable
+
+4. REVIEW THRESHOLDS
+All international transactions over $5,000 require compliance team review.
+Transactions to high-risk countries always require executive approval.
+
+5. DOCUMENTATION
+Required documents for international payments:
+- Commercial invoice
+- Proof of delivery
+- Tax documentation
+- Compliance certificate

@@ -1,0 +1,27 @@
+{
+  "invoice_id": "INV-0012",
+  "vendor": "TechSupply Inc",
+  "vendor_reputation": 65,
+  "amount": 2988.0,
+  "currency": "USD",
+  "category": "Professional Services",
+  "date": "2025-10-09",
+  "po_number": "PO-7185",
+  "line_items": [
+    {
+      "description": "Professional Services item 1",
+      "quantity": 10,
+      "unit_price": 2988.0
+    },
+    {
+      "description": "Professional Services item 2",
+      "quantity": 1,
+      "unit_price": 996.0
+    }
+  ],
+  "tax": 239.04,
+  "total": 3227.04,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

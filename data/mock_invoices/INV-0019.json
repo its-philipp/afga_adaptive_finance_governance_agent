@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0019",
+  "vendor": "TechSupply Inc",
+  "vendor_reputation": 65,
+  "amount": 6934.17,
+  "currency": "USD",
+  "category": "Office Supplies",
+  "date": "2025-10-22",
+  "po_number": "PO-9736",
+  "line_items": [
+    {
+      "description": "Office Supplies item 1",
+      "quantity": 4,
+      "unit_price": 6934.17
+    },
+    {
+      "description": "Office Supplies item 2",
+      "quantity": 3,
+      "unit_price": 3467.09
+    },
+    {
+      "description": "Office Supplies item 3",
+      "quantity": 3,
+      "unit_price": 3467.09
+    }
+  ],
+  "tax": 554.73,
+  "total": 7488.9,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

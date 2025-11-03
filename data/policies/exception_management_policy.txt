@@ -1,0 +1,37 @@
+EXCEPTION MANAGEMENT AND LEARNING POLICY
+
+This policy defines how exceptions are handled and how the system learns from human decisions.
+
+1. EXCEPTION TYPES
+- Temporary exception: One-time override for specific circumstances
+- Recurring exception: Pattern-based rule for similar future transactions
+- Policy gap: Situation not covered by existing policies
+
+2. EXCEPTION APPROVAL AUTHORITY
+- Low-value exceptions (under $5,000): Manager approval
+- High-value exceptions ($5,000-$15,000): Director approval
+- Policy exceptions (over $15,000): VP approval
+
+3. LEARNING FROM EXCEPTIONS
+When a human approves an exception:
+- System captures the rationale
+- Similar patterns are identified
+- Memory is updated with learned rule
+- Future similar transactions apply the learned exception
+
+4. EXCEPTION REVIEW CYCLE
+All exceptions are reviewed quarterly to:
+- Confirm validity
+- Update policies if needed
+- Remove obsolete exceptions
+- Measure exception frequency trends
+
+5. EXCEPTION DOCUMENTATION
+Each exception must include:
+- Business justification
+- Risk assessment
+- Approver identification
+- Duration (temporary vs permanent)
+- Review date
+
+The goal is continuous learning to reduce human intervention over time while maintaining compliance.

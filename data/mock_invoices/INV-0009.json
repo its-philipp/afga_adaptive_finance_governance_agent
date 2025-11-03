@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0009",
+  "vendor": "Office Essentials Ltd",
+  "vendor_reputation": 96,
+  "amount": 4478.42,
+  "currency": "USD",
+  "category": "Software",
+  "date": "2025-11-01",
+  "po_number": "PO-5304",
+  "line_items": [
+    {
+      "description": "Software item 1",
+      "quantity": 2,
+      "unit_price": 4478.42
+    },
+    {
+      "description": "Software item 2",
+      "quantity": 9,
+      "unit_price": 4478.42
+    },
+    {
+      "description": "Software item 3",
+      "quantity": 7,
+      "unit_price": 1119.61
+    }
+  ],
+  "tax": 358.27,
+  "total": 4836.69,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

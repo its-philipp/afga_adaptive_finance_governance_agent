@@ -1,0 +1,29 @@
+{
+  "invoice_id": "INV-0048",
+  "vendor": "Global Services Group",
+  "vendor_reputation": 72,
+  "amount": 5127.85,
+  "currency": "USD",
+  "category": "Professional Services",
+  "date": "2025-10-12",
+  "po_number": "PO-1637",
+  "line_items": [
+    {
+      "description": "Professional Services item 1",
+      "quantity": 1,
+      "unit_price": 2563.93
+    },
+    {
+      "description": "Professional Services item 2",
+      "quantity": 6,
+      "unit_price": 2563.93
+    }
+  ],
+  "tax": 410.23,
+  "total": 5538.08,
+  "payment_terms": "Net 30",
+  "notes": "Edge case: Rush payment requested, expedited review needed",
+  "compliance_status": "edge_case",
+  "edge_case_reason": "Rush payment requested, expedited review needed",
+  "international": false
+}

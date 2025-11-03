@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0023",
+  "vendor": "Training Academy Ltd",
+  "vendor_reputation": 95,
+  "amount": 4828.96,
+  "currency": "USD",
+  "category": "Hardware",
+  "date": "2025-10-16",
+  "po_number": "PO-3170",
+  "line_items": [
+    {
+      "description": "Hardware item 1",
+      "quantity": 7,
+      "unit_price": 2414.48
+    },
+    {
+      "description": "Hardware item 2",
+      "quantity": 10,
+      "unit_price": 4828.96
+    },
+    {
+      "description": "Hardware item 3",
+      "quantity": 4,
+      "unit_price": 2414.48
+    }
+  ],
+  "tax": 386.32,
+  "total": 5215.28,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

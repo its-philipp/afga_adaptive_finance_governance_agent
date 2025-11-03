@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0032",
+  "vendor": "Training Academy Ltd",
+  "vendor_reputation": 95,
+  "amount": 3522.03,
+  "currency": "USD",
+  "category": "Consulting",
+  "date": "2025-10-30",
+  "po_number": "PO-2116",
+  "line_items": [
+    {
+      "description": "Consulting item 1",
+      "quantity": 4,
+      "unit_price": 880.51
+    },
+    {
+      "description": "Consulting item 2",
+      "quantity": 2,
+      "unit_price": 880.51
+    },
+    {
+      "description": "Consulting item 3",
+      "quantity": 4,
+      "unit_price": 880.51
+    }
+  ],
+  "tax": 281.76,
+  "total": 3803.79,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

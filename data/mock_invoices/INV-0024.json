@@ -1,0 +1,22 @@
+{
+  "invoice_id": "INV-0024",
+  "vendor": "Office Essentials Ltd",
+  "vendor_reputation": 96,
+  "amount": 1965.55,
+  "currency": "USD",
+  "category": "Marketing",
+  "date": "2025-10-24",
+  "po_number": "PO-6271",
+  "line_items": [
+    {
+      "description": "Marketing item 1",
+      "quantity": 10,
+      "unit_price": 655.18
+    }
+  ],
+  "tax": 157.24,
+  "total": 2122.79,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

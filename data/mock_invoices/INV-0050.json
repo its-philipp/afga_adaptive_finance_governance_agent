@@ -1,0 +1,29 @@
+{
+  "invoice_id": "INV-0050",
+  "vendor": "Acme Corporation",
+  "vendor_reputation": 70,
+  "amount": 3244.87,
+  "currency": "USD",
+  "category": "Utilities",
+  "date": "2025-10-04",
+  "po_number": "PO-6875",
+  "line_items": [
+    {
+      "description": "Utilities item 1",
+      "quantity": 1,
+      "unit_price": 3244.87
+    },
+    {
+      "description": "Utilities item 2",
+      "quantity": 10,
+      "unit_price": 3244.87
+    }
+  ],
+  "tax": 259.59,
+  "total": 3504.46,
+  "payment_terms": "Net 30",
+  "notes": "Edge case: Vendor has history of exceptions, review recommended",
+  "compliance_status": "edge_case",
+  "edge_case_reason": "Vendor has history of exceptions, review recommended",
+  "international": false
+}

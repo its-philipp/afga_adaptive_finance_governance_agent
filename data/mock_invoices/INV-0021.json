@@ -1,0 +1,22 @@
+{
+  "invoice_id": "INV-0021",
+  "vendor": "Training Academy Ltd",
+  "vendor_reputation": 95,
+  "amount": 6743.18,
+  "currency": "USD",
+  "category": "Software",
+  "date": "2025-10-22",
+  "po_number": "PO-2468",
+  "line_items": [
+    {
+      "description": "Software item 1",
+      "quantity": 10,
+      "unit_price": 6743.18
+    }
+  ],
+  "tax": 539.45,
+  "total": 7282.63,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0007",
+  "vendor": "Acme Corporation",
+  "vendor_reputation": 70,
+  "amount": 6109.43,
+  "currency": "USD",
+  "category": "Facilities",
+  "date": "2025-10-30",
+  "po_number": "PO-4546",
+  "line_items": [
+    {
+      "description": "Facilities item 1",
+      "quantity": 2,
+      "unit_price": 3054.72
+    },
+    {
+      "description": "Facilities item 2",
+      "quantity": 2,
+      "unit_price": 3054.72
+    },
+    {
+      "description": "Facilities item 3",
+      "quantity": 3,
+      "unit_price": 2036.48
+    }
+  ],
+  "tax": 488.75,
+  "total": 6598.18,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

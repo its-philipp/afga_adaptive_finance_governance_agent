@@ -1,0 +1,23 @@
+{
+  "invoice_id": "INV-0039",
+  "vendor": "Office Essentials Ltd",
+  "vendor_reputation": 96,
+  "amount": 27647.23,
+  "currency": "USD",
+  "category": "Facilities",
+  "date": "2025-10-24",
+  "po_number": "PO-5775",
+  "line_items": [
+    {
+      "description": "Facilities item 1",
+      "quantity": 7,
+      "unit_price": 9215.74
+    }
+  ],
+  "tax": 2211.78,
+  "total": 29859.01,
+  "payment_terms": "Net 30",
+  "notes": "Non-compliant: Amount exceeds approval threshold",
+  "compliance_status": "non_compliant",
+  "non_compliance_reason": "Amount exceeds approval threshold"
+}

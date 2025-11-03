@@ -1,0 +1,22 @@
+{
+  "invoice_id": "INV-0017",
+  "vendor": "Global Services Group",
+  "vendor_reputation": 72,
+  "amount": 4234.54,
+  "currency": "USD",
+  "category": "Marketing",
+  "date": "2025-10-15",
+  "po_number": "PO-1717",
+  "line_items": [
+    {
+      "description": "Marketing item 1",
+      "quantity": 8,
+      "unit_price": 1058.63
+    }
+  ],
+  "tax": 338.76,
+  "total": 4573.3,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

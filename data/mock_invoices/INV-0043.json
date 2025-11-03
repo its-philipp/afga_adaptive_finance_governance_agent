@@ -1,0 +1,34 @@
+{
+  "invoice_id": "INV-0043",
+  "vendor": "Office Essentials Ltd",
+  "vendor_reputation": 96,
+  "amount": 6517.21,
+  "currency": "USD",
+  "category": "Consulting",
+  "date": "2025-10-31",
+  "po_number": "PO-3367",
+  "line_items": [
+    {
+      "description": "Consulting item 1",
+      "quantity": 7,
+      "unit_price": 3258.61
+    },
+    {
+      "description": "Consulting item 2",
+      "quantity": 5,
+      "unit_price": 2172.4
+    },
+    {
+      "description": "Consulting item 3",
+      "quantity": 5,
+      "unit_price": 3258.61
+    }
+  ],
+  "tax": 521.38,
+  "total": 7038.59,
+  "payment_terms": "Net 30",
+  "notes": "Edge case: Rush payment requested, expedited review needed",
+  "compliance_status": "edge_case",
+  "edge_case_reason": "Rush payment requested, expedited review needed",
+  "international": false
+}

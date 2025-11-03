@@ -1,0 +1,22 @@
+{
+  "invoice_id": "INV-0001",
+  "vendor": "Marketing Solutions Co",
+  "vendor_reputation": 70,
+  "amount": 2571.4,
+  "currency": "USD",
+  "category": "Travel",
+  "date": "2025-10-20",
+  "po_number": "PO-3198",
+  "line_items": [
+    {
+      "description": "Travel item 1",
+      "quantity": 4,
+      "unit_price": 1285.7
+    }
+  ],
+  "tax": 205.71,
+  "total": 2777.11,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

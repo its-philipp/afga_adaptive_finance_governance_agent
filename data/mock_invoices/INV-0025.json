@@ -1,0 +1,32 @@
+{
+  "invoice_id": "INV-0025",
+  "vendor": "Facilities Management Inc",
+  "vendor_reputation": 56,
+  "amount": 3974.89,
+  "currency": "USD",
+  "category": "Hardware",
+  "date": "2025-10-18",
+  "po_number": "PO-5282",
+  "line_items": [
+    {
+      "description": "Hardware item 1",
+      "quantity": 2,
+      "unit_price": 1324.96
+    },
+    {
+      "description": "Hardware item 2",
+      "quantity": 4,
+      "unit_price": 794.98
+    },
+    {
+      "description": "Hardware item 3",
+      "quantity": 1,
+      "unit_price": 794.98
+    }
+  ],
+  "tax": 317.99,
+  "total": 4292.88,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

@@ -1,0 +1,29 @@
+{
+  "invoice_id": "INV-0045",
+  "vendor": "Facilities Management Inc",
+  "vendor_reputation": 56,
+  "amount": 9532.69,
+  "currency": "USD",
+  "category": "Training",
+  "date": "2025-10-11",
+  "po_number": "PO-7032",
+  "line_items": [
+    {
+      "description": "Training item 1",
+      "quantity": 8,
+      "unit_price": 9532.69
+    },
+    {
+      "description": "Training item 2",
+      "quantity": 3,
+      "unit_price": 4766.35
+    }
+  ],
+  "tax": 762.62,
+  "total": 10295.31,
+  "payment_terms": "Net 30",
+  "notes": "Edge case: Amount near approval threshold, requires review",
+  "compliance_status": "edge_case",
+  "edge_case_reason": "Amount near approval threshold, requires review",
+  "international": false
+}

@@ -1,0 +1,28 @@
+{
+  "invoice_id": "INV-0037",
+  "vendor": "IT Infrastructure Pro",
+  "vendor_reputation": 61,
+  "amount": 4839.64,
+  "currency": "USD",
+  "category": "Hardware",
+  "date": "2025-10-10",
+  "po_number": null,
+  "line_items": [
+    {
+      "description": "Hardware item 1",
+      "quantity": 8,
+      "unit_price": 1613.21
+    },
+    {
+      "description": "Hardware item 2",
+      "quantity": 6,
+      "unit_price": 1613.21
+    }
+  ],
+  "tax": 387.17,
+  "total": 5226.81,
+  "payment_terms": "Net 30",
+  "notes": "Non-compliant: Missing purchase order number",
+  "compliance_status": "non_compliant",
+  "non_compliance_reason": "Missing purchase order number"
+}

@@ -1,0 +1,33 @@
+{
+  "invoice_id": "INV-0038",
+  "vendor": "Unapproved Vendor LLC",
+  "vendor_reputation": 30,
+  "amount": 3525.69,
+  "currency": "USD",
+  "category": "Training",
+  "date": "2025-10-23",
+  "po_number": "PO-6262",
+  "line_items": [
+    {
+      "description": "Training item 1",
+      "quantity": 4,
+      "unit_price": 3525.69
+    },
+    {
+      "description": "Training item 2",
+      "quantity": 1,
+      "unit_price": 3525.69
+    },
+    {
+      "description": "Training item 3",
+      "quantity": 10,
+      "unit_price": 1175.23
+    }
+  ],
+  "tax": 282.06,
+  "total": 3807.75,
+  "payment_terms": "Net 30",
+  "notes": "Non-compliant: Vendor not on approved vendor list",
+  "compliance_status": "non_compliant",
+  "non_compliance_reason": "Vendor not on approved vendor list"
+}

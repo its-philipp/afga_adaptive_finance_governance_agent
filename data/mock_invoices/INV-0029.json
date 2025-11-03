@@ -1,0 +1,27 @@
+{
+  "invoice_id": "INV-0029",
+  "vendor": "Consulting Partners LLC",
+  "vendor_reputation": 67,
+  "amount": 7865.18,
+  "currency": "USD",
+  "category": "Training",
+  "date": "2025-10-18",
+  "po_number": "PO-2884",
+  "line_items": [
+    {
+      "description": "Training item 1",
+      "quantity": 10,
+      "unit_price": 1573.04
+    },
+    {
+      "description": "Training item 2",
+      "quantity": 10,
+      "unit_price": 7865.18
+    }
+  ],
+  "tax": 629.21,
+  "total": 8494.39,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}
