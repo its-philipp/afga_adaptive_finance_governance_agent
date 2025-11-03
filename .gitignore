@@ -60,7 +60,6 @@ azure_extension/infra/terraform/**/terraform.tfstate
 azure_extension/infra/terraform/**/terraform.tfstate.backup
 azure_extension/infra/terraform/**/.terraform.tfstate.lock.info
 
-# Test scripts (local testing only)
-test_*.py
-!tests/
+# Test scripts (local testing only - exclude from root only)
+/test_*.py
 
