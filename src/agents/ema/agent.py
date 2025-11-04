@@ -8,7 +8,7 @@ from langgraph.graph import StateGraph, END
 
 from ...core.config import get_settings
 from ...core.observability import Observability
-from ...core.openrouter_client import OpenRouterClient
+from ...governance import GovernedLLMClient
 from ...mcp_servers.memory_server import MemoryMCPServer
 from ...models.schemas import HITLFeedback, Invoice
 from .state import ExceptionManagerState
@@ -33,11 +33,11 @@ class ExceptionManagerAgent:
         self.memory_mcp = memory_mcp_server or MemoryMCPServer()
         self.memory_manager = self.memory_mcp.memory_manager  # Access underlying manager
         self.observability = observability or Observability()
-        self.llm_client = OpenRouterClient()
+        self.llm_client = GovernedLLMClient(agent_name="EMA")  # Governed LLM with AI governance
         
         # Build LangGraph workflow
         self.graph = self._build_graph()
-        logger.info("EMA initialized with MCP memory server")
+        logger.info("EMA initialized with MCP memory server and AI governance")
 
     def _build_graph(self) -> StateGraph:
         """Build the LangGraph workflow for EMA."""
@@ -119,6 +119,7 @@ REASONING: [brief explanation]
             response = self.llm_client.completion(
                 prompt=prompt,
                 temperature=self.settings.ema_temperature,
+                trace_id=state.get("trace_id", ""),
             )
 
             # Parse LLM response

@@ -21,6 +21,10 @@ env/
 backend.log
 *.out
 
+# Governance audit logs (KEEP these - they're important)
+!governance_audit.jsonl
+!governance_violations.jsonl
+
 # IDE
 .cursor/
 .vscode/

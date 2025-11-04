@@ -12,7 +12,7 @@ from typing import Optional
 from PIL import Image
 
 from ..core.config import get_settings
-from ..core.openrouter_client import OpenRouterClient
+from ..governance import GovernedLLMClient
 from ..models.schemas import Invoice, LineItem
 
 
@@ -24,8 +24,8 @@ class InvoiceExtractor:
 
     def __init__(self):
         self.settings = get_settings()
-        self.llm_client = OpenRouterClient()
-        logger.info("Invoice Extractor initialized")
+        self.llm_client = GovernedLLMClient(agent_name="InvoiceExtractor")  # Governed LLM with AI governance
+        logger.info("Invoice Extractor initialized with AI governance")
 
     def extract_from_document(
         self,

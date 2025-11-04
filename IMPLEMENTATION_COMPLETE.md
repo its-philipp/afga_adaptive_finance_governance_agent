@@ -388,7 +388,7 @@ adaptive_finance_governance_agent/
 
 ### All MVP Criteria Met
 
-✅ 3 LangGraph agents with A2A protocol  
+✅ 3 LangGraph agents with A2A/MCP  
 ✅ Transaction processing (approve/reject/HITL)  
 ✅ Adaptive memory operational  
 ✅ KPIs calculated and visualized  
@@ -565,7 +565,7 @@ adaptive_finance_governance_agent/
 ✅ **Portable:** Single file  
 ✅ **Upgradeable:** Can migrate to Delta Lake  
 
-### Why A2A Protocol?
+### Why A2A/MCP Protocol?
 
 ✅ **Standard:** Industry protocol  
 ✅ **Interoperable:** Works with any A2A agent  

@@ -9,7 +9,7 @@ from langgraph.graph import StateGraph, END
 from ...agents.ema.memory_manager import MemoryManager
 from ...core.config import get_settings
 from ...core.observability import Observability
-from ...core.openrouter_client import OpenRouterClient
+from ...governance import GovernedLLMClient
 from ...mcp_servers.policy_server import PolicyMCPServer
 from ...models.memory_schemas import MemoryQuery
 from ...models.schemas import Invoice, PolicyCheckResult
@@ -36,11 +36,11 @@ class PolicyAdherenceAgent:
         self.policy_mcp = policy_mcp_server or PolicyMCPServer()
         self.memory_manager = memory_manager or MemoryManager()
         self.observability = observability or Observability()
-        self.llm_client = OpenRouterClient()
+        self.llm_client = GovernedLLMClient(agent_name="PAA")  # Governed LLM with AI governance
         
         # Build LangGraph workflow
         self.graph = self._build_graph()
-        logger.info("PAA initialized with MCP policy server")
+        logger.info("PAA initialized with MCP policy server and AI governance")
 
     def _build_graph(self) -> StateGraph:
         """Build the LangGraph workflow for PAA."""
@@ -204,6 +204,7 @@ REASONING: [detailed explanation]
             response = self.llm_client.completion(
                 prompt=prompt,
                 temperature=self.settings.paa_temperature,
+                trace_id=state.get("trace_id", ""),
             )
 
             # Parse LLM response

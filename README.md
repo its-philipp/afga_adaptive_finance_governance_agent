@@ -81,6 +81,13 @@ source .venv/bin/activate
 - Supports German invoices ("Rechnung", "Spesenabrechnung")
 - Handles handwriting, photos, scans, and multi-page PDFs
 
+### 🛡️ AI Governance
+- **Input Governance:** PII detection, forbidden word filtering, prompt validation
+- **Output Governance:** Content filtering, response quality validation
+- **Audit Logging:** JSONL format with PII redaction
+- **Cost Tracking:** Per-agent and per-call LLM cost monitoring
+- **Policy Enforcement:** Access controls and compliance checks
+
 ### 📊 KPI Dashboard
 - **H-CR (Human Correction Rate)**: Measures learning progress
 - **CRS (Context Retention Score)**: Memory effectiveness
@@ -96,7 +103,7 @@ source .venv/bin/activate
 
 ### Transaction Processing
 - `POST /api/v1/transactions/submit` - Submit structured invoice (JSON)
-- `POST /api/v1/transactions/upload-receipt` - Upload receipt/invoice (PDF/Image) with AI extraction
+- `POST /api/v1/transactions/upload-receipt` - Upload receipt/invoice (PDF/Image) with AI extraction + governance
 - `GET /api/v1/transactions/{transaction_id}` - Get transaction status
 - `POST /api/v1/transactions/{transaction_id}/hitl` - Submit human feedback
 
@@ -143,6 +150,8 @@ adaptive_finance_governance_agent/
 - [x] 50 mock invoices + 5 policy documents
 - [x] Unit and integration tests
 - [x] Complete documentation
+- [x] Document extraction with Vision LLM
+- [x] AI Governance framework (PII detection, audit logging)
 
 ### Phase 2: Databricks Integration (Future)
 - [ ] Memory migration to Delta Lake
@@ -176,8 +185,10 @@ adaptive_finance_governance_agent/
 ## Documentation
 
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System architecture and design
-- [A2A_PROTOCOL.md](docs/A2A_PROTOCOL.md) - Agent communication specifications
-- [KPI_DEFINITIONS.md](docs/KPI_DEFINITIONS.md) - KPI formulas and interpretation
+- [HYBRID_A2A_MCP.md](docs/HYBRID_A2A_MCP.md) - Hybrid protocol architecture
+- [GOVERNANCE.md](docs/GOVERNANCE.md) - AI governance framework
+- [DOCUMENT_EXTRACTION.md](docs/DOCUMENT_EXTRACTION.md) - Vision LLM extraction
+- [QUICKSTART.md](QUICKSTART.md) - Getting started guide
 
 ## License
 

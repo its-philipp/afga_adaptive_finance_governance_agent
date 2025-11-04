@@ -59,7 +59,7 @@
    │ MCP            │ MCP
    │ (resources)    │ (tools)
    │                │
-┌──▼────────┐  ┌───▼──────┐
+┌──▼─────────┐  ┌───▼──────┐
 │  Policies  │  │  Memory  │
 │ MCP Server │  │MCP Server│
 └────────────┘  └──────────┘

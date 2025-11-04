@@ -19,7 +19,7 @@ A **fully functional multi-agent AI system** for automated finance compliance wi
 - PAA (Policy Adherence) - 5 nodes  
 - EMA (Exception Manager) - 4 nodes
 
-✅ **A2A Protocol Integration (Agent-to-Agent)**
+✅ **A2A/MCP Protocol Integration**
 - In-process communication for MVP
 - Agent cards for service discovery
 - Agent executors for PAA and EMA
