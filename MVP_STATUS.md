@@ -11,7 +11,7 @@
 
 A fully functional multi-agent AI system with:
 
-### ✅ 3 LangGraph Agents (A2A/MCP Protocol)
+### ✅ 3 LangGraph Agents (A2A Protocol)
 1. **TAA (Transaction Auditor Agent)** - Orchestrator
    - 6-node state machine
    - Risk assessment
@@ -247,7 +247,7 @@ adaptive_finance_governance_agent/
 
 We've achieved 6 of 7 MVP criteria:
 
-- ✅ 3 LangGraph agents communicate via A2A/MCP
+- ✅ 3 LangGraph agents communicate via A2A protocol
 - ✅ Transaction processing with approve/reject/HITL
 - ✅ Adaptive memory operational
 - ✅ KPIs calculated

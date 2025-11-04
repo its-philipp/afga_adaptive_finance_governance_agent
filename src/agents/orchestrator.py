@@ -1,4 +1,4 @@
-"""Orchestrator for connecting TAA, PAA, and EMA via A2A/MCP protocol.
+"""Orchestrator for connecting TAA, PAA, and EMA via A2A (Agent-to-Agent) protocol.
 
 This module provides in-process A2A communication for the local MVP.
 In production, agents would be deployed as separate services with HTTP-based A2A.

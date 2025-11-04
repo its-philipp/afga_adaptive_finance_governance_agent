@@ -46,7 +46,7 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description=(
             "Multi-agent AI system for automated finance compliance with adaptive learning. "
-            "Features TAA, PAA, and EMA agents communicating via A2A/MCP protocol."
+            "Features TAA, PAA, and EMA agents communicating via A2A (Agent-to-Agent) protocol."
         ),
         lifespan=lifespan,
     )

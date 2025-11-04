@@ -114,9 +114,9 @@ The Adaptive Finance Governance Agent (AFGA) is a multi-agent AI system for auto
 - Adaptive memory updates
 - KPI calculation for learning metrics
 
-## Communication: A2A/MCP Protocol
+## Communication: A2A Protocol
 
-The agents communicate using the Agent-to-Agent (A2A) protocol:
+The agents communicate using the **A2A (Agent-to-Agent) protocol**, an industry standard for multi-agent systems:
 
 - **Agent Cards:** Each agent publishes its capabilities
 - **Agent Executors:** Server agents (PAA, EMA) implement executors

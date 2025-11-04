@@ -17,7 +17,7 @@
 - **PAA (Policy Adherence):** 5-node state machine  
 - **EMA (Exception Manager):** 4-node state machine
 
-✅ **A2A/MCP Protocol**
+✅ **A2A Protocol (Agent-to-Agent)**
 - Agent cards for service discovery
 - Agent executors (PAA, EMA)
 - In-process communication (MVP)
@@ -93,7 +93,7 @@
 ### Core Features (MVP)
 
 ✅ Multi-agent orchestration (TAA, PAA, EMA)  
-✅ A2A/MCP protocol communication  
+✅ A2A protocol communication  
 ✅ Risk assessment (multi-factor scoring)  
 ✅ Policy-based compliance checking (RAG)  
 ✅ Adaptive memory learning  
@@ -120,7 +120,7 @@
 
 ### 1. True Multi-Agent Architecture
 
-Not just microservices - **actual A2A/MCP protocol:**
+Not just microservices - **actual A2A protocol:**
 - Agent Cards define capabilities
 - Agent Executors handle tasks
 - Structured message passing
@@ -347,7 +347,7 @@ adaptive_finance_governance_agent/
 
 ### New Patterns Added
 
-🆕 **Multi-agent orchestration** - A2A/MCP protocol  
+🆕 **Multi-agent orchestration** - A2A protocol  
 🆕 **Adaptive memory** - Learning from feedback  
 🆕 **Vision LLM** - Document extraction  
 🆕 **KPI tracking** - Performance metrics  
@@ -388,7 +388,7 @@ adaptive_finance_governance_agent/
 
 ### All MVP Criteria Met
 
-✅ 3 LangGraph agents with A2A/MCP  
+✅ 3 LangGraph agents with A2A protocol  
 ✅ Transaction processing (approve/reject/HITL)  
 ✅ Adaptive memory operational  
 ✅ KPIs calculated and visualized  
@@ -565,7 +565,7 @@ adaptive_finance_governance_agent/
 ✅ **Portable:** Single file  
 ✅ **Upgradeable:** Can migrate to Delta Lake  
 
-### Why A2A/MCP Protocol?
+### Why A2A Protocol?
 
 ✅ **Standard:** Industry protocol  
 ✅ **Interoperable:** Works with any A2A agent  

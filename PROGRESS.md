@@ -67,7 +67,7 @@
 - ✅ A2A executor implementation
 - ✅ Agent card for A2A discovery
 
-### 8. A2A/MCP Integration
+### 8. A2A Protocol Integration
 - ✅ AFGAOrchestrator connecting all agents
 - ✅ In-process A2A communication
 - ✅ Agent card generation
@@ -264,7 +264,7 @@ SQLite Database (✅ Complete)
 ## Success Criteria Status
 
 ### Phase 1 MVP
-- ✅ 3 LangGraph agents communicate via A2A/MCP
+- ✅ 3 LangGraph agents communicate via A2A protocol
 - ✅ Transaction processing with approve/reject/HITL decisions
 - ✅ Adaptive memory stores and retrieves learned exceptions
 - ✅ KPIs calculated and stored in database

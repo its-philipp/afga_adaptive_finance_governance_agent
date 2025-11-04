@@ -9,7 +9,7 @@ The Adaptive Finance Governance Agent (AFGA) is a multi-agent agentic AI system 
 
 ## Architecture
 
-**3 Specialized LangGraph Agents (A2A/MCP Protocol):**
+**3 Specialized LangGraph Agents (A2A Protocol):**
 
 - **TAA (Transaction Auditor Agent)**: Client/orchestrator - receives transactions, performs risk scoring, delegates to PAA and EMA
 - **PAA (Policy Adherence Agent)**: Server - RAG-based compliance checking against policy documents and adaptive memory
@@ -17,7 +17,7 @@ The Adaptive Finance Governance Agent (AFGA) is a multi-agent agentic AI system 
 
 **Key Technologies:**
 - LangGraph for agent state management
-- A2A/MCP for inter-agent communication
+- A2A Protocol for inter-agent communication
 - SQLite for local memory persistence (upgradeable to Databricks)
 - FastAPI as API Gateway
 - Streamlit for UI with agent workflow visualization
@@ -134,7 +134,7 @@ adaptive_finance_governance_agent/
 
 ### Phase 1: Local MVP ✅ **COMPLETE**
 - [x] Multi-agent architecture with LangGraph
-- [x] A2A/MCP protocol implementation
+- [x] A2A protocol implementation
 - [x] SQLite adaptive memory
 - [x] KPI tracking
 - [x] Streamlit UI with workflow visualization
@@ -156,7 +156,7 @@ adaptive_finance_governance_agent/
 
 ## Success Criteria
 
-- ✅ 3 LangGraph agents communicate via A2A/MCP
+- ✅ 3 LangGraph agents communicate via A2A protocol
 - ✅ Transaction processing with approve/reject/HITL decisions
 - ✅ Adaptive memory stores and retrieves learned exceptions
 - ✅ KPIs calculated and displayed in Streamlit

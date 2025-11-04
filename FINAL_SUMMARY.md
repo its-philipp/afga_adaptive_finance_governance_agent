@@ -19,7 +19,7 @@ A **fully functional multi-agent AI system** for automated finance compliance wi
 - PAA (Policy Adherence) - 5 nodes  
 - EMA (Exception Manager) - 4 nodes
 
-✅ **A2A/MCP Protocol Integration**
+✅ **A2A Protocol Integration (Agent-to-Agent)**
 - In-process communication for MVP
 - Agent cards for service discovery
 - Agent executors for PAA and EMA
@@ -167,7 +167,7 @@ PYTHONPATH=src pytest tests/ -v
 
 | Criterion | Status | Notes |
 |-----------|--------|-------|
-| 3 LangGraph agents with A2A/MCP | ✅ Complete | TAA, PAA, EMA with agent cards |
+| 3 LangGraph agents with A2A protocol | ✅ Complete | TAA, PAA, EMA with agent cards |
 | Transaction processing workflow | ✅ Complete | Approve/Reject/HITL decisions |
 | Adaptive memory operational | ✅ Complete | SQLite with learned exceptions |
 | KPIs calculated | ✅ Complete | H-CR, CRS, ATAR, traceability |
@@ -216,7 +216,7 @@ adaptive_finance_governance_agent/
 
 ### Core Framework
 - **LangGraph:** Agent state machines
-- **A2A/MCP:** Inter-agent protocol
+- **A2A:** Inter-agent protocol
 - **FastAPI:** API gateway
 - **Streamlit:** Web UI
 - **SQLite:** Local database
@@ -325,7 +325,7 @@ Production deployment:
 
 ### What Worked Well
 1. **LangGraph:** Perfect for agent state machines
-2. **A2A/MCP:** Clean protocol for multi-agent systems
+2. **A2A Protocol:** Clean standard for multi-agent systems
 3. **SQLite:** Simple and effective for MVP
 4. **Streamlit:** Fast UI development
 5. **FastAPI:** Excellent API gateway
@@ -408,7 +408,7 @@ Success metrics:
 The **Adaptive Finance Governance Agent (AFGA) MVP is complete and ready for demonstration**.
 
 All core features are implemented:
-- ✅ Multi-agent architecture with A2A/MCP
+- ✅ Multi-agent architecture with A2A protocol
 - ✅ Adaptive memory and learning
 - ✅ KPI tracking and monitoring
 - ✅ Complete UI and API

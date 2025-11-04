@@ -10,7 +10,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 st.set_page_config(page_title="Agent Workflow", page_icon="🔄", layout="wide")
 
 st.title("🔄 Agent Workflow Visualization")
-st.markdown("Understand how the three agents (TAA, PAA, EMA) work together using A2A/MCP protocol.")
+st.markdown("Understand how the three agents (TAA, PAA, EMA) work together using the A2A (Agent-to-Agent) protocol.")
 
 # Architecture Overview
 st.markdown("## 🏗️ System Architecture")
@@ -18,11 +18,11 @@ st.markdown("## 🏗️ System Architecture")
 st.markdown("""
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    Streamlit UI (Frontend)                    │
+│                    Streamlit UI (Frontend)                   │
 └────────────────────────┬─────────────────────────────────────┘
                          │ HTTP REST API
 ┌────────────────────────▼─────────────────────────────────────┐
-│                    FastAPI Gateway                            │
+│                    FastAPI Gateway                           │
 │  /transactions/submit   /transactions/{id}/hitl   /kpis/*    │
 └────────────────────────┬─────────────────────────────────────┘
                          │
@@ -39,7 +39,7 @@ st.markdown("""
         ▼                ▼               ▼
 ┌──────────────────────────────────────────────┐
 │           LangGraph State Machines           │
-│  (6 nodes)        (5 nodes)      (4 nodes)  │
+│  (6 nodes)        (5 nodes)      (4 nodes)   │
 └──────────────────────────────────────────────┘
         │                │               │
         │                ▼               ▼
@@ -51,10 +51,10 @@ st.markdown("""
         │                │               │
         ▼                ▼               ▼
 ┌──────────────────────────────────────────────┐
-│          SQLite Database (Local MVP)          │
-│  ┌───────────────┬───────────┬──────────┐   │
+│          SQLite Database (Local MVP)         │
+│  ┌───────────────┬────────────┬──────────┐   │
 │  │adaptive_memory│transactions│   kpis   │   │
-│  └───────────────┴───────────┴──────────┘   │
+│  └───────────────┴────────────┴──────────┘   │
 └──────────────────────────────────────────────┘
 ```
 """)
@@ -204,11 +204,11 @@ st.markdown("""
 ```
 """)
 
-# A2A/MCP Protocol
-st.markdown("## 🔗 A2A/MCP Protocol")
+# A2A Protocol
+st.markdown("## 🔗 A2A Protocol (Agent-to-Agent Communication)")
 
 st.markdown("""
-The agents communicate using the **Agent-to-Agent (A2A) Protocol** with **Model Context Protocol (MCP)** standards.
+The agents communicate using the **Agent-to-Agent (A2A) Protocol**, an industry standard for multi-agent systems.
 
 ### Key Concepts
 
@@ -345,5 +345,5 @@ with col2:
         st.error("❌ Cannot check services")
 
 st.markdown("---")
-st.caption("AFGA Agent Workflow | LangGraph + A2A/MCP Architecture")
+st.caption("AFGA Agent Workflow | LangGraph + A2A Architecture")
 
