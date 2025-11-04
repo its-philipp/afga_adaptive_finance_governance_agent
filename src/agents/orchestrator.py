@@ -1,6 +1,10 @@
-"""Orchestrator for connecting TAA, PAA, and EMA via A2A (Agent-to-Agent) protocol.
+"""Orchestrator for connecting TAA, PAA, and EMA via A2A + MCP protocols.
 
-This module provides in-process A2A communication for the local MVP.
+Hybrid Architecture:
+- A2A (Agent-to-Agent): Inter-agent communication (TAA ↔ PAA, TAA ↔ EMA)
+- MCP (Model Context Protocol): Agent ↔ Resources/Tools (PAA ↔ Policies, EMA ↔ Memory)
+
+This demonstrates both industry-standard protocols working together.
 In production, agents would be deployed as separate services with HTTP-based A2A.
 """
 
@@ -15,6 +19,7 @@ import time
 
 from ..core.observability import Observability
 from ..db.memory_db import MemoryDatabase
+from ..mcp_servers import PolicyMCPServer, MemoryMCPServer
 from ..models.schemas import (
     Invoice,
     HITLFeedback,
@@ -32,8 +37,11 @@ logger = logging.getLogger(__name__)
 class AFGAOrchestrator:
     """Orchestrator for AFGA multi-agent system.
     
-    Coordinates TAA, PAA, and EMA agents using A2A protocol.
-    For MVP, implements in-process communication.
+    Hybrid Architecture:
+    - A2A Protocol: Coordinates TAA, PAA, and EMA (inter-agent communication)
+    - MCP Protocol: PAA accesses policies, EMA manages memory (agent-to-resource/tools)
+    
+    This demonstrates both protocols working together as recommended by MIT GenAI research.
     """
 
     def __init__(
@@ -41,16 +49,26 @@ class AFGAOrchestrator:
         observability: Optional[Observability] = None,
         memory_db: Optional[MemoryDatabase] = None,
     ):
-        """Initialize orchestrator with all three agents."""
+        """Initialize orchestrator with all three agents and MCP servers."""
         self.observability = observability or Observability()
         self.memory_db = memory_db or MemoryDatabase()
         
-        # Initialize agents
-        self.taa = TransactionAuditorAgent(observability=self.observability)
-        self.paa = PolicyAdherenceAgent(observability=self.observability)
-        self.ema = ExceptionManagerAgent(observability=self.observability)
+        # Initialize MCP servers
+        self.policy_mcp = PolicyMCPServer()
+        self.memory_mcp = MemoryMCPServer()
         
-        logger.info("AFGA Orchestrator initialized with TAA, PAA, and EMA")
+        # Initialize agents with MCP servers
+        self.taa = TransactionAuditorAgent(observability=self.observability)
+        self.paa = PolicyAdherenceAgent(
+            policy_mcp_server=self.policy_mcp,
+            observability=self.observability
+        )
+        self.ema = ExceptionManagerAgent(
+            memory_mcp_server=self.memory_mcp,
+            observability=self.observability
+        )
+        
+        logger.info("AFGA Orchestrator initialized with TAA, PAA, EMA + MCP servers (hybrid A2A+MCP architecture)")
 
     def process_transaction(
         self,

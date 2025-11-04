@@ -9,15 +9,16 @@ The Adaptive Finance Governance Agent (AFGA) is a multi-agent agentic AI system 
 
 ## Architecture
 
-**3 Specialized LangGraph Agents (A2A Protocol):**
+**3 Specialized LangGraph Agents (Hybrid A2A + MCP Architecture):**
 
-- **TAA (Transaction Auditor Agent)**: Client/orchestrator - receives transactions, performs risk scoring, delegates to PAA and EMA
-- **PAA (Policy Adherence Agent)**: Server - RAG-based compliance checking against policy documents and adaptive memory
-- **EMA (Exception Manager Agent)**: Server - manages HITL feedback loop and updates adaptive memory
+- **TAA (Transaction Auditor Agent)**: Orchestrator - receives transactions, performs risk scoring, delegates via A2A protocol
+- **PAA (Policy Adherence Agent)**: Server - uses MCP to access policies, performs RAG-based compliance checking
+- **EMA (Exception Manager Agent)**: Server - uses MCP for memory tools, manages HITL feedback and learning
 
 **Key Technologies:**
 - LangGraph for agent state management
-- A2A Protocol for inter-agent communication
+- **A2A Protocol** for inter-agent communication (TAA ↔ PAA, TAA ↔ EMA)
+- **MCP Protocol** for resource/tool access (PAA ↔ Policies, EMA ↔ Memory)
 - SQLite for local memory persistence (upgradeable to Databricks)
 - FastAPI as API Gateway
 - Streamlit for UI with agent workflow visualization
@@ -134,7 +135,7 @@ adaptive_finance_governance_agent/
 
 ### Phase 1: Local MVP ✅ **COMPLETE**
 - [x] Multi-agent architecture with LangGraph
-- [x] A2A protocol implementation
+- [x] Hybrid A2A + MCP protocol implementation
 - [x] SQLite adaptive memory
 - [x] KPI tracking
 - [x] Streamlit UI with workflow visualization
@@ -156,7 +157,7 @@ adaptive_finance_governance_agent/
 
 ## Success Criteria
 
-- ✅ 3 LangGraph agents communicate via A2A protocol
+- ✅ 3 LangGraph agents with hybrid A2A + MCP architecture
 - ✅ Transaction processing with approve/reject/HITL decisions
 - ✅ Adaptive memory stores and retrieves learned exceptions
 - ✅ KPIs calculated and displayed in Streamlit

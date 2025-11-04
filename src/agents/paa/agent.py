@@ -10,9 +10,9 @@ from ...agents.ema.memory_manager import MemoryManager
 from ...core.config import get_settings
 from ...core.observability import Observability
 from ...core.openrouter_client import OpenRouterClient
+from ...mcp_servers.policy_server import PolicyMCPServer
 from ...models.memory_schemas import MemoryQuery
 from ...models.schemas import Invoice, PolicyCheckResult
-from ...services.policy_retriever import PolicyRetriever
 from .state import PolicyAdherenceState
 
 
@@ -20,23 +20,27 @@ logger = logging.getLogger(__name__)
 
 
 class PolicyAdherenceAgent:
-    """Policy Adherence Agent - Checks transactions against policies and memory."""
+    """Policy Adherence Agent - Checks transactions against policies and memory.
+    
+    Uses MCP (Model Context Protocol) to access policy resources and memory,
+    providing a clean abstraction layer for LLM-driven compliance checking.
+    """
 
     def __init__(
         self,
-        policy_retriever: PolicyRetriever | None = None,
+        policy_mcp_server: PolicyMCPServer | None = None,
         memory_manager: MemoryManager | None = None,
         observability: Observability | None = None,
     ):
         self.settings = get_settings()
-        self.policy_retriever = policy_retriever or PolicyRetriever()
+        self.policy_mcp = policy_mcp_server or PolicyMCPServer()
         self.memory_manager = memory_manager or MemoryManager()
         self.observability = observability or Observability()
         self.llm_client = OpenRouterClient()
         
         # Build LangGraph workflow
         self.graph = self._build_graph()
-        logger.info("PAA initialized")
+        logger.info("PAA initialized with MCP policy server")
 
     def _build_graph(self) -> StateGraph:
         """Build the LangGraph workflow for PAA."""
@@ -73,32 +77,38 @@ class PolicyAdherenceAgent:
         return state
 
     def retrieve_policies(self, state: PolicyAdherenceState) -> PolicyAdherenceState:
-        """Node 2: Retrieve relevant policy documents."""
+        """Node 2: Retrieve relevant policy documents via MCP.
+        
+        Uses MCP (Model Context Protocol) to access policy resources,
+        demonstrating how LLM agents can access external data through standardized protocols.
+        """
         invoice = state["invoice"]
         audit_trail = state.get("audit_trail", [])
         
-        audit_trail.append("Retrieving relevant policies (RAG)")
+        audit_trail.append("Retrieving relevant policies (RAG via MCP)")
 
         try:
-            relevant_policies = self.policy_retriever.retrieve_relevant_policies(invoice, top_k=5)
+            # Access policies through MCP server
+            # This provides a clean abstraction - PAA doesn't directly access files
+            relevant_policies = self.policy_mcp.search_relevant_policies_sync(invoice, top_k=5)
             state["retrieved_policies"] = relevant_policies
             
             policy_names = list(set(p["policy_name"] for p in relevant_policies))
-            audit_trail.append(f"Retrieved {len(relevant_policies)} policy chunks from: {', '.join(policy_names)}")
+            audit_trail.append(f"Retrieved {len(relevant_policies)} policy chunks via MCP from: {', '.join(policy_names)}")
             
             if self.observability:
                 self.observability.log_agent_step(
                     trace_id=state.get("trace_id", ""),
                     agent_name="PAA",
-                    step_name="retrieve_policies",
-                    input_data={"invoice_id": invoice.invoice_id},
+                    step_name="retrieve_policies_mcp",
+                    input_data={"invoice_id": invoice.invoice_id, "protocol": "MCP"},
                     output_data={"retrieved_count": len(relevant_policies), "policies": policy_names},
                 )
 
         except Exception as e:
-            logger.error(f"Error retrieving policies: {e}")
+            logger.error(f"Error retrieving policies via MCP: {e}")
             state["retrieved_policies"] = []
-            audit_trail.append(f"Error retrieving policies: {str(e)}")
+            audit_trail.append(f"Error retrieving policies via MCP: {str(e)}")
 
         state["audit_trail"] = audit_trail
         return state

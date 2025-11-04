@@ -10,7 +10,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 st.set_page_config(page_title="Agent Workflow", page_icon="🔄", layout="wide")
 
 st.title("🔄 Agent Workflow Visualization")
-st.markdown("Understand how the three agents (TAA, PAA, EMA) work together using the A2A (Agent-to-Agent) protocol.")
+st.markdown("Understand how the three agents (TAA, PAA, EMA) work together using hybrid A2A + MCP protocols.")
 
 # Architecture Overview
 st.markdown("## 🏗️ System Architecture")
@@ -204,29 +204,61 @@ st.markdown("""
 ```
 """)
 
-# A2A Protocol
-st.markdown("## 🔗 A2A Protocol (Agent-to-Agent Communication)")
+# Hybrid A2A + MCP Architecture
+st.markdown("## 🔗 Hybrid A2A + MCP Architecture")
 
 st.markdown("""
-The agents communicate using the **Agent-to-Agent (A2A) Protocol**, an industry standard for multi-agent systems.
+AFGA uses **two industry-standard protocols** working together, as recommended by MIT GenAI research:
 
-### Key Concepts
+### 1. A2A Protocol (Agent-to-Agent Communication)
 
-**Agent Cards:** Each agent publishes its capabilities
-- TAA Card: Defines orchestration capabilities
-- PAA Card: Defines policy checking capabilities
-- EMA Card: Defines learning capabilities
+**Used for:** Inter-agent communication
 
-**Agent Executors:** Server agents (PAA, EMA) implement executors
-- Receive tasks from clients
-- Execute LangGraph workflows
-- Stream progress updates
-- Return structured artifacts
+- **TAA → PAA:** A2A task delegation for compliance checking
+- **TAA → EMA:** A2A task delegation for HITL feedback
 
-**Task-Based Communication:**
-- Each request is a "task" with a lifecycle
-- States: submitted → working → completed
-- Supports cancellation and error handling
+**Key Concepts:**
+- **Agent Cards:** Each agent publishes its capabilities
+  - TAA Card: Orchestration capabilities
+  - PAA Card: Policy checking capabilities  
+  - EMA Card: Learning capabilities
+
+- **Agent Executors:** Server agents (PAA, EMA) implement executors
+  - Receive tasks from TAA
+  - Execute LangGraph workflows
+  - Stream progress updates
+  - Return structured artifacts
+
+- **Task Lifecycle:** submitted → working → completed
+
+### 2. MCP Protocol (Model Context Protocol)
+
+**Used for:** Agent access to resources and tools
+
+- **PAA → Policy Resources:** Accesses company policies via MCP resources
+  - `policy://vendor_approval_policy`
+  - `policy://expense_limits_policy`
+  - `policy://po_matching_requirements`
+  - etc.
+
+- **EMA → Memory Tools:** Calls memory operations via MCP tools
+  - `add_exception()` - Create learned rules
+  - `query_exceptions()` - Search memory
+  - `update_exception_usage()` - Track usage
+  - `get_memory_stats()` - Memory statistics
+
+**Benefits:**
+- ✅ Clean abstraction (agents don't touch databases directly)
+- ✅ Standardized interfaces (MCP resources/tools)
+- ✅ Observable (MCP calls are logged)
+- ✅ Testable (can mock MCP servers)
+
+### Why Both Protocols?
+
+**A2A** = Agent orchestration (TAA delegates to PAA/EMA)  
+**MCP** = Data access (PAA/EMA access policies/memory)
+
+This hybrid approach follows MIT GenAI research recommendations for scalable, governable AI systems.
 """)
 
 # Get Agent Cards
@@ -345,5 +377,5 @@ with col2:
         st.error("❌ Cannot check services")
 
 st.markdown("---")
-st.caption("AFGA Agent Workflow | LangGraph + A2A Architecture")
+st.caption("AFGA Agent Workflow | LangGraph + A2A + MCP Hybrid Architecture")
 

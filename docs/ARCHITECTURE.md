@@ -114,15 +114,47 @@ The Adaptive Finance Governance Agent (AFGA) is a multi-agent AI system for auto
 - Adaptive memory updates
 - KPI calculation for learning metrics
 
-## Communication: A2A Protocol
+## Communication: Hybrid A2A + MCP Architecture
 
-The agents communicate using the **A2A (Agent-to-Agent) protocol**, an industry standard for multi-agent systems:
+AFGA uses **two industry-standard protocols** working together:
 
+### A2A Protocol (Agent-to-Agent Communication)
+
+**Used for:** Inter-agent communication
+
+- **TAA → PAA:** A2A task delegation for compliance checking
+- **TAA → EMA:** A2A task delegation for HITL feedback
+
+**Components:**
 - **Agent Cards:** Each agent publishes its capabilities
-- **Agent Executors:** Server agents (PAA, EMA) implement executors
+- **Agent Executors:** Server agents (PAA, EMA) implement executors  
 - **Task Client:** TAA uses TaskClient to invoke server agents
 - **Streaming:** Agents can stream progress updates
 - **Structured Messages:** JSON-based message passing
+
+### MCP Protocol (Model Context Protocol)
+
+**Used for:** Agent access to resources and tools
+
+- **PAA → Policy Resources:** MCP resource access for company policies
+- **EMA → Memory Tools:** MCP tool calls for memory management
+
+**Components:**
+- **MCP Servers:** PolicyMCPServer, MemoryMCPServer
+- **Resources:** Policy documents exposed as `policy://` URIs
+- **Tools:** Memory operations (add_exception, query_exceptions, etc.)
+- **Clean Abstraction:** Agents don't directly access databases/files
+
+### Why Both Protocols?
+
+**A2A:** Perfect for agent-to-agent delegation  
+**MCP:** Perfect for agent-to-data access  
+
+This hybrid approach:
+- ✅ Follows MIT GenAI research recommendations
+- ✅ Separates concerns (orchestration vs data access)
+- ✅ More maintainable (agents use standard interfaces)
+- ✅ Production-ready (both are industry standards)
 
 ## Data Flow
 

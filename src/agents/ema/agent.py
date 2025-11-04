@@ -9,8 +9,8 @@ from langgraph.graph import StateGraph, END
 from ...core.config import get_settings
 from ...core.observability import Observability
 from ...core.openrouter_client import OpenRouterClient
+from ...mcp_servers.memory_server import MemoryMCPServer
 from ...models.schemas import HITLFeedback, Invoice
-from .memory_manager import MemoryManager
 from .state import ExceptionManagerState
 
 
@@ -18,21 +18,26 @@ logger = logging.getLogger(__name__)
 
 
 class ExceptionManagerAgent:
-    """Exception Manager Agent - Handles HITL feedback and updates adaptive memory."""
+    """Exception Manager Agent - Handles HITL feedback and updates adaptive memory.
+    
+    Uses MCP (Model Context Protocol) to access memory tools,
+    providing a clean interface for LLM-driven memory management operations.
+    """
 
     def __init__(
         self,
-        memory_manager: MemoryManager | None = None,
+        memory_mcp_server: MemoryMCPServer | None = None,
         observability: Observability | None = None,
     ):
         self.settings = get_settings()
-        self.memory_manager = memory_manager or MemoryManager()
+        self.memory_mcp = memory_mcp_server or MemoryMCPServer()
+        self.memory_manager = self.memory_mcp.memory_manager  # Access underlying manager
         self.observability = observability or Observability()
         self.llm_client = OpenRouterClient()
         
         # Build LangGraph workflow
         self.graph = self._build_graph()
-        logger.info("EMA initialized")
+        logger.info("EMA initialized with MCP memory server")
 
     def _build_graph(self) -> StateGraph:
         """Build the LangGraph workflow for EMA."""
@@ -154,32 +159,40 @@ REASONING: [brief explanation]
         return state
 
     def update_memory(self, state: ExceptionManagerState) -> ExceptionManagerState:
-        """Node 3: Update adaptive memory with the learned rule."""
+        """Node 3: Update adaptive memory via MCP tools.
+        
+        Uses MCP (Model Context Protocol) to call memory management tools,
+        demonstrating how LLM agents can perform operations through standardized protocols.
+        """
         feedback = state["feedback"]
         invoice = state.get("invoice")
         correction_type = state.get("correction_type", "one_time_override")
         description = state.get("exception_description", "")
         audit_trail = state.get("audit_trail", [])
 
-        audit_trail.append("Updating adaptive memory")
+        audit_trail.append("Updating adaptive memory via MCP tools")
 
         try:
-            exception_id = self.memory_manager.add_learned_exception(
-                invoice=invoice,
-                exception_type=feedback.exception_type or correction_type,
+            # Use MCP tool to add exception
+            # This provides a clean abstraction - EMA uses MCP interface
+            exception_id = self.memory_mcp.add_exception_sync(
+                vendor=invoice.vendor,
+                category=invoice.category,
+                rule_type=feedback.exception_type or correction_type,
                 description=description,
-                reason=feedback.reasoning,
+                reason=feedback.reasoning
             )
 
             state["memory_update_id"] = exception_id
-            audit_trail.append(f"Created memory exception {exception_id}: {description}")
+            audit_trail.append(f"Created memory exception via MCP: {exception_id}")
+            audit_trail.append(f"Exception description: {description}")
             
-            logger.info(f"Memory updated with exception {exception_id}")
+            logger.info(f"Memory updated via MCP with exception {exception_id}")
 
         except Exception as e:
-            logger.error(f"Error updating memory: {e}")
+            logger.error(f"Error updating memory via MCP: {e}")
             state["memory_update_id"] = ""
-            audit_trail.append(f"Error updating memory: {str(e)}")
+            audit_trail.append(f"Error updating memory via MCP: {str(e)}")
 
         state["audit_trail"] = audit_trail
         return state

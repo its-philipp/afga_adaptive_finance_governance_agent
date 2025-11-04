@@ -242,5 +242,5 @@ except Exception as e:
     st.warning(f"Could not load quick stats: {str(e)}")
 
 st.markdown("---")
-st.caption("AFGA v0.1.0 | Multi-Agent AI for Finance Compliance | Built with LangGraph + A2A Protocol")
+st.caption("AFGA v0.1.0 | Multi-Agent AI for Finance Compliance | Built with LangGraph + A2A + MCP")
 
