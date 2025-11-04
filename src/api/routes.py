@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, UploadFile, File
 
 from ..agents import AFGAOrchestrator
 from ..models.schemas import (
@@ -20,6 +21,7 @@ from ..models.schemas import (
 )
 from ..models.memory_schemas import MemoryQuery, MemoryStats
 from ..services import KPITracker
+from ..services.invoice_extractor import InvoiceExtractor
 
 
 logger = logging.getLogger(__name__)
@@ -29,6 +31,7 @@ router = APIRouter()
 # Initialize orchestrator and services
 orchestrator = AFGAOrchestrator()
 kpi_tracker = KPITracker(memory_db=orchestrator.memory_db)
+invoice_extractor = InvoiceExtractor()
 
 
 @router.get("/health")
@@ -53,7 +56,7 @@ def health_check():
 
 @router.post("/transactions/submit", response_model=TransactionResult, status_code=status.HTTP_201_CREATED)
 def submit_transaction(request: TransactionRequest):
-    """Submit a new transaction for processing.
+    """Submit a new transaction for processing (structured JSON).
     
     The transaction will be processed through the TAA → PAA workflow
     and a final decision (approve/reject/HITL) will be returned.
@@ -74,6 +77,68 @@ def submit_transaction(request: TransactionRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing transaction: {str(e)}"
+        )
+
+
+@router.post("/transactions/upload-receipt", response_model=TransactionResult, status_code=status.HTTP_201_CREATED)
+async def upload_receipt(
+    file: UploadFile = File(...),
+    source: str = "expense_report",
+):
+    """Upload a receipt/invoice document (PDF or image) for automated extraction and processing.
+    
+    Supported formats: PDF, PNG, JPG, JPEG, WEBP
+    
+    The document will be:
+    1. Extracted using Vision LLM (GPT-4 Vision)
+    2. Structured into Invoice format
+    3. Processed through TAA → PAA workflow
+    4. Decision returned (approve/reject/HITL)
+    """
+    try:
+        # Validate file type
+        allowed_extensions = {'.pdf', '.png', '.jpg', '.jpeg', '.webp'}
+        file_ext = Path(file.filename).suffix.lower() if file.filename else ''
+        
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported file type: {file_ext}. Allowed: {', '.join(allowed_extensions)}"
+            )
+        
+        logger.info(f"Uploading document: {file.filename}")
+        
+        # Read file bytes
+        file_bytes = await file.read()
+        
+        # Extract invoice data using Vision LLM
+        logger.info(f"Extracting invoice data from {file.filename}")
+        invoice = invoice_extractor.extract_from_document(
+            file_bytes=file_bytes,
+            filename=file.filename,
+            source=source,
+        )
+        
+        logger.info(f"Extracted invoice: {invoice.invoice_id} from {file.filename}")
+        
+        # Process through normal workflow
+        result = orchestrator.process_transaction(invoice=invoice)
+        
+        logger.info(f"Document {file.filename} processed: {result.final_decision.value}")
+        return result
+        
+    except ValueError as e:
+        # Extraction or validation error
+        logger.error(f"Error extracting invoice data: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Could not extract valid invoice data: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Error processing document: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing document: {str(e)}"
         )
 
 

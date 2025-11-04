@@ -74,6 +74,12 @@ source .venv/bin/activate
 - Stores institutional knowledge in SQLite (local) or Databricks (production)
 - Context Retention Score (CRS) tracks memory effectiveness
 
+### 📄 Document Intelligence
+- Upload receipts/invoices in PDF or image format
+- AI extraction using Vision LLM (GPT-4 Vision)
+- Supports German invoices ("Rechnung", "Spesenabrechnung")
+- Handles handwriting, photos, scans, and multi-page PDFs
+
 ### 📊 KPI Dashboard
 - **H-CR (Human Correction Rate)**: Measures learning progress
 - **CRS (Context Retention Score)**: Memory effectiveness
@@ -88,7 +94,8 @@ source .venv/bin/activate
 ## API Endpoints
 
 ### Transaction Processing
-- `POST /api/v1/transactions/submit` - Submit invoice for processing
+- `POST /api/v1/transactions/submit` - Submit structured invoice (JSON)
+- `POST /api/v1/transactions/upload-receipt` - Upload receipt/invoice (PDF/Image) with AI extraction
 - `GET /api/v1/transactions/{transaction_id}` - Get transaction status
 - `POST /api/v1/transactions/{transaction_id}/hitl` - Submit human feedback
 

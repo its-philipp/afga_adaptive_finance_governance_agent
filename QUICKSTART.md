@@ -8,7 +8,22 @@ Get the Adaptive Finance Governance Agent running in 5 minutes!
 - uv package manager
 - Terminal/Command line
 
-## Step 1: Install Dependencies
+## Step 1: Install System Dependencies (for PDF support)
+
+**macOS:**
+```bash
+brew install poppler
+```
+
+**Ubuntu/Linux:**
+```bash
+sudo apt-get install poppler-utils
+```
+
+**Windows:**
+- Download poppler: https://github.com/oschwartz10612/poppler-windows
+
+## Step 2: Install Python Dependencies
 
 ```bash
 cd adaptive_finance_governance_agent
@@ -18,9 +33,10 @@ uv sync --extra all
 This installs:
 - Core dependencies (LangGraph, FastAPI, etc.)
 - Streamlit UI
+- Document processing (pdf2image, pillow)
 - Development tools
 
-## Step 2: Configure Environment
+## Step 3: Configure Environment
 
 ```bash
 cp env.example .env
@@ -34,7 +50,9 @@ OPENROUTER_API_KEY=your_key_here
 
 **Get a free API key:** https://openrouter.ai/
 
-## Step 3: Start the System
+**Note:** Vision LLM (for PDF/image uploads) requires GPT-4 Vision access via OpenRouter
+
+## Step 4: Start the System
 
 ### Option A: Quick Start Script (Recommended)
 
@@ -62,20 +80,30 @@ source .venv/bin/activate
 streamlit run streamlit_app/app.py
 ```
 
-## Step 4: Access the UI
+## Step 5: Access the UI
 
 Open your browser to:
 - **Streamlit UI:** http://localhost:8501
 - **API Docs:** http://localhost:8000/docs
 
-## Step 5: Try It Out!
+## Step 6: Try It Out!
 
-### Process Your First Transaction
+### Option A: Upload Real Receipt/Invoice (NEW!)
 
 1. Go to **📋 Transaction Review** page
-2. Select a mock invoice from the dropdown
-3. Click **🚀 Process Transaction**
-4. View the decision and audit trail
+2. Select **"Upload Receipt/Invoice (PDF/Image)"**
+3. Upload any PDF or image of an invoice/receipt
+4. Click **"🔍 Extract & Process Invoice"**
+5. Watch AI extract the data
+6. View the decision and audit trail
+
+### Option B: Use Mock Data
+
+1. Go to **📋 Transaction Review** page
+2. Select **"Mock Invoices (Test Data)"**
+3. Choose an invoice from the dropdown
+4. Click **"🚀 Process Transaction"**
+5. View the decision and audit trail
 
 ### Provide HITL Feedback
 

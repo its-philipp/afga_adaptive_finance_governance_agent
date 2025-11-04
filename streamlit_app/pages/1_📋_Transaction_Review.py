@@ -21,16 +21,112 @@ tab1, tab2, tab3 = st.tabs(["📤 Submit Transaction", "📜 Transaction History
 with tab1:
     st.markdown("### Submit Invoice for Processing")
     
-    # Option to use mock data or custom
+    # Option to use mock data, upload file, or custom JSON
     data_source = st.radio(
         "Data Source:",
-        ["Mock Invoices (Test Data)", "Custom Invoice (JSON)"],
+        ["Mock Invoices (Test Data)", "Upload Receipt/Invoice (PDF/Image)", "Custom Invoice (JSON)"],
         horizontal=True
     )
     
     invoice_data = None
     
-    if data_source == "Mock Invoices (Test Data)":
+    if data_source == "Upload Receipt/Invoice (PDF/Image)":
+        st.markdown("### 📄 Upload Receipt or Invoice Document")
+        st.info("Upload a PDF or image of an expense report. The system will extract invoice data using AI.")
+        
+        uploaded_file = st.file_uploader(
+            "Choose a file:",
+            type=['pdf', 'png', 'jpg', 'jpeg', 'webp'],
+            help="Supported formats: PDF, PNG, JPG, JPEG, WEBP"
+        )
+        
+        if uploaded_file:
+            st.success(f"✅ File uploaded: {uploaded_file.name} ({uploaded_file.size:,} bytes)")
+            
+            # Show file preview (if image)
+            if uploaded_file.type.startswith('image/'):
+                st.image(uploaded_file, caption=uploaded_file.name, use_container_width=True)
+            else:
+                st.info(f"📄 PDF document: {uploaded_file.name}")
+            
+            # Process button
+            if st.button("🔍 Extract & Process Invoice", type="primary"):
+                with st.spinner("Extracting invoice data with Vision LLM..."):
+                    try:
+                        # Upload to API for extraction
+                        files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                        
+                        with httpx.Client(timeout=120.0) as client:
+                            response = client.post(
+                                f"{API_BASE_URL}/transactions/upload-receipt",
+                                files=files
+                            )
+                            
+                            if response.status_code == 201:
+                                result = response.json()
+                                
+                                st.success("✅ Invoice extracted and processed!")
+                                
+                                # Show extracted invoice data
+                                st.markdown("#### 📋 Extracted Invoice Data")
+                                extracted_invoice = result.get("invoice", {})
+                                
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("Invoice ID", extracted_invoice.get("invoice_id"))
+                                    st.metric("Vendor", extracted_invoice.get("vendor"))
+                                
+                                with col2:
+                                    st.metric("Amount", f"${extracted_invoice.get('amount', 0):,.2f}")
+                                    st.metric("Category", extracted_invoice.get("category"))
+                                
+                                with col3:
+                                    st.metric("PO Number", extracted_invoice.get("po_number") or "N/A")
+                                    st.metric("Date", extracted_invoice.get("date"))
+                                
+                                with st.expander("📋 Full Extracted Data"):
+                                    st.json(extracted_invoice)
+                                
+                                # Show processing result (same as structured submission)
+                                st.markdown("---")
+                                st.markdown("#### 🎯 Processing Result")
+                                
+                                # Store in session for HITL
+                                st.session_state.last_transaction = result
+                                
+                                # Decision badge
+                                decision = result.get("final_decision")
+                                if decision == "approved":
+                                    st.success(f"✅ **APPROVED**")
+                                elif decision == "rejected":
+                                    st.error(f"❌ **REJECTED**")
+                                else:
+                                    st.warning(f"⚠️ **HITL REQUIRED**")
+                                
+                                # Risk and policy check (same as before)
+                                risk = result.get("risk_assessment", {})
+                                if risk:
+                                    st.metric("Risk Level", risk.get("risk_level", "N/A").upper())
+                                    st.metric("Risk Score", f"{risk.get('risk_score', 0):.1f}/100")
+                                
+                                # Audit trail
+                                with st.expander("📜 Complete Audit Trail"):
+                                    audit_trail = result.get("audit_trail", [])
+                                    for idx, step in enumerate(audit_trail, 1):
+                                        st.write(f"{idx}. {step}")
+                            
+                            elif response.status_code == 422:
+                                st.error(f"❌ Could not extract valid invoice data from document")
+                                st.error(f"Details: {response.json().get('detail', 'Unknown error')}")
+                            else:
+                                st.error(f"❌ Error: {response.status_code} - {response.text}")
+                    
+                    except Exception as e:
+                        st.error(f"❌ Error processing document: {str(e)}")
+                        st.info("Make sure the backend is running and has Vision LLM access")
+    
+    elif data_source == "Mock Invoices (Test Data)":
+        st.markdown("### 🧪 Mock Invoice Testing")
         # List mock invoices
         try:
             with httpx.Client(timeout=10.0) as client:
