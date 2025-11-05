@@ -242,20 +242,29 @@ class AFGAOrchestrator:
         taa_trail = taa_state.get("audit_trail", [])
         paa_trail = paa_state.get("audit_trail", [])
         
+        logger.debug(f"Merging audit trails: TAA={len(taa_trail)} steps, PAA={len(paa_trail)} steps")
+        
         # Filter out obsolete warnings from TAA if PAA actually ran
         warnings_to_remove = [
             "⚠️ PAA A2A integration pending - using mock response",
             "⚠️ No PAA response available (using risk-based decision)",
-            "Delegating to PAA for policy check (A2A)",  # Replace with cleaner message
+            "Delegating to PAA for policy check (A2A)",
+            "Preparing for PAA policy check (A2A)",  # Also filter this since orchestrator handles it
         ]
         
         # Interleave trails chronologically
         merged = []
+        filtered_count = 0
+        
         for step in taa_trail:
             # Skip warning messages if PAA actually executed
             if paa_trail and any(warning in step for warning in warnings_to_remove):
+                logger.debug(f"Filtering TAA step: {step}")
+                filtered_count += 1
                 continue
             merged.append(f"[TAA] {step}")
+        
+        logger.info(f"Filtered {filtered_count} obsolete TAA messages. Clean audit trail: {len(merged)} TAA + {len(paa_trail)} PAA steps")
         
         for step in paa_trail:
             merged.append(f"[PAA] {step}")
