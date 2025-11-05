@@ -250,7 +250,15 @@ REASONING: [detailed explanation]
             if violated_policies:
                 audit_trail.append(f"Violated policies: {', '.join(violated_policies)}")
             if applied_exceptions:
-                audit_trail.append(f"Applied exceptions: {', '.join(applied_exceptions)}")
+                audit_trail.append(f"Applied {len(applied_exceptions)} exception(s)")
+                
+                # Update exception usage stats
+                memory_exceptions = state.get("memory_exceptions", [])
+                for exc in memory_exceptions:
+                    # Check if this exception was applied
+                    if exc.description in applied_exceptions or exc.exception_id in applied_exceptions:
+                        self.memory_manager.update_exception_usage(exc.exception_id)
+                        audit_trail.append(f"  - {exc.description}")
             
             if self.observability:
                 self.observability.log_llm_call(

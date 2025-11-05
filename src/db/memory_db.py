@@ -58,13 +58,26 @@ class MemoryDatabase:
                 risk_level TEXT,
                 paa_decision TEXT,
                 final_decision TEXT,
+                decision_reasoning TEXT,
                 human_override INTEGER,
                 processing_time_ms INTEGER,
                 audit_trail TEXT,
                 trace_id TEXT,
-                created_at TIMESTAMP
+                created_at TIMESTAMP,
+                updated_at TIMESTAMP
             )
         """)
+        
+        # Add columns if they don't exist (for existing databases)
+        try:
+            cursor.execute("ALTER TABLE transactions ADD COLUMN decision_reasoning TEXT")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+            
+        try:
+            cursor.execute("ALTER TABLE transactions ADD COLUMN updated_at TIMESTAMP")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
         # Create kpis table
         cursor.execute("""
@@ -287,9 +300,9 @@ class MemoryDatabase:
         cursor.execute("""
             INSERT INTO transactions
             (transaction_id, invoice_id, invoice_data, risk_score, risk_level, 
-             paa_decision, final_decision, human_override, processing_time_ms, 
-             audit_trail, trace_id, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             paa_decision, final_decision, decision_reasoning, human_override, processing_time_ms, 
+             audit_trail, trace_id, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             result.transaction_id,
             result.invoice.invoice_id,
@@ -298,11 +311,13 @@ class MemoryDatabase:
             result.risk_assessment.risk_level.value,
             "compliant" if result.policy_check.is_compliant else "non_compliant",
             result.final_decision.value,
+            result.decision_reasoning,
             1 if result.human_override else 0,
             result.processing_time_ms,
             json.dumps(result.audit_trail),
             result.trace_id,
             result.created_at,
+            result.created_at,  # updated_at initially same as created_at
         ))
 
         conn.commit()
@@ -341,6 +356,30 @@ class MemoryDatabase:
         conn.close()
 
         return [dict(row) for row in rows]
+
+    def update_transaction_after_hitl(
+        self,
+        transaction_id: str,
+        human_decision: str,
+        final_reasoning: str
+    ) -> None:
+        """Update transaction record after HITL feedback."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE transactions
+            SET human_override = 1,
+                final_decision = ?,
+                decision_reasoning = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE transaction_id = ?
+        """, (human_decision, final_reasoning, transaction_id))
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"Updated transaction {transaction_id} with HITL feedback")
 
     # ========== KPI OPERATIONS ==========
 

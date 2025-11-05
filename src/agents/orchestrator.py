@@ -188,13 +188,13 @@ class AFGAOrchestrator:
             
             ema_state = self.ema.process_hitl_feedback_sync(feedback, invoice, trace_id=trace_id)
             
-            # Update transaction in database
-            transaction = self.memory_db.get_transaction(feedback.transaction_id)
-            if transaction:
-                # Mark as human override
-                self.memory_db.conn = self.memory_db._ensure_database()
-                # Note: In a real implementation, we'd update the transaction record
-                logger.info(f"Transaction {feedback.transaction_id} marked with human override")
+            # Update transaction in database with HITL feedback
+            reasoning = f"Human override: {feedback.reasoning}"
+            self.memory_db.update_transaction_after_hitl(
+                transaction_id=feedback.transaction_id,
+                human_decision=feedback.human_decision.value,
+                final_reasoning=reasoning
+            )
             
             # Recalculate KPIs
             self.memory_db.calculate_and_save_kpis()
