@@ -43,7 +43,8 @@ fi
 
 # Start Streamlit frontend
 echo "🎨 Starting Streamlit frontend..."
-streamlit run streamlit_app/app.py
+# Skip email prompt and disable usage stats collection
+STREAMLIT_SERVER_HEADLESS=true streamlit run streamlit_app/app.py --server.headless=true
 
 # Cleanup on exit
 echo ""
