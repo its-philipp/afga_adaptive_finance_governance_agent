@@ -106,7 +106,7 @@ class MemoryDatabase:
         category: Optional[str],
         rule_type: str,
         description: str,
-        condition: Dict[str, any],
+        condition: Dict[str, Any],
     ) -> str:
         """Add a new exception to adaptive memory."""
         exception_id = str(uuid.uuid4())[:8]
@@ -310,7 +310,7 @@ class MemoryDatabase:
         
         logger.info(f"Saved transaction {result.transaction_id}")
 
-    def get_transaction(self, transaction_id: str) -> Optional[Dict[str, any]]:
+    def get_transaction(self, transaction_id: str) -> Optional[Dict[str, Any]]:
         """Get transaction by ID."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
@@ -325,7 +325,7 @@ class MemoryDatabase:
 
         return dict(row)
 
-    def get_recent_transactions(self, limit: int = 10) -> List[Dict[str, any]]:
+    def get_recent_transactions(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get recent transactions."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row

@@ -155,7 +155,7 @@ class AFGAOrchestrator:
         feedback: HITLFeedback,
         invoice: Invoice,
         trace_id: Optional[str] = None,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """Process human-in-the-loop feedback through EMA.
         
         Args:
@@ -208,7 +208,7 @@ class AFGAOrchestrator:
                 "hcr_updated": ema_state.get("hcr_updated", False),
             }
 
-    def _update_taa_decision(self, taa_state: Dict[str, any]) -> Dict[str, any]:
+    def _update_taa_decision(self, taa_state: Dict[str, Any]) -> Dict[str, Any]:
         """Update TAA decision based on PAA response."""
         paa_response = taa_state.get("paa_response")
         risk_assessment = taa_state.get("risk_assessment")
@@ -237,7 +237,7 @@ class AFGAOrchestrator:
         taa_state["audit_trail"] = audit_trail
         return taa_state
 
-    def _merge_audit_trails(self, taa_state: Dict[str, any], paa_state: Dict[str, any]) -> list[str]:
+    def _merge_audit_trails(self, taa_state: Dict[str, Any], paa_state: Dict[str, Any]) -> list[str]:
         """Merge audit trails from TAA and PAA."""
         taa_trail = taa_state.get("audit_trail", [])
         paa_trail = paa_state.get("audit_trail", [])
@@ -251,11 +251,11 @@ class AFGAOrchestrator:
         
         return merged
 
-    def get_transaction(self, transaction_id: str) -> Optional[Dict[str, any]]:
+    def get_transaction(self, transaction_id: str) -> Optional[Dict[str, Any]]:
         """Get transaction by ID."""
         return self.memory_db.get_transaction(transaction_id)
 
-    def get_recent_transactions(self, limit: int = 10) -> list[Dict[str, any]]:
+    def get_recent_transactions(self, limit: int = 10) -> list[Dict[str, Any]]:
         """Get recent transactions."""
         return self.memory_db.get_recent_transactions(limit)
 
@@ -271,7 +271,7 @@ class AFGAOrchestrator:
         """Get adaptive memory statistics."""
         return self.ema.memory_manager.get_memory_stats()
 
-    def get_agent_cards(self) -> Dict[str, any]:
+    def get_agent_cards(self) -> Dict[str, Any]:
         """Get A2A agent cards for all agents."""
         from .taa import get_taa_agent_card
         from .paa import get_paa_agent_card

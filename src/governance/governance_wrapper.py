@@ -260,7 +260,7 @@ class GovernanceWrapper:
         
         return round(total_cost, 6)
 
-    def get_statistics(self) -> Dict[str, any]:
+    def get_statistics(self) -> Dict[str, Any]:
         """Get governance statistics.
         
         Returns:
@@ -276,7 +276,7 @@ class GovernanceWrapper:
             if self.stats["total_calls"] > 0 else 100.0,
         }
 
-    def get_recent_violations(self, limit: int = 10) -> List[Dict[str, any]]:
+    def get_recent_violations(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get recent governance violations."""
         return self.audit_logger.get_recent_violations(limit)
 
@@ -316,7 +316,7 @@ class GovernedLLMClient:
             user_id=user_id,
         )
 
-    def get_statistics(self) -> Dict[str, any]:
+    def get_statistics(self) -> Dict[str, Any]:
         """Get governance statistics for this client."""
         return self.governance.get_statistics()
 

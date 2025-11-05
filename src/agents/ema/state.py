@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, TypedDict
+from typing import Any, Dict, List, TypedDict
 
 from ...models.schemas import HITLFeedback, Invoice, DecisionType
 
@@ -18,7 +18,7 @@ class ExceptionManagerState(TypedDict, total=False):
     correction_type: str  # "new_exception", "policy_gap", "one_time_override"
     should_learn: bool
     exception_description: str
-    exception_condition: Dict[str, any]
+    exception_condition: Dict[str, Any]
     
     # Output
     memory_update_id: str

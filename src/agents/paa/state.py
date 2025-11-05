@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, TypedDict
+from typing import Any, Dict, List, TypedDict
 
 from ...models.schemas import Invoice, PolicyCheckResult, MemoryException
 
@@ -15,7 +15,7 @@ class PolicyAdherenceState(TypedDict, total=False):
     trace_id: str
     
     # Policy Retrieval
-    retrieved_policies: List[Dict[str, any]]
+    retrieved_policies: List[Dict[str, Any]]
     
     # Memory Check
     memory_exceptions: List[MemoryException]

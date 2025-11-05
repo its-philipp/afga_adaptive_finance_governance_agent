@@ -94,7 +94,7 @@ class MemoryManager:
         logger.info(f"Found {len(applicable)} applicable exceptions for invoice {invoice.invoice_id}")
         return applicable
 
-    def _matches_condition(self, invoice: Invoice, condition: Dict[str, any]) -> bool:
+    def _matches_condition(self, invoice: Invoice, condition: Dict[str, Any]) -> bool:
         """Check if an invoice matches the exception condition."""
         # Check amount threshold if present
         if "amount_threshold" in condition:

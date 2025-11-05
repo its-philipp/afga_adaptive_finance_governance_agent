@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, TypedDict, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 from ...models.schemas import Invoice, RiskAssessment, PolicyCheckResult, DecisionType
 
@@ -23,7 +23,7 @@ class TransactionAuditorState(TypedDict, total=False):
     
     # EMA Communication (optional - only for human overrides later)
     ema_request_sent: bool
-    ema_response: Optional[Dict[str, any]]
+    ema_response: Optional[Dict[str, Any]]
     
     # Decision
     final_decision: DecisionType

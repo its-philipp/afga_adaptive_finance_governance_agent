@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
@@ -23,8 +23,8 @@ class MemoryStats(BaseModel):
     active_exceptions: int
     total_applications: int
     avg_success_rate: float
-    most_applied_rules: list[Dict[str, any]]
-    recent_additions: list[Dict[str, any]]
+    most_applied_rules: list[Dict[str, Any]]
+    recent_additions: list[Dict[str, Any]]
 
 
 class MemoryUpdateRequest(BaseModel):
@@ -34,7 +34,7 @@ class MemoryUpdateRequest(BaseModel):
     category: Optional[str] = None
     rule_type: str
     description: str
-    condition: Dict[str, any]
+    condition: Dict[str, Any]
 
 
 class CRSCalculation(BaseModel):

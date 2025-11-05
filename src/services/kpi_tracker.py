@@ -56,7 +56,7 @@ class KPITracker:
         """Get the most recent KPI metrics."""
         return self.db.get_latest_kpis()
 
-    def get_hcr_trend(self, days: int = 30) -> List[Dict[str, any]]:
+    def get_hcr_trend(self, days: int = 30) -> List[Dict[str, Any]]:
         """Get H-CR (Human Correction Rate) trend.
         
         Args:
@@ -68,7 +68,7 @@ class KPITracker:
         kpis = self.get_kpi_trend(days)
         return [{"date": kpi.date, "hcr": kpi.hcr} for kpi in kpis]
 
-    def get_crs_trend(self, days: int = 30) -> List[Dict[str, any]]:
+    def get_crs_trend(self, days: int = 30) -> List[Dict[str, Any]]:
         """Get CRS (Context Retention Score) trend.
         
         Args:
@@ -80,7 +80,7 @@ class KPITracker:
         kpis = self.get_kpi_trend(days)
         return [{"date": kpi.date, "crs": kpi.crs} for kpi in kpis]
 
-    def get_atar_trend(self, days: int = 30) -> List[Dict[str, any]]:
+    def get_atar_trend(self, days: int = 30) -> List[Dict[str, Any]]:
         """Get ATAR (Automated Transaction Approval Rate) trend.
         
         Args:
@@ -92,7 +92,7 @@ class KPITracker:
         kpis = self.get_kpi_trend(days)
         return [{"date": kpi.date, "atar": kpi.atar} for kpi in kpis]
 
-    def get_kpi_summary(self) -> Dict[str, any]:
+    def get_kpi_summary(self) -> Dict[str, Any]:
         """Get a comprehensive KPI summary.
         
         Returns:
@@ -171,7 +171,7 @@ class KPITracker:
         else:
             return second_half_avg > first_half_avg
 
-    def get_transaction_stats(self) -> Dict[str, any]:
+    def get_transaction_stats(self) -> Dict[str, Any]:
         """Get transaction statistics."""
         import sqlite3
         
@@ -211,7 +211,7 @@ class KPITracker:
             "avg_processing_time_ms": int(avg_time),
         }
 
-    def force_recalculate_all_kpis(self) -> Dict[str, any]:
+    def force_recalculate_all_kpis(self) -> Dict[str, Any]:
         """Recalculate KPIs for all dates with transactions.
         
         Useful for backfilling after system changes.

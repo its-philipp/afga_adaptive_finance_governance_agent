@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -69,7 +69,7 @@ class RiskAssessment(BaseModel):
     risk_score: float = Field(ge=0, le=100)
     risk_level: RiskLevel
     risk_factors: List[str]
-    assessment_details: Dict[str, any]
+    assessment_details: Dict[str, Any]
 
 
 class PolicyCheckResult(BaseModel):
@@ -99,7 +99,7 @@ class MemoryException(BaseModel):
     category: Optional[str] = None
     rule_type: str  # "exception", "learned_threshold", "custom_rule"
     description: str
-    condition: Dict[str, any]  # Structured rule conditions
+    condition: Dict[str, Any]  # Structured rule conditions
     applied_count: int = 0
     success_rate: float = 1.0
     created_at: datetime

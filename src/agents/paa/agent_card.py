@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from a2a.types import AgentCard, Capability, CapabilityType
+from a2a.types import AgentCard, AgentSkill
 
 
 def get_paa_agent_card() -> AgentCard:
@@ -17,72 +17,39 @@ def get_paa_agent_card() -> AgentCard:
             "Retrieves relevant policy documents and consults adaptive memory for learned exceptions. "
             "Returns compliance result with confidence score."
         ),
-        capabilities=[
-            Capability(
-                type=CapabilityType.ACTION,
-                name="policy_checking",
+        url="http://localhost:8000/api/v1/agents/paa",
+        version="1.0.0",
+        skills=[
+            AgentSkill(
+                id="policy_checking",
+                name="Policy Checking",
                 description=(
                     "Check if a transaction complies with company policies. Uses RAG to retrieve "
                     "relevant policy documents and queries adaptive memory for exceptions."
                 ),
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "invoice": {
-                            "type": "object",
-                            "description": "Invoice data to check",
-                            "properties": {
-                                "invoice_id": {"type": "string"},
-                                "vendor": {"type": "string"},
-                                "amount": {"type": "number"},
-                                "category": {"type": "string"},
-                                "po_number": {"type": "string", "nullable": True},
-                                "international": {"type": "boolean"},
-                            },
-                            "required": ["invoice_id", "vendor", "amount", "category"],
-                        },
-                        "trace_id": {"type": "string", "description": "Trace ID for observability"},
-                    },
-                    "required": ["invoice"],
-                },
-                output_schema={
-                    "type": "object",
-                    "properties": {
-                        "is_compliant": {"type": "boolean"},
-                        "violated_policies": {"type": "array", "items": {"type": "string"}},
-                        "applied_exceptions": {"type": "array", "items": {"type": "string"}},
-                        "reasoning": {"type": "string"},
-                        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-                    },
-                },
+                tags=["compliance", "policy", "rag"],
+                inputModes=["application/json"],
+                outputModes=["application/json"],
+                examples=[
+                    "Check if invoice complies with expense policy",
+                    "Validate international transaction against policy",
+                ],
             ),
-            Capability(
-                type=CapabilityType.ACTION,
-                name="compliance_evaluation",
+            AgentSkill(
+                id="compliance_evaluation",
+                name="Compliance Evaluation",
                 description=(
                     "Evaluate compliance using LLM with retrieved policies and learned exceptions. "
                     "Provides detailed reasoning and confidence assessment."
                 ),
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "invoice": {"type": "object"},
-                        "policies": {"type": "array", "items": {"type": "string"}},
-                        "exceptions": {"type": "array", "items": {"type": "object"}},
-                    },
-                    "required": ["invoice"],
-                },
-                output_schema={
-                    "type": "object",
-                    "properties": {
-                        "is_compliant": {"type": "boolean"},
-                        "confidence": {"type": "number"},
-                        "reasoning": {"type": "string"},
-                    },
-                },
+                tags=["compliance", "llm", "evaluation"],
+                inputModes=["application/json"],
+                outputModes=["application/json"],
+                examples=[
+                    "Evaluate invoice against retrieved policies",
+                    "Assess compliance with confidence score",
+                ],
             ),
         ],
-        version="1.0.0",
-        url="http://localhost:8000/api/v1/agents/paa",
     )
 
