@@ -9,6 +9,15 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
 st.set_page_config(page_title="Memory Browser", page_icon="🧠", layout="wide")
 
+# Hide default Streamlit navigation
+st.markdown("""
+<style>
+    [data-testid="stSidebarNav"] {
+        display: none;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🧠 Adaptive Memory Browser")
 st.markdown("Explore learned exceptions, view memory statistics, and understand how the system improves over time.")
 

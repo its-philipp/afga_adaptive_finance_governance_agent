@@ -9,6 +9,15 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
 st.set_page_config(page_title="Agent Workflow", page_icon="🔄", layout="wide")
 
+# Hide default Streamlit navigation
+st.markdown("""
+<style>
+    [data-testid="stSidebarNav"] {
+        display: none;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🔄 Agent Workflow Visualization")
 st.markdown("Understand how the three agents (TAA, PAA, EMA) work together using hybrid A2A + MCP protocols.")
 

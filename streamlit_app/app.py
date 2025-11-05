@@ -79,7 +79,7 @@ with st.sidebar:
     
     # Navigation
     st.markdown("### 📑 Navigation")
-    st.page_link("app.py", label="🏠 Home", icon="🏠")
+    st.page_link("app.py", label="Home", icon="🏠")
     st.page_link("pages/1_📋_Transaction_Review.py", label="Transaction Review", icon="📋")
     st.page_link("pages/2_🔄_Agent_Workflow.py", label="Agent Workflow", icon="🔄")
     st.page_link("pages/3_📊_KPI_Dashboard.py", label="KPI Dashboard", icon="📊")

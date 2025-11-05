@@ -10,6 +10,15 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
 st.set_page_config(page_title="KPI Dashboard", page_icon="📊", layout="wide")
 
+# Hide default Streamlit navigation
+st.markdown("""
+<style>
+    [data-testid="stSidebarNav"] {
+        display: none;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("📊 KPI Dashboard")
 st.markdown("Monitor system performance, learning metrics, and operational efficiency.")
 
