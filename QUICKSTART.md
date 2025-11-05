@@ -10,7 +10,9 @@ Get the Adaptive Finance Governance Agent running in 5 minutes!
 
 ## Step 1: Install System Dependencies (for PDF support)
 
-**macOS:**
+**Note:** For local Mac M2 development, install poppler. For Docker deployment, poppler is included in the image.
+
+**macOS (Local Development - Recommended):**
 ```bash
 brew install poppler
 ```
@@ -22,6 +24,8 @@ sudo apt-get install poppler-utils
 
 **Windows:**
 - Download poppler: https://github.com/oschwartz10612/poppler-windows
+
+**Docker:** Poppler is pre-installed in the Docker image (see Dockerfile)
 
 ## Step 2: Install Python Dependencies
 
@@ -54,7 +58,9 @@ OPENROUTER_API_KEY=your_key_here
 
 ## Step 4: Start the System
 
-### Option A: Quick Start Script (Recommended)
+### Option A: Direct Start (Recommended for Mac M2)
+
+**This is the simplest way - no Docker needed!**
 
 ```bash
 ./start.sh
@@ -66,7 +72,7 @@ This automatically:
 - Starts FastAPI backend
 - Starts Streamlit frontend
 
-### Option B: Manual Start
+### Option B: Manual Start (Two Terminals)
 
 Terminal 1 - Backend:
 ```bash
@@ -79,6 +85,29 @@ Terminal 2 - Frontend:
 source .venv/bin/activate
 streamlit run streamlit_app/app.py
 ```
+
+### Option C: Docker Compose (Optional - For Deployment)
+
+**Note:** Only use Docker if you want to test containerization. Not needed for local development.
+
+```bash
+# Build and start
+docker-compose up --build
+
+# Access same URLs
+# Streamlit: http://localhost:8501
+# API: http://localhost:8000
+```
+
+**When to use Docker:**
+- Testing containerized deployment
+- Deploying to cloud
+- Multi-environment setups
+
+**When NOT to use Docker:**
+- Local Mac M2 development (use direct start instead)
+- Quick testing and iteration
+- Current MVP phase
 
 ## Step 5: Access the UI
 
