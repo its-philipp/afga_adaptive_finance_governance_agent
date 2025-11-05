@@ -19,6 +19,18 @@ st.markdown("""
 st.title("📖 Policy Viewer")
 st.markdown("Browse the company policies used by PAA for compliance checking.")
 
+# Sidebar
+with st.sidebar:
+    st.title("🤖 AFGA")
+    st.caption("Adaptive Finance Governance Agent")
+    st.markdown("---")
+    st.page_link("app.py", label="Home", icon="🏠")
+    st.page_link("pages/1_📋_Transaction_Review.py", label="Transaction Review", icon="📋")
+    st.page_link("pages/2_🔄_Agent_Workflow.py", label="Agent Workflow", icon="🔄")
+    st.page_link("pages/3_📊_KPI_Dashboard.py", label="KPI Dashboard", icon="📊")
+    st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
+    st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
+
 # Find policies directory
 policies_dir = Path("data/policies")
 
