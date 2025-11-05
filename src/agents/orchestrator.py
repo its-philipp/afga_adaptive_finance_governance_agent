@@ -239,8 +239,10 @@ class AFGAOrchestrator:
 
     def _merge_audit_trails(self, taa_state: Dict[str, Any], paa_state: Dict[str, Any]) -> list[str]:
         """Merge audit trails from TAA and PAA."""
+        print("🔍 _merge_audit_trails CALLED!")  # DEBUG: This should ALWAYS print
         taa_trail = taa_state.get("audit_trail", [])
         paa_trail = paa_state.get("audit_trail", [])
+        print(f"🔍 TAA steps: {len(taa_trail)}, PAA steps: {len(paa_trail)}")  # DEBUG
         
         logger.debug(f"Merging audit trails: TAA={len(taa_trail)} steps, PAA={len(paa_trail)} steps")
         
