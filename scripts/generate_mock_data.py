@@ -42,7 +42,9 @@ def generate_compliant_invoice(invoice_id: int) -> dict:
     vendor = random.choice(VENDORS)
     category = random.choice(CATEGORIES)
     amount = round(random.uniform(100, 8000), 2)
+    # Generate date with random time during business hours (8 AM - 6 PM)
     date = datetime.now() - timedelta(days=random.randint(1, 30))
+    date = date.replace(hour=random.randint(8, 18), minute=random.randint(0, 59), second=random.randint(0, 59))
     
     return {
         "invoice_id": f"INV-{invoice_id:04d}",
@@ -51,7 +53,7 @@ def generate_compliant_invoice(invoice_id: int) -> dict:
         "amount": amount,
         "currency": "USD",
         "category": category,
-        "date": date.strftime("%Y-%m-%d"),
+        "date": date.strftime("%Y-%m-%d %H:%M:%S"),
         "po_number": f"PO-{random.randint(1000, 9999)}",
         "line_items": [
             {
@@ -73,7 +75,9 @@ def generate_non_compliant_invoice(invoice_id: int) -> dict:
     """Generate a non-compliant invoice requiring rejection (15% of dataset)."""
     vendor = random.choice(VENDORS)
     category = random.choice(CATEGORIES)
+    # Generate date with random time during business hours
     date = datetime.now() - timedelta(days=random.randint(1, 30))
+    date = date.replace(hour=random.randint(8, 18), minute=random.randint(0, 59), second=random.randint(0, 59))
     
     # Different types of non-compliance
     non_compliance_type = random.choice([
@@ -109,7 +113,7 @@ def generate_non_compliant_invoice(invoice_id: int) -> dict:
         "amount": amount,
         "currency": "USD",
         "category": category,
-        "date": date.strftime("%Y-%m-%d"),
+        "date": date.strftime("%Y-%m-%d %H:%M:%S"),
         "po_number": po_number,
         "line_items": [
             {
@@ -132,7 +136,9 @@ def generate_edge_case_invoice(invoice_id: int) -> dict:
     """Generate an edge case invoice requiring human review (15% of dataset)."""
     vendor = random.choice(VENDORS)
     category = random.choice(CATEGORIES)
+    # Generate date with random time during business hours
     date = datetime.now() - timedelta(days=random.randint(1, 30))
+    date = date.replace(hour=random.randint(8, 18), minute=random.randint(0, 59), second=random.randint(0, 59))
     
     # Different types of edge cases
     edge_case_type = random.choice([
@@ -166,7 +172,7 @@ def generate_edge_case_invoice(invoice_id: int) -> dict:
         "amount": amount,
         "currency": "USD" if not international else random.choice(["EUR", "GBP", "JPY"]),
         "category": category,
-        "date": date.strftime("%Y-%m-%d"),
+        "date": date.strftime("%Y-%m-%d %H:%M:%S"),
         "po_number": f"PO-{random.randint(1000, 9999)}",
         "line_items": [
             {
