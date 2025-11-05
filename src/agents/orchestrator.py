@@ -242,10 +242,21 @@ class AFGAOrchestrator:
         taa_trail = taa_state.get("audit_trail", [])
         paa_trail = paa_state.get("audit_trail", [])
         
+        # Filter out obsolete warnings from TAA if PAA actually ran
+        warnings_to_remove = [
+            "⚠️ PAA A2A integration pending - using mock response",
+            "⚠️ No PAA response available (using risk-based decision)",
+            "Delegating to PAA for policy check (A2A)",  # Replace with cleaner message
+        ]
+        
         # Interleave trails chronologically
         merged = []
         for step in taa_trail:
+            # Skip warning messages if PAA actually executed
+            if paa_trail and any(warning in step for warning in warnings_to_remove):
+                continue
             merged.append(f"[TAA] {step}")
+        
         for step in paa_trail:
             merged.append(f"[PAA] {step}")
         
