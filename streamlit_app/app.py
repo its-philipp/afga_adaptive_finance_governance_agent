@@ -16,6 +16,11 @@ st.set_page_config(
 # Custom CSS
 st.markdown("""
 <style>
+    /* Hide the default app name in sidebar */
+    [data-testid="stSidebarNav"] {
+        display: none;
+    }
+    
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
@@ -70,6 +75,17 @@ st.markdown('<div class="sub-header">Multi-Agent AI System for Automated Finance
 with st.sidebar:
     st.title("🤖 AFGA")
     st.caption("Adaptive Finance Governance Agent")
+    st.markdown("---")
+    
+    # Navigation
+    st.markdown("### 📑 Navigation")
+    st.page_link("app.py", label="🏠 Home", icon="🏠")
+    st.page_link("pages/1_📋_Transaction_Review.py", label="Transaction Review", icon="📋")
+    st.page_link("pages/2_🔄_Agent_Workflow.py", label="Agent Workflow", icon="🔄")
+    st.page_link("pages/3_📊_KPI_Dashboard.py", label="KPI Dashboard", icon="📊")
+    st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
+    st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
+    
     st.markdown("---")
     st.info("""
     **AFGA Features:**

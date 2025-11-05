@@ -161,7 +161,7 @@ with tab1:
                                 st.metric("Category", invoice_data.get("category"))
                             
                             with col3:
-                                st.metric("PO Number", invoice_data.get("po_number") or "N/A")
+                                st.metric("Invoice Date", invoice_data.get("date", "N/A"))
                                 st.metric("Status", invoice_data.get("compliance_status", "Unknown"))
                             
                             with st.expander("📋 Full Invoice Details"):
