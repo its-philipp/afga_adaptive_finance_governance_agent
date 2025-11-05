@@ -4,10 +4,13 @@ import streamlit as st
 
 # Page configuration
 st.set_page_config(
-    page_title="AFGA - Adaptive Finance Governance Agent",
+    page_title="AFGA - Home",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded",
+    menu_items={
+        'About': "Adaptive Finance Governance Agent - Multi-Agent AI System for Automated Finance Compliance"
+    }
 )
 
 # Custom CSS
@@ -63,12 +66,11 @@ st.markdown("""
 st.markdown('<div class="main-header">🤖 Adaptive Finance Governance Agent</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Multi-Agent AI System for Automated Finance Compliance with Adaptive Learning</div>', unsafe_allow_html=True)
 
-# Sidebar navigation
-st.sidebar.title("Navigation")
-st.sidebar.markdown("---")
-
-# Information box
+# Sidebar
 with st.sidebar:
+    st.title("🤖 AFGA")
+    st.caption("Adaptive Finance Governance Agent")
+    st.markdown("---")
     st.info("""
     **AFGA Features:**
     - 🔍 Transaction Processing

@@ -286,10 +286,80 @@ with tab1:
 with tab2:
     st.markdown("### Recent Transactions")
     
-    # Refresh button
-    if st.button("🔄 Refresh"):
-        st.rerun()
+    col_refresh, col_clear = st.columns([1, 4])
+    with col_refresh:
+        if st.button("🔄 Refresh", use_container_width=True):
+            st.rerun()
+    with col_clear:
+        if "selected_transaction" in st.session_state and st.button("✖️ Clear Selection", use_container_width=True):
+            del st.session_state.selected_transaction
+            st.rerun()
     
+    # Show selected transaction details if any
+    if "selected_transaction" in st.session_state:
+        st.markdown("---")
+        st.markdown("### 📋 Transaction Details")
+        
+        trans = st.session_state.selected_transaction
+        
+        # Header info
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Transaction ID", trans.get("transaction_id", "N/A"))
+        with col2:
+            st.metric("Invoice ID", trans.get("invoice", {}).get("invoice_id", "N/A"))
+        with col3:
+            decision = trans.get("final_decision", "N/A").upper()
+            if decision == "APPROVED":
+                st.success(f"✅ {decision}")
+            elif decision == "REJECTED":
+                st.error(f"❌ {decision}")
+            else:
+                st.warning(f"⚠️ {decision}")
+        
+        # Full details in tabs
+        detail_tab1, detail_tab2, detail_tab3 = st.tabs(["📊 Overview", "📜 Audit Trail", "📋 Raw Data"])
+        
+        with detail_tab1:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Risk Assessment:**")
+                st.write(f"- Level: {trans.get('risk_level', 'N/A').upper()}")
+                st.write(f"- Score: {trans.get('risk_score', 0):.1f}/100")
+                st.write(f"- Human Override: {'Yes' if trans.get('human_override') else 'No'}")
+                st.write(f"- Processing Time: {trans.get('processing_time_ms', 0)}ms")
+                
+                st.markdown("**Decision:**")
+                st.info(trans.get("decision_reasoning", "No reasoning available"))
+            
+            with col2:
+                if trans.get("invoice"):
+                    st.markdown("**Invoice Details:**")
+                    invoice = trans["invoice"]
+                    st.write(f"- Vendor: {invoice.get('vendor')}")
+                    st.write(f"- Amount: ${invoice.get('amount', 0):,.2f}")
+                    st.write(f"- Category: {invoice.get('category')}")
+                    st.write(f"- PO Number: {invoice.get('po_number', 'N/A')}")
+                    st.write(f"- International: {'Yes' if invoice.get('international') else 'No'}")
+                    
+                st.markdown(f"**Created:** {trans.get('created_at', 'N/A')}")
+        
+        with detail_tab2:
+            st.markdown("**Complete Audit Trail:**")
+            audit_trail = trans.get("audit_trail", [])
+            if audit_trail:
+                for idx, step in enumerate(audit_trail, 1):
+                    st.write(f"{idx}. {step}")
+            else:
+                st.info("No audit trail available")
+        
+        with detail_tab3:
+            st.json(trans)
+        
+        st.markdown("---")
+    
+    # Transaction list
     try:
         with httpx.Client(timeout=10.0) as client:
             response = client.get(f"{API_BASE_URL}/transactions?limit=20")
@@ -301,32 +371,29 @@ with tab2:
                     st.markdown(f"**Showing {len(transactions)} most recent transactions**")
                     
                     for trans in transactions:
-                        with st.expander(f"🧾 {trans.get('invoice_id', 'N/A')} - {trans.get('final_decision', 'N/A').upper()}"):
-                            col1, col2 = st.columns(2)
+                        # Highlight selected transaction
+                        is_selected = ("selected_transaction" in st.session_state and 
+                                     st.session_state.selected_transaction.get("transaction_id") == trans.get("transaction_id"))
+                        
+                        expander_label = f"{'🔍 ' if is_selected else ''}🧾 {trans.get('invoice_id', 'N/A')} - {trans.get('final_decision', 'N/A').upper()}"
+                        
+                        with st.expander(expander_label, expanded=is_selected):
+                            col1, col2, col3 = st.columns([3, 3, 2])
                             
                             with col1:
-                                st.markdown(f"**Transaction ID:** {trans.get('transaction_id')}")
-                                st.markdown(f"**Invoice ID:** {trans.get('invoice_id')}")
-                                st.markdown(f"**Decision:** {trans.get('final_decision', 'N/A').upper()}")
-                                st.markdown(f"**Risk Level:** {trans.get('risk_level', 'N/A').upper()}")
+                                st.markdown(f"**Invoice:** {trans.get('invoice_id', 'N/A')}")
+                                st.markdown(f"**Vendor:** {trans.get('invoice', {}).get('vendor', 'N/A')}")
+                                st.markdown(f"**Amount:** ${trans.get('invoice', {}).get('amount', 0):,.2f}")
                             
                             with col2:
-                                st.markdown(f"**Risk Score:** {trans.get('risk_score', 0):.1f}")
-                                st.markdown(f"**Human Override:** {'Yes' if trans.get('human_override') else 'No'}")
-                                st.markdown(f"**Processing Time:** {trans.get('processing_time_ms', 0)}ms")
-                                st.markdown(f"**Created:** {trans.get('created_at', 'N/A')}")
+                                st.markdown(f"**Decision:** {trans.get('final_decision', 'N/A').upper()}")
+                                st.markdown(f"**Risk:** {trans.get('risk_level', 'N/A').upper()} ({trans.get('risk_score', 0):.1f})")
+                                st.markdown(f"**Override:** {'Yes' if trans.get('human_override') else 'No'}")
                             
-                            # Invoice details
-                            if trans.get("invoice"):
-                                st.markdown("**Invoice:**")
-                                invoice = trans["invoice"]
-                                st.write(f"- Vendor: {invoice.get('vendor')}")
-                                st.write(f"- Amount: ${invoice.get('amount', 0):,.2f}")
-                                st.write(f"- Category: {invoice.get('category')}")
-                            
-                            # View button
-                            if st.button(f"View Details", key=f"view_{trans.get('transaction_id')}"):
-                                st.session_state.selected_transaction = trans
+                            with col3:
+                                if st.button("View Details", key=f"view_{trans.get('transaction_id')}", use_container_width=True):
+                                    st.session_state.selected_transaction = trans
+                                    st.rerun()
                 else:
                     st.info("No transactions found. Submit your first transaction above!")
             
@@ -339,13 +406,61 @@ with tab2:
 # ==================== TAB 3: HUMAN REVIEW (HITL) ====================
 with tab3:
     st.markdown("### 👤 Human-in-the-Loop (HITL) Feedback")
-    st.markdown("Provide feedback on transactions that required human review. Your feedback helps the system learn!")
+    st.markdown("Provide feedback on transactions. Your feedback helps the system learn!")
     
-    # Check if there's a last transaction
-    if "last_transaction" in st.session_state:
-        trans = st.session_state.last_transaction
+    # Fetch all transactions for selection
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            response = client.get(f"{API_BASE_URL}/transactions?limit=50")
+            
+            if response.status_code == 200:
+                all_transactions = response.json()
+                
+                if all_transactions:
+                    # Transaction selector
+                    st.markdown("#### Select Transaction for Feedback")
+                    
+                    # Create selection options
+                    transaction_options = {}
+                    for t in all_transactions:
+                        label = f"{t.get('invoice_id', 'N/A')} - {t.get('final_decision', 'N/A').upper()} - ${t.get('invoice', {}).get('amount', 0):,.2f}"
+                        transaction_options[label] = t
+                    
+                    # Use last_transaction if available, otherwise first transaction
+                    default_trans = None
+                    if "last_transaction" in st.session_state:
+                        default_trans = st.session_state.last_transaction
+                    elif all_transactions:
+                        default_trans = all_transactions[0]
+                    
+                    # Find default index
+                    default_index = 0
+                    if default_trans:
+                        for idx, (label, t) in enumerate(transaction_options.items()):
+                            if t.get("transaction_id") == default_trans.get("transaction_id"):
+                                default_index = idx
+                                break
+                    
+                    selected_label = st.selectbox(
+                        "Choose a transaction:",
+                        options=list(transaction_options.keys()),
+                        index=default_index
+                    )
+                    
+                    trans = transaction_options[selected_label]
+                else:
+                    trans = None
+                    st.info("No transactions available. Submit a transaction first!")
+            else:
+                trans = None
+                st.error("Failed to load transactions")
+    except Exception as e:
+        trans = None
+        st.error(f"Error loading transactions: {e}")
+    
+    if trans:
         
-        st.markdown("#### Last Processed Transaction")
+        st.markdown("#### Selected Transaction for Review")
         
         # Display transaction summary
         col1, col2, col3 = st.columns(3)
@@ -445,8 +560,11 @@ with tab3:
                                     if ema_result.get("exception_description"):
                                         st.success(f"**Learned Rule:** {ema_result.get('exception_description')}")
                                     
-                                    # Clear last transaction
-                                    del st.session_state.last_transaction
+                                    st.info("💡 KPIs and Memory have been updated. Check the KPI Dashboard and Memory Browser!")
+                                    
+                                    # Clear last transaction (but keep in history)
+                                    if "last_transaction" in st.session_state:
+                                        del st.session_state.last_transaction
                                 
                                 else:
                                     st.error(f"Error: {response.status_code} - {response.text}")
@@ -454,7 +572,4 @@ with tab3:
                         except Exception as e:
                             st.error(f"Error submitting feedback: {str(e)}")
     
-    else:
-        st.info("No recent transaction available for HITL feedback. Process a transaction first!")
-        st.markdown("💡 **Tip:** Submit a transaction in the 'Submit Transaction' tab, and if it requires human review, you can provide feedback here.")
 

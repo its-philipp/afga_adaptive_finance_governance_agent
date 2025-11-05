@@ -394,6 +394,8 @@ try:
     # Get governance statistics from the orchestrator's agents
     import sys
     import os
+    import json
+    from pathlib import Path
     
     # We need to access the governance wrapper statistics
     # For now, show a placeholder with live capability indication
@@ -459,8 +461,6 @@ try:
         st.markdown("### 📊 Governance Statistics")
         
         # Read audit log
-        import json
-        
         total_calls = 0
         violations = 0
         by_agent = {}

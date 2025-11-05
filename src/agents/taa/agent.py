@@ -112,31 +112,18 @@ class TransactionAuditorAgent:
         risk_assessment = state.get("risk_assessment")
         audit_trail = state.get("audit_trail", [])
         
-        audit_trail.append("Delegating to PAA for policy check (A2A)")
-
-        try:
-            if self.paa_client:
-                # A2A call to PAA (will be implemented in A2A integration)
-                # For now, we'll create a placeholder response
-                audit_trail.append("⚠️ PAA client not yet connected (A2A integration pending)")
-                state["paa_request_sent"] = False
-            else:
-                # Placeholder: Assume PAA would check policies
-                audit_trail.append("⚠️ PAA A2A integration pending - using mock response")
-                state["paa_request_sent"] = False
-                
-            if self.observability:
-                self.observability.log_a2a_communication(
-                    trace_id=state.get("trace_id", ""),
-                    from_agent="TAA",
-                    to_agent="PAA",
-                    message={"invoice_id": invoice.invoice_id, "risk_level": risk_assessment.risk_level.value if risk_assessment else "unknown"},
-                )
-
-        except Exception as e:
-            logger.error(f"Error delegating to PAA: {e}")
-            audit_trail.append(f"Error delegating to PAA: {str(e)}")
-            state["paa_request_sent"] = False
+        # Note: A2A delegation is handled by the orchestrator
+        # This node prepares the state for PAA delegation
+        audit_trail.append("Preparing for PAA policy check (A2A)")
+        state["paa_request_sent"] = True
+        
+        if self.observability:
+            self.observability.log_a2a_communication(
+                trace_id=state.get("trace_id", ""),
+                from_agent="TAA",
+                to_agent="PAA",
+                message={"invoice_id": invoice.invoice_id, "risk_level": risk_assessment.risk_level.value if risk_assessment else "unknown"},
+            )
 
         state["audit_trail"] = audit_trail
         return state
@@ -150,17 +137,17 @@ class TransactionAuditorAgent:
 
         if paa_response:
             if paa_response.is_compliant:
-                audit_trail.append(f"✅ PAA: Compliant (confidence: {paa_response.confidence:.2f})")
+                audit_trail.append(f"✅ Compliant (PAA confidence: {paa_response.confidence:.2f})")
             else:
-                audit_trail.append(f"❌ PAA: Non-compliant")
+                audit_trail.append(f"❌ Non-compliant")
                 if paa_response.violated_policies:
                     audit_trail.append(f"Violated policies: {', '.join(paa_response.violated_policies)}")
             
             if paa_response.applied_exceptions:
-                audit_trail.append(f"Applied exceptions: {', '.join(paa_response.applied_exceptions)}")
+                audit_trail.append(f"✅ Applied {len(paa_response.applied_exceptions)} learned exception(s)")
         else:
-            # No PAA response yet (A2A integration pending)
-            audit_trail.append("⚠️ No PAA response available (using risk-based decision)")
+            # Orchestrator will provide PAA response
+            audit_trail.append("Awaiting PAA response from orchestrator")
 
         state["audit_trail"] = audit_trail
         return state
