@@ -65,7 +65,7 @@ echo "   ✅ Database ready"
 
 # 5. Start backend (NO --reload to avoid duplicate process issues)
 echo "5️⃣  Starting FastAPI backend..."
-nohup python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 > afga_backend.log 2>&1 &
+nohup .venv/bin/python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 > afga_backend.log 2>&1 &
 BACKEND_PID=$!
 disown  # Detach from shell so it stays alive when script exits
 echo $BACKEND_PID > .backend.pid
@@ -83,7 +83,7 @@ done
 
 # 6. Start frontend
 echo "6️⃣  Starting Streamlit frontend..."
-nohup streamlit run streamlit_app/app.py > afga_frontend.log 2>&1 &
+nohup .venv/bin/streamlit run streamlit_app/app.py > afga_frontend.log 2>&1 &
 FRONTEND_PID=$!
 disown  # Detach from shell so it stays alive when script exits
 echo $FRONTEND_PID > .frontend.pid
