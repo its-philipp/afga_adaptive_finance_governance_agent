@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
     # Model Configuration
-    primary_model: str = "openai/gpt-4o"
-    fallback_model_1: str = "anthropic/claude-3.5-sonnet"
+    primary_model: str = "anthropic/claude-3.5-sonnet"
+    fallback_model_1: str = "openai/gpt-4o"
     fallback_model_2: str = "meta-llama/llama-3.1-70b-instruct"
 
     # Langfuse Observability (Optional)
