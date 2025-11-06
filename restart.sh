@@ -57,14 +57,19 @@ else
     echo "3️⃣  Preserving database (use --clean to reset)"
 fi
 
-# 4. Initialize/verify database
-echo "4️⃣  Initializing database..."
+# 4. Sync dependencies (especially UI deps like streamlit)
+echo "4️⃣  Syncing dependencies with uv..."
+uv sync --all-extras > /dev/null 2>&1
+echo "   ✅ Dependencies synced"
+
+# 5. Initialize/verify database
+echo "5️⃣  Initializing database..."
 source .venv/bin/activate
 python -c "from src.db.memory_db import MemoryDatabase; db = MemoryDatabase()" 2>&1 | grep -v "Traceback" || true
 echo "   ✅ Database ready"
 
-# 5. Start backend (NO --reload to avoid duplicate process issues)
-echo "5️⃣  Starting FastAPI backend..."
+# 6. Start backend (NO --reload to avoid duplicate process issues)
+echo "6️⃣  Starting FastAPI backend..."
 nohup .venv/bin/python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 > afga_backend.log 2>&1 &
 BACKEND_PID=$!
 disown  # Detach from shell so it stays alive when script exits
@@ -81,8 +86,8 @@ for i in {1..30}; do
     sleep 1
 done
 
-# 6. Start frontend
-echo "6️⃣  Starting Streamlit frontend..."
+# 7. Start frontend
+echo "7️⃣  Starting Streamlit frontend..."
 nohup .venv/bin/streamlit run streamlit_app/app.py > afga_frontend.log 2>&1 &
 FRONTEND_PID=$!
 disown  # Detach from shell so it stays alive when script exits
@@ -100,7 +105,7 @@ for i in {1..10}; do
     sleep 1
 done
 
-# 7. Final verification
+# 8. Final verification
 sleep 2
 echo ""
 echo "=================================================="
