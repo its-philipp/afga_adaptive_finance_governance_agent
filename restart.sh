@@ -62,14 +62,26 @@ echo "4️⃣  Syncing dependencies with uv..."
 uv sync --all-extras > /dev/null 2>&1
 echo "   ✅ Dependencies synced"
 
-# 5. Initialize/verify database
-echo "5️⃣  Initializing database..."
+# 5. Configure Streamlit (disable first-time prompt)
+echo "5️⃣  Configuring Streamlit..."
+mkdir -p ~/.streamlit
+cat > ~/.streamlit/config.toml << 'EOF'
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true
+EOF
+echo "   ✅ Streamlit configured"
+
+# 6. Initialize/verify database
+echo "6️⃣  Initializing database..."
 source .venv/bin/activate
 python -c "from src.db.memory_db import MemoryDatabase; db = MemoryDatabase()" 2>&1 | grep -v "Traceback" || true
 echo "   ✅ Database ready"
 
-# 6. Start backend (NO --reload to avoid duplicate process issues)
-echo "6️⃣  Starting FastAPI backend..."
+# 7. Start backend (NO --reload to avoid duplicate process issues)
+echo "7️⃣  Starting FastAPI backend..."
 nohup .venv/bin/python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 > afga_backend.log 2>&1 &
 BACKEND_PID=$!
 disown  # Detach from shell so it stays alive when script exits
@@ -86,8 +98,8 @@ for i in {1..30}; do
     sleep 1
 done
 
-# 7. Start frontend
-echo "7️⃣  Starting Streamlit frontend..."
+# 8. Start frontend
+echo "8️⃣  Starting Streamlit frontend..."
 # Set environment variables to disable Streamlit prompts
 export STREAMLIT_SERVER_HEADLESS=true
 export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
@@ -108,7 +120,7 @@ for i in {1..10}; do
     sleep 1
 done
 
-# 8. Final verification
+# 9. Final verification
 sleep 2
 echo ""
 echo "=================================================="
