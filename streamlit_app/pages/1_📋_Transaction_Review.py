@@ -443,7 +443,28 @@ with tab2:
                         is_selected = ("selected_transaction" in st.session_state and 
                                      st.session_state.selected_transaction.get("transaction_id") == trans.get("transaction_id"))
                         
-                        expander_label = f"{'🔍 ' if is_selected else ''}🧾 {trans.get('invoice_id', 'N/A')} - {trans.get('final_decision', 'N/A').upper()}"
+                        # Format dates for label
+                        from datetime import datetime
+                        created_str = ""
+                        if trans.get('created_at'):
+                            try:
+                                if isinstance(trans.get('created_at'), str):
+                                    created_dt = datetime.fromisoformat(trans.get('created_at').replace('Z', '+00:00'))
+                                    created_str = created_dt.strftime('%m/%d %H:%M')
+                            except:
+                                pass
+                        
+                        hitl_str = ""
+                        if trans.get('updated_at') and trans.get('updated_at') != trans.get('created_at'):
+                            try:
+                                if isinstance(trans.get('updated_at'), str):
+                                    updated_dt = datetime.fromisoformat(trans.get('updated_at').replace('Z', '+00:00'))
+                                    hitl_str = f" | HITL: {updated_dt.strftime('%m/%d %H:%M')}"
+                            except:
+                                pass
+                        
+                        # Create label with dates
+                        expander_label = f"{'🔍 ' if is_selected else ''}🧾 {trans.get('invoice_id', 'N/A')} - {trans.get('final_decision', 'N/A').upper()} | Processed: {created_str}{hitl_str}"
                         
                         with st.expander(expander_label, expanded=is_selected):
                             col1, col2, col3 = st.columns([3, 3, 2])
@@ -510,10 +531,30 @@ with tab3:
                     # Transaction selector
                     st.markdown("#### Select Transaction for Feedback")
                     
-                    # Create selection options
+                    # Create selection options with dates
                     transaction_options = {}
                     for t in all_transactions:
-                        label = f"{t.get('invoice_id', 'N/A')} - {t.get('final_decision', 'N/A').upper()} - ${t.get('invoice', {}).get('amount', 0):,.2f}"
+                        # Format dates
+                        from datetime import datetime
+                        created_str = ""
+                        if t.get('created_at'):
+                            try:
+                                if isinstance(t.get('created_at'), str):
+                                    created_dt = datetime.fromisoformat(t.get('created_at').replace('Z', '+00:00'))
+                                    created_str = created_dt.strftime('%m/%d %H:%M')
+                            except:
+                                created_str = str(t.get('created_at'))[:16]
+                        
+                        hitl_str = ""
+                        if t.get('updated_at') and t.get('updated_at') != t.get('created_at'):
+                            try:
+                                if isinstance(t.get('updated_at'), str):
+                                    updated_dt = datetime.fromisoformat(t.get('updated_at').replace('Z', '+00:00'))
+                                    hitl_str = f" | HITL: {updated_dt.strftime('%m/%d %H:%M')}"
+                            except:
+                                pass
+                        
+                        label = f"{t.get('invoice_id', 'N/A')} - {t.get('final_decision', 'N/A').upper()} - ${t.get('invoice', {}).get('amount', 0):,.2f} | {created_str}{hitl_str}"
                         transaction_options[label] = t
                     
                     # Use last_transaction if available, otherwise first transaction
@@ -594,17 +635,19 @@ with tab3:
                 help="Check this if the system should learn this rule for similar future transactions"
             )
             
-            exception_type = st.selectbox(
-                "Exception Type:",
-                ["recurring", "temporary", "policy_gap"],
-                format_func=lambda x: {
-                    "recurring": "Recurring (applies to similar transactions)",
-                    "temporary": "Temporary (one-time exception)",
-                    "policy_gap": "Policy Gap (missing policy coverage)"
-                }[x],
-                disabled=not should_create_exception,
-                help="Select exception type (enabled when 'Create Exception Rule' is checked)"
-            )
+            # Only show exception type if checkbox is checked
+            exception_type = None
+            if should_create_exception:
+                exception_type = st.selectbox(
+                    "Exception Type:",
+                    ["recurring", "temporary", "policy_gap"],
+                    format_func=lambda x: {
+                        "recurring": "Recurring (applies to similar transactions)",
+                        "temporary": "Temporary (one-time exception)",
+                        "policy_gap": "Policy Gap (missing policy coverage)"
+                    }[x],
+                    help="Select the type of exception rule to create"
+                )
             
             submit_hitl = st.form_submit_button("💾 Submit Feedback", type="primary")
             
