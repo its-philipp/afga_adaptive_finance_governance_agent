@@ -88,7 +88,10 @@ done
 
 # 7. Start frontend
 echo "7️⃣  Starting Streamlit frontend..."
-nohup .venv/bin/streamlit run streamlit_app/app.py > afga_frontend.log 2>&1 &
+# Set environment variables to disable Streamlit prompts
+export STREAMLIT_SERVER_HEADLESS=true
+export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+nohup .venv/bin/streamlit run streamlit_app/app.py --server.headless true > afga_frontend.log 2>&1 &
 FRONTEND_PID=$!
 disown  # Detach from shell so it stays alive when script exits
 echo $FRONTEND_PID > .frontend.pid
