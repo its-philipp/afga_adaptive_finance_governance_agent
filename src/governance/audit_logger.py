@@ -68,6 +68,8 @@ class GovernanceAuditLogger:
             "user_id": user_id,
             "agent_name": agent_name,
             "model": model,
+            "prompt": prompt,  # Redacted prompts for transparency
+            "response": response,  # Redacted responses for transparency
             "prompt_length": len(prompt),
             "response_length": len(response),
             "input_valid": input_valid,
