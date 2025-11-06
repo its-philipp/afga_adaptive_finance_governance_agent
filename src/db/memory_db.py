@@ -44,9 +44,22 @@ class MemoryDatabase:
                 applied_count INTEGER DEFAULT 0,
                 success_rate REAL DEFAULT 1.0,
                 created_at TIMESTAMP,
-                last_applied_at TIMESTAMP
+                last_applied_at TIMESTAMP,
+                deleted_at TIMESTAMP,
+                is_active INTEGER DEFAULT 1
             )
         """)
+        
+        # Add deleted_at and is_active columns if they don't exist (for existing databases)
+        try:
+            cursor.execute("ALTER TABLE adaptive_memory ADD COLUMN deleted_at TIMESTAMP")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        
+        try:
+            cursor.execute("ALTER TABLE adaptive_memory ADD COLUMN is_active INTEGER DEFAULT 1")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
         # Create transactions table
         cursor.execute("""
@@ -140,7 +153,7 @@ class MemoryDatabase:
         return exception_id
 
     def delete_exception(self, exception_id: str) -> bool:
-        """Delete an exception from adaptive memory.
+        """Soft-delete an exception from adaptive memory (mark as inactive).
         
         Returns:
             True if exception was deleted, False if not found
@@ -148,18 +161,48 @@ class MemoryDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        cursor.execute("DELETE FROM adaptive_memory WHERE exception_id = ?", (exception_id,))
+        cursor.execute("""
+            UPDATE adaptive_memory 
+            SET is_active = 0, deleted_at = ?
+            WHERE exception_id = ? AND is_active = 1
+        """, (datetime.now(), exception_id))
         deleted = cursor.rowcount > 0
         
         conn.commit()
         conn.close()
         
         if deleted:
-            logger.info(f"Deleted exception {exception_id}")
+            logger.info(f"Soft-deleted exception {exception_id}")
         else:
-            logger.warning(f"Exception {exception_id} not found for deletion")
+            logger.warning(f"Exception {exception_id} not found or already deleted")
         
         return deleted
+    
+    def restore_exception(self, exception_id: str) -> bool:
+        """Restore a soft-deleted exception.
+        
+        Returns:
+            True if exception was restored, False if not found
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE adaptive_memory 
+            SET is_active = 1, deleted_at = NULL
+            WHERE exception_id = ? AND is_active = 0
+        """, (exception_id,))
+        restored = cursor.rowcount > 0
+        
+        conn.commit()
+        conn.close()
+        
+        if restored:
+            logger.info(f"Restored exception {exception_id}")
+        else:
+            logger.warning(f"Exception {exception_id} not found or already active")
+        
+        return restored
 
     def query_exceptions(self, query: MemoryQuery) -> List[MemoryException]:
         """Query exceptions from adaptive memory."""
@@ -167,8 +210,8 @@ class MemoryDatabase:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        # Build dynamic query
-        where_clauses = []
+        # Build dynamic query - only show active exceptions by default
+        where_clauses = ["is_active = 1"]
         params = []
 
         if query.vendor:
@@ -256,26 +299,26 @@ class MemoryDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        # Total and active exceptions
-        cursor.execute("SELECT COUNT(*) FROM adaptive_memory")
+        # Total and active exceptions (only count active ones)
+        cursor.execute("SELECT COUNT(*) FROM adaptive_memory WHERE is_active = 1")
         total_exceptions = cursor.fetchone()[0] or 0
 
-        cursor.execute("SELECT COUNT(*) FROM adaptive_memory WHERE applied_count > 0")
+        cursor.execute("SELECT COUNT(*) FROM adaptive_memory WHERE applied_count > 0 AND is_active = 1")
         active_exceptions = cursor.fetchone()[0] or 0
 
-        # Total applications - ensure we get a number, not None
-        cursor.execute("SELECT COALESCE(SUM(applied_count), 0) FROM adaptive_memory")
+        # Total applications - ensure we get a number, not None (only active)
+        cursor.execute("SELECT COALESCE(SUM(applied_count), 0) FROM adaptive_memory WHERE is_active = 1")
         total_applications = cursor.fetchone()[0] or 0
 
-        # Average success rate
-        cursor.execute("SELECT AVG(success_rate) FROM adaptive_memory WHERE applied_count > 0")
+        # Average success rate (only active)
+        cursor.execute("SELECT AVG(success_rate) FROM adaptive_memory WHERE applied_count > 0 AND is_active = 1")
         avg_success_rate = cursor.fetchone()[0] or 0.0
 
-        # Most applied rules
+        # Most applied rules (only active)
         cursor.execute("""
             SELECT exception_id, description, applied_count, success_rate
             FROM adaptive_memory
-            WHERE applied_count > 0
+            WHERE applied_count > 0 AND is_active = 1
             ORDER BY applied_count DESC
             LIMIT 5
         """)
@@ -289,10 +332,11 @@ class MemoryDatabase:
             for row in cursor.fetchall()
         ]
 
-        # Recent additions
+        # Recent additions (only active)
         cursor.execute("""
             SELECT exception_id, description, created_at
             FROM adaptive_memory
+            WHERE is_active = 1
             ORDER BY created_at DESC
             LIMIT 5
         """)

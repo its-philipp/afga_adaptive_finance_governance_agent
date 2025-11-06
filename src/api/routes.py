@@ -354,17 +354,17 @@ def get_memory_stats():
 
 @router.delete("/memory/exceptions/{exception_id}")
 def delete_exception(exception_id: str):
-    """Delete an exception from adaptive memory."""
+    """Soft-delete an exception from adaptive memory."""
     try:
         deleted = get_orch_cached().ema.memory_manager.db.delete_exception(exception_id)
         
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Exception {exception_id} not found"
+                detail=f"Exception {exception_id} not found or already deleted"
             )
         
-        logger.info(f"Deleted exception {exception_id}")
+        logger.info(f"Soft-deleted exception {exception_id}")
         return {"message": f"Exception {exception_id} deleted successfully", "exception_id": exception_id}
         
     except HTTPException:
@@ -374,6 +374,67 @@ def delete_exception(exception_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting exception: {str(e)}"
+        )
+
+
+@router.post("/memory/exceptions/{exception_id}/restore")
+def restore_exception(exception_id: str):
+    """Restore a soft-deleted exception."""
+    try:
+        restored = get_orch_cached().ema.memory_manager.db.restore_exception(exception_id)
+        
+        if not restored:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Exception {exception_id} not found or already active"
+            )
+        
+        logger.info(f"Restored exception {exception_id}")
+        return {"message": f"Exception {exception_id} restored successfully", "exception_id": exception_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error restoring exception: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error restoring exception: {str(e)}"
+        )
+
+
+@router.get("/memory/exceptions/deleted")
+def list_deleted_exceptions():
+    """List soft-deleted exceptions."""
+    try:
+        conn = get_orch_cached().ema.memory_manager.db.db_path
+        import sqlite3
+        conn = sqlite3.connect(conn)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT * FROM adaptive_memory
+            WHERE is_active = 0
+            ORDER BY deleted_at DESC
+        """)
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        from ..models.memory_schemas import MemoryException
+        exceptions = []
+        for row in rows:
+            row_dict = dict(row)
+            row_dict["condition"] = json.loads(row_dict.get("condition", "{}"))
+            exceptions.append(MemoryException(**row_dict))
+        
+        return {"exceptions": [exc.model_dump() for exc in exceptions]}
+        
+    except Exception as e:
+        logger.error(f"Error querying deleted exceptions: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error querying deleted exceptions: {str(e)}"
         )
 
 

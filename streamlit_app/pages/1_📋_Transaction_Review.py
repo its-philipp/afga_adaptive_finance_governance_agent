@@ -376,6 +376,16 @@ with tab2:
                 
                 st.markdown("**Decision:**")
                 st.info(trans.get("decision_reasoning", "No reasoning available"))
+                
+                # Show applied exceptions if any
+                audit_trail = trans.get("audit_trail", [])
+                if audit_trail:
+                    # Look for applied exceptions in audit trail
+                    exception_messages = [msg for msg in audit_trail if "Applied" in msg and "exception" in msg.lower()]
+                    if exception_messages:
+                        st.markdown("**Applied Exceptions:**")
+                        for msg in exception_messages:
+                            st.success(msg)
             
             with col2:
                 if trans.get("invoice"):

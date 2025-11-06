@@ -233,8 +233,9 @@ if audit_file.exists():
             if line.strip():
                 try:
                     entry = json.loads(line)
-                    # Filter by agent if not "all"
-                    if selected_agent == "all" or entry.get("agent", "").lower() == selected_agent:
+                    # Filter by agent if not "all" - check both 'agent' and 'agent_name' fields
+                    agent_name = (entry.get("agent") or entry.get("agent_name", "")).lower()
+                    if selected_agent == "all" or agent_name == selected_agent:
                         audit_entries.append(entry)
                 except json.JSONDecodeError:
                     continue
@@ -242,19 +243,27 @@ if audit_file.exists():
     if audit_entries:
         st.markdown(f"### 📋 Recent Audit Entries ({len(audit_entries)} total)")
         
-        # Show last 20 entries
+        # Show last 20 entries in chronological order (most recent first)
         recent_entries = audit_entries[-20:] if len(audit_entries) > 20 else audit_entries
         
         for idx, entry in enumerate(reversed(recent_entries), 1):
-            with st.expander(f"Entry #{len(audit_entries) - len(recent_entries) + idx} - {entry.get('agent', 'Unknown')} - {entry.get('timestamp', 'N/A')}"):
+            # Get agent name (try both fields)
+            agent_display = entry.get("agent") or entry.get("agent_name", "Unknown")
+            entry_number = len(audit_entries) - idx + 1  # Chronological numbering
+            
+            with st.expander(f"#{entry_number} - {agent_display.upper()} - {entry.get('timestamp', 'N/A')}"):
                 col1, col2 = st.columns(2)
                 
                 with col1:
                     st.markdown("**Metadata:**")
-                    st.write(f"- Agent: {entry.get('agent', 'N/A')}")
+                    st.write(f"- Agent: {agent_display}")
                     st.write(f"- Timestamp: {entry.get('timestamp', 'N/A')}")
-                    st.write(f"- Model: {entry.get('model', 'N/A')}")
-                    st.write(f"- Cost: ${entry.get('estimated_cost', 0):.6f}")
+                    # Clean up model name (remove openrouter/ prefix if present)
+                    model_name = entry.get('model', 'N/A')
+                    if model_name.startswith('openrouter/'):
+                        model_name = model_name.replace('openrouter/', '')
+                    st.write(f"- Model: {model_name}")
+                    st.write(f"- Cost: ${entry.get('cost_estimate_usd', entry.get('estimated_cost', 0)):.6f}")
                     st.write(f"- Processing Time: {entry.get('processing_time_ms', 0)}ms")
                 
                 with col2:
@@ -289,8 +298,9 @@ if violations_file.exists():
             if line.strip():
                 try:
                     violation = json.loads(line)
-                    # Filter by agent if not "all"
-                    if selected_agent == "all" or violation.get("agent", "").lower() == selected_agent:
+                    # Filter by agent if not "all" - check both fields
+                    agent_name = (violation.get("agent") or violation.get("agent_name", "")).lower()
+                    if selected_agent == "all" or agent_name == selected_agent:
                         violations.append(violation)
                 except json.JSONDecodeError:
                     continue
@@ -299,7 +309,10 @@ if violations_file.exists():
         st.warning(f"⚠️ **{len(violations)} violation(s) found**")
         
         for idx, violation in enumerate(reversed(violations[-10:]), 1):
-            with st.expander(f"Violation #{len(violations) - min(10, len(violations)) + idx} - {violation.get('agent', 'Unknown')} - {violation.get('timestamp', 'N/A')}"):
+            agent_display = violation.get("agent") or violation.get("agent_name", "Unknown")
+            violation_number = len(violations) - idx + 1  # Chronological numbering
+            
+            with st.expander(f"#{violation_number} - {agent_display.upper()} - {violation.get('timestamp', 'N/A')}"):
                 st.error(f"**Type:** {violation.get('violation_type', 'N/A')}")
                 st.error(f"**Message:** {violation.get('message', 'N/A')}")
                 st.json(violation)

@@ -35,8 +35,16 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-# Refresh button
+# Refresh button - force KPI recalculation
 if st.button("🔄 Refresh Data"):
+    try:
+        # Force KPI recalculation
+        with httpx.Client(timeout=10.0) as client:
+            response = client.get(f"{API_BASE_URL}/kpis/current")
+            if response.status_code == 200:
+                st.success("✅ KPIs recalculated!")
+    except:
+        pass
     st.rerun()
 
 # Load KPI summary

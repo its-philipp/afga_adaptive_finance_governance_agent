@@ -34,8 +34,16 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-# Refresh button
+# Refresh button - force memory stats recalculation
 if st.button("🔄 Refresh"):
+    try:
+        # Force memory stats refresh
+        with httpx.Client(timeout=10.0) as client:
+            response = client.get(f"{API_BASE_URL}/memory/stats")
+            if response.status_code == 200:
+                st.success("✅ Memory stats refreshed!")
+    except:
+        pass
     st.rerun()
 
 # Memory Statistics
@@ -339,6 +347,47 @@ with st.expander("📖 How Adaptive Memory Works"):
     4. Apply all matching exceptions
     5. Report applied exceptions in result
     """)
+
+# Deleted Exceptions
+st.markdown("---")
+st.markdown("## 🗑️ Deleted Exceptions")
+
+try:
+    with httpx.Client(timeout=10.0) as client:
+        response = client.get(f"{API_BASE_URL}/memory/exceptions/deleted")
+        
+        if response.status_code == 200:
+            data = response.json()
+            deleted_exceptions = data.get("exceptions", [])
+            
+            if deleted_exceptions:
+                st.warning(f"**{len(deleted_exceptions)} deleted exception(s)**")
+                
+                for exc in deleted_exceptions:
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        st.markdown(f"~~{exc.get('description', 'N/A')}~~ | ID: `{exc.get('exception_id')}` | Was applied: {exc.get('applied_count', 0)}x")
+                    with col2:
+                        if st.button("♻️ Restore", key=f"restore_{exc.get('exception_id')}", use_container_width=True):
+                            try:
+                                restore_response = client.post(
+                                    f"{API_BASE_URL}/memory/exceptions/{exc.get('exception_id')}/restore"
+                                )
+                                
+                                if restore_response.status_code == 200:
+                                    st.success(f"✅ Restored!")
+                                    st.rerun()
+                                else:
+                                    st.error(f"Error: {restore_response.status_code}")
+                            except Exception as e:
+                                st.error(f"Error: {str(e)}")
+                    st.markdown("---")
+            else:
+                st.info("No deleted exceptions. Deleted exceptions can be restored here.")
+        else:
+            st.error(f"Error loading deleted exceptions: {response.status_code}")
+except Exception as e:
+    st.error(f"Error: {str(e)}")
 
 # Memory Management (Admin)
 st.markdown("---")
