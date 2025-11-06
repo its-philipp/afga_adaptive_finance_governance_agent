@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     # Note: .env values will override these defaults
     primary_model: str = "openai/gpt-4o-mini"
     fallback_model_1: str = "meta-llama/llama-3.1-70b-instruct"
-    fallback_model_2: str = "anthropic/claude-3.5-sonnet"
+    fallback_model_2: str = "mistralai/mistral-large"
+    fallback_model_3: str = "anthropic/claude-3.5-sonnet"
 
     # Langfuse Observability (Optional)
     langfuse_public_key: str | None = None
@@ -70,8 +71,12 @@ class Settings(BaseSettings):
 
     @property
     def fallback_models(self) -> list[str]:
-        """Return list of fallback models."""
-        return [self.fallback_model_1, self.fallback_model_2]
+        """Return list of fallback models (up to 3 fallbacks)."""
+        models = [self.fallback_model_1, self.fallback_model_2]
+        # Add fallback_model_3 if it exists (for backward compatibility)
+        if hasattr(self, 'fallback_model_3') and self.fallback_model_3:
+            models.append(self.fallback_model_3)
+        return models
 
 
 @lru_cache(maxsize=1)
