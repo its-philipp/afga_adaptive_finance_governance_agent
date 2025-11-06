@@ -2,7 +2,8 @@
 # Smart restart script with duplicate process detection
 # Use this for development and before demos
 
-set -e  # Exit on error
+# Don't exit on error - we want to handle errors gracefully
+# set -e is too aggressive for this script
 
 echo "🔍 AFGA Smart Restart"
 echo "=================================================="
@@ -66,6 +67,7 @@ echo "   ✅ Database ready"
 echo "5️⃣  Starting FastAPI backend..."
 nohup python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 > afga_backend.log 2>&1 &
 BACKEND_PID=$!
+disown  # Detach from shell so it stays alive when script exits
 echo $BACKEND_PID > .backend.pid
 echo "   Backend PID: $BACKEND_PID"
 
@@ -83,11 +85,23 @@ done
 echo "6️⃣  Starting Streamlit frontend..."
 nohup streamlit run streamlit_app/app.py > afga_frontend.log 2>&1 &
 FRONTEND_PID=$!
+disown  # Detach from shell so it stays alive when script exits
 echo $FRONTEND_PID > .frontend.pid
 echo "   Frontend PID: $FRONTEND_PID"
 
+# Wait for Streamlit to start
+echo "   ⏳ Waiting for Streamlit..."
+for i in {1..10}; do
+    streamlit_count=$(pgrep -f "streamlit run" | wc -l | tr -d ' ')
+    if [ "$streamlit_count" -ge 1 ]; then
+        echo "   ✅ Streamlit is running!"
+        break
+    fi
+    sleep 1
+done
+
 # 7. Final verification
-sleep 3
+sleep 2
 echo ""
 echo "=================================================="
 echo "✅ AFGA STARTED SUCCESSFULLY!"
