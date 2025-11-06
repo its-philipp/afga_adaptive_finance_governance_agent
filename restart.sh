@@ -67,8 +67,8 @@ echo "   ✅ Dependencies synced"
 
 # 5. Configure Streamlit (disable first-time prompt)
 echo "5️⃣  Configuring Streamlit..."
-mkdir -p ~/.streamlit
-cat > ~/.streamlit/config.toml << 'EOF'
+mkdir -p ~/.streamlit 2>/dev/null || true
+cat > ~/.streamlit/config.toml 2>/dev/null << 'EOF' || true
 [browser]
 gatherUsageStats = false
 
