@@ -1,28 +1,23 @@
 {
   "invoice_id": "INV-0037",
-  "vendor": "IT Infrastructure Pro",
-  "vendor_reputation": 61,
-  "amount": 4839.64,
+  "vendor": "Training Academy Ltd",
+  "vendor_reputation": 73,
+  "amount": 32430.7,
   "currency": "USD",
-  "category": "Hardware",
-  "date": "2025-10-10",
-  "po_number": null,
+  "category": "Travel",
+  "date": "2025-10-26 13:35:34",
+  "po_number": "PO-7277",
   "line_items": [
     {
-      "description": "Hardware item 1",
+      "description": "Travel item 1",
       "quantity": 8,
-      "unit_price": 1613.21
-    },
-    {
-      "description": "Hardware item 2",
-      "quantity": 6,
-      "unit_price": 1613.21
+      "unit_price": 10810.23
     }
   ],
-  "tax": 387.17,
-  "total": 5226.81,
+  "tax": 2594.46,
+  "total": 35025.16,
   "payment_terms": "Net 30",
-  "notes": "Non-compliant: Missing purchase order number",
+  "notes": "Non-compliant: Amount exceeds approval threshold",
   "compliance_status": "non_compliant",
-  "non_compliance_reason": "Missing purchase order number"
+  "non_compliance_reason": "Amount exceeds approval threshold"
 }

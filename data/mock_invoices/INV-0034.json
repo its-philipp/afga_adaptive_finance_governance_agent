@@ -1,26 +1,26 @@
 {
   "invoice_id": "INV-0034",
-  "vendor": "Acme Corporation",
-  "vendor_reputation": 70,
-  "amount": 5089.45,
+  "vendor": "Office Essentials Ltd",
+  "vendor_reputation": 94,
+  "amount": 3152.46,
   "currency": "USD",
-  "category": "Marketing",
-  "date": "2025-10-07",
-  "po_number": "PO-6667",
+  "category": "Consulting",
+  "date": "2025-10-15 12:05:47",
+  "po_number": "PO-3635",
   "line_items": [
     {
-      "description": "Marketing item 1",
-      "quantity": 3,
-      "unit_price": 5089.45
+      "description": "Consulting item 1",
+      "quantity": 9,
+      "unit_price": 630.49
     },
     {
-      "description": "Marketing item 2",
-      "quantity": 4,
-      "unit_price": 1017.89
+      "description": "Consulting item 2",
+      "quantity": 8,
+      "unit_price": 3152.46
     }
   ],
-  "tax": 407.16,
-  "total": 5496.61,
+  "tax": 252.2,
+  "total": 3404.66,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

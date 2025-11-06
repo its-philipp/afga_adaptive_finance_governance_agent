@@ -1,21 +1,21 @@
 {
   "invoice_id": "INV-0015",
   "vendor": "Consulting Partners LLC",
-  "vendor_reputation": 67,
-  "amount": 611.62,
+  "vendor_reputation": 68,
+  "amount": 7242.23,
   "currency": "USD",
-  "category": "Software",
-  "date": "2025-10-31",
-  "po_number": "PO-4769",
+  "category": "Consulting",
+  "date": "2025-10-13 12:37:41",
+  "po_number": "PO-3583",
   "line_items": [
     {
-      "description": "Software item 1",
-      "quantity": 1,
-      "unit_price": 203.87
+      "description": "Consulting item 1",
+      "quantity": 2,
+      "unit_price": 1448.45
     }
   ],
-  "tax": 48.93,
-  "total": 660.55,
+  "tax": 579.38,
+  "total": 7821.61,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

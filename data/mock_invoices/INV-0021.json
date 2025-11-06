@@ -1,21 +1,31 @@
 {
   "invoice_id": "INV-0021",
-  "vendor": "Training Academy Ltd",
-  "vendor_reputation": 95,
-  "amount": 6743.18,
+  "vendor": "Acme Corporation",
+  "vendor_reputation": 96,
+  "amount": 4350.07,
   "currency": "USD",
-  "category": "Software",
-  "date": "2025-10-22",
-  "po_number": "PO-2468",
+  "category": "Consulting",
+  "date": "2025-10-22 10:07:07",
+  "po_number": "PO-4687",
   "line_items": [
     {
-      "description": "Software item 1",
+      "description": "Consulting item 1",
+      "quantity": 9,
+      "unit_price": 4350.07
+    },
+    {
+      "description": "Consulting item 2",
       "quantity": 10,
-      "unit_price": 6743.18
+      "unit_price": 2175.03
+    },
+    {
+      "description": "Consulting item 3",
+      "quantity": 8,
+      "unit_price": 1450.02
     }
   ],
-  "tax": 539.45,
-  "total": 7282.63,
+  "tax": 348.01,
+  "total": 4698.08,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

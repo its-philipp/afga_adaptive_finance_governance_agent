@@ -1,23 +1,28 @@
 {
   "invoice_id": "INV-0040",
-  "vendor": "Unapproved Vendor LLC",
-  "vendor_reputation": 30,
-  "amount": 4614.9,
+  "vendor": "Training Academy Ltd",
+  "vendor_reputation": 73,
+  "amount": 1897.36,
   "currency": "USD",
-  "category": "Training",
-  "date": "2025-10-07",
-  "po_number": "PO-3817",
+  "category": "Prohibited Expense",
+  "date": "2025-10-08 09:25:23",
+  "po_number": "PO-9803",
   "line_items": [
     {
-      "description": "Training item 1",
-      "quantity": 5,
-      "unit_price": 1538.3
+      "description": "Prohibited Expense item 1",
+      "quantity": 7,
+      "unit_price": 474.34
+    },
+    {
+      "description": "Prohibited Expense item 2",
+      "quantity": 10,
+      "unit_price": 1897.36
     }
   ],
-  "tax": 369.19,
-  "total": 4984.09,
+  "tax": 151.79,
+  "total": 2049.15,
   "payment_terms": "Net 30",
-  "notes": "Non-compliant: Vendor not on approved vendor list",
+  "notes": "Non-compliant: Invalid expense category",
   "compliance_status": "non_compliant",
-  "non_compliance_reason": "Vendor not on approved vendor list"
+  "non_compliance_reason": "Invalid expense category"
 }

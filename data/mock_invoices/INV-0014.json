@@ -1,21 +1,21 @@
 {
   "invoice_id": "INV-0014",
   "vendor": "TechSupply Inc",
-  "vendor_reputation": 65,
-  "amount": 593.2,
+  "vendor_reputation": 96,
+  "amount": 6489.0,
   "currency": "USD",
-  "category": "Office Supplies",
-  "date": "2025-10-14",
-  "po_number": "PO-2946",
+  "category": "Software",
+  "date": "2025-10-21 14:07:26",
+  "po_number": "PO-5682",
   "line_items": [
     {
-      "description": "Office Supplies item 1",
+      "description": "Software item 1",
       "quantity": 10,
-      "unit_price": 118.64
+      "unit_price": 2163.0
     }
   ],
-  "tax": 47.46,
-  "total": 640.66,
+  "tax": 519.12,
+  "total": 7008.12,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

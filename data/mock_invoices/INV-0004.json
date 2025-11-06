@@ -1,31 +1,21 @@
 {
   "invoice_id": "INV-0004",
-  "vendor": "IT Infrastructure Pro",
-  "vendor_reputation": 61,
-  "amount": 1098.17,
+  "vendor": "Office Essentials Ltd",
+  "vendor_reputation": 94,
+  "amount": 6248.66,
   "currency": "USD",
-  "category": "Professional Services",
-  "date": "2025-10-15",
-  "po_number": "PO-4110",
+  "category": "Utilities",
+  "date": "2025-10-16 11:04:26",
+  "po_number": "PO-3626",
   "line_items": [
     {
-      "description": "Professional Services item 1",
-      "quantity": 6,
-      "unit_price": 274.54
-    },
-    {
-      "description": "Professional Services item 2",
-      "quantity": 8,
-      "unit_price": 219.63
-    },
-    {
-      "description": "Professional Services item 3",
-      "quantity": 6,
-      "unit_price": 1098.17
+      "description": "Utilities item 1",
+      "quantity": 9,
+      "unit_price": 1249.73
     }
   ],
-  "tax": 87.85,
-  "total": 1186.02,
+  "tax": 499.89,
+  "total": 6748.55,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

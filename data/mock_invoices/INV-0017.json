@@ -1,21 +1,31 @@
 {
   "invoice_id": "INV-0017",
-  "vendor": "Global Services Group",
-  "vendor_reputation": 72,
-  "amount": 4234.54,
+  "vendor": "Software Licensing Corp",
+  "vendor_reputation": 68,
+  "amount": 5254.69,
   "currency": "USD",
   "category": "Marketing",
-  "date": "2025-10-15",
-  "po_number": "PO-1717",
+  "date": "2025-10-30 17:50:54",
+  "po_number": "PO-4811",
   "line_items": [
     {
       "description": "Marketing item 1",
-      "quantity": 8,
-      "unit_price": 1058.63
+      "quantity": 10,
+      "unit_price": 5254.69
+    },
+    {
+      "description": "Marketing item 2",
+      "quantity": 2,
+      "unit_price": 2627.34
+    },
+    {
+      "description": "Marketing item 3",
+      "quantity": 6,
+      "unit_price": 2627.34
     }
   ],
-  "tax": 338.76,
-  "total": 4573.3,
+  "tax": 420.38,
+  "total": 5675.07,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

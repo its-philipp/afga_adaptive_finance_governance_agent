@@ -1,21 +1,21 @@
 {
   "invoice_id": "INV-0010",
-  "vendor": "Office Essentials Ltd",
-  "vendor_reputation": 96,
-  "amount": 4110.68,
+  "vendor": "Facilities Management Inc",
+  "vendor_reputation": 53,
+  "amount": 7282.98,
   "currency": "USD",
-  "category": "Office Supplies",
-  "date": "2025-11-01",
-  "po_number": "PO-3363",
+  "category": "Hardware",
+  "date": "2025-10-10 11:54:41",
+  "po_number": "PO-8245",
   "line_items": [
     {
-      "description": "Office Supplies item 1",
-      "quantity": 2,
-      "unit_price": 1370.23
+      "description": "Hardware item 1",
+      "quantity": 4,
+      "unit_price": 1456.6
     }
   ],
-  "tax": 328.85,
-  "total": 4439.53,
+  "tax": 582.64,
+  "total": 7865.62,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

@@ -1,31 +1,31 @@
 {
   "invoice_id": "INV-0011",
-  "vendor": "Marketing Solutions Co",
-  "vendor_reputation": 70,
-  "amount": 1970.3,
+  "vendor": "Software Licensing Corp",
+  "vendor_reputation": 68,
+  "amount": 4560.26,
   "currency": "USD",
-  "category": "Travel",
-  "date": "2025-10-09",
-  "po_number": "PO-5985",
+  "category": "Training",
+  "date": "2025-10-13 10:22:48",
+  "po_number": "PO-4779",
   "line_items": [
     {
-      "description": "Travel item 1",
-      "quantity": 9,
-      "unit_price": 394.06
+      "description": "Training item 1",
+      "quantity": 6,
+      "unit_price": 2280.13
     },
     {
-      "description": "Travel item 2",
-      "quantity": 2,
-      "unit_price": 985.15
+      "description": "Training item 2",
+      "quantity": 7,
+      "unit_price": 2280.13
     },
     {
-      "description": "Travel item 3",
-      "quantity": 2,
-      "unit_price": 1970.3
+      "description": "Training item 3",
+      "quantity": 10,
+      "unit_price": 2280.13
     }
   ],
-  "tax": 157.62,
-  "total": 2127.92,
+  "tax": 364.82,
+  "total": 4925.08,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

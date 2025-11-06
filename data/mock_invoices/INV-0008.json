@@ -1,31 +1,31 @@
 {
   "invoice_id": "INV-0008",
-  "vendor": "Facilities Management Inc",
-  "vendor_reputation": 56,
-  "amount": 1875.0,
+  "vendor": "Training Academy Ltd",
+  "vendor_reputation": 73,
+  "amount": 544.2,
   "currency": "USD",
-  "category": "Training",
-  "date": "2025-10-27",
-  "po_number": "PO-2611",
+  "category": "Consulting",
+  "date": "2025-10-08 14:33:20",
+  "po_number": "PO-7791",
   "line_items": [
     {
-      "description": "Training item 1",
-      "quantity": 6,
-      "unit_price": 937.5
+      "description": "Consulting item 1",
+      "quantity": 5,
+      "unit_price": 181.4
     },
     {
-      "description": "Training item 2",
-      "quantity": 4,
-      "unit_price": 937.5
+      "description": "Consulting item 2",
+      "quantity": 1,
+      "unit_price": 181.4
     },
     {
-      "description": "Training item 3",
-      "quantity": 3,
-      "unit_price": 937.5
+      "description": "Consulting item 3",
+      "quantity": 2,
+      "unit_price": 108.84
     }
   ],
-  "tax": 150.0,
-  "total": 2025.0,
+  "tax": 43.54,
+  "total": 587.74,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

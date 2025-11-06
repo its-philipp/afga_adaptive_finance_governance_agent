@@ -1,29 +1,29 @@
 {
   "invoice_id": "INV-0045",
-  "vendor": "Facilities Management Inc",
-  "vendor_reputation": 56,
-  "amount": 9532.69,
+  "vendor": "Software Licensing Corp",
+  "vendor_reputation": 68,
+  "amount": 2564.59,
   "currency": "USD",
-  "category": "Training",
-  "date": "2025-10-11",
-  "po_number": "PO-7032",
+  "category": "Utilities",
+  "date": "2025-10-14 10:21:16",
+  "po_number": "PO-5518",
   "line_items": [
     {
-      "description": "Training item 1",
-      "quantity": 8,
-      "unit_price": 9532.69
+      "description": "Utilities item 1",
+      "quantity": 5,
+      "unit_price": 512.92
     },
     {
-      "description": "Training item 2",
-      "quantity": 3,
-      "unit_price": 4766.35
+      "description": "Utilities item 2",
+      "quantity": 5,
+      "unit_price": 1282.3
     }
   ],
-  "tax": 762.62,
-  "total": 10295.31,
+  "tax": 205.17,
+  "total": 2769.76,
   "payment_terms": "Net 30",
-  "notes": "Edge case: Amount near approval threshold, requires review",
+  "notes": "Edge case: Vendor has history of exceptions, review recommended",
   "compliance_status": "edge_case",
-  "edge_case_reason": "Amount near approval threshold, requires review",
+  "edge_case_reason": "Vendor has history of exceptions, review recommended",
   "international": false
 }

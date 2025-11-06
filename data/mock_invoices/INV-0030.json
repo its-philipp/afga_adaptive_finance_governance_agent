@@ -1,26 +1,31 @@
 {
   "invoice_id": "INV-0030",
-  "vendor": "IT Infrastructure Pro",
-  "vendor_reputation": 61,
-  "amount": 6765.45,
+  "vendor": "Training Academy Ltd",
+  "vendor_reputation": 73,
+  "amount": 3870.18,
   "currency": "USD",
-  "category": "Utilities",
-  "date": "2025-10-30",
-  "po_number": "PO-3472",
+  "category": "Software",
+  "date": "2025-10-21 14:22:15",
+  "po_number": "PO-3094",
   "line_items": [
     {
-      "description": "Utilities item 1",
-      "quantity": 1,
-      "unit_price": 1353.09
+      "description": "Software item 1",
+      "quantity": 9,
+      "unit_price": 1290.06
     },
     {
-      "description": "Utilities item 2",
-      "quantity": 8,
-      "unit_price": 1691.36
+      "description": "Software item 2",
+      "quantity": 5,
+      "unit_price": 774.04
+    },
+    {
+      "description": "Software item 3",
+      "quantity": 9,
+      "unit_price": 1290.06
     }
   ],
-  "tax": 541.24,
-  "total": 7306.69,
+  "tax": 309.61,
+  "total": 4179.79,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

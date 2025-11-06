@@ -1,31 +1,26 @@
 {
   "invoice_id": "INV-0031",
-  "vendor": "Facilities Management Inc",
-  "vendor_reputation": 56,
-  "amount": 6940.16,
+  "vendor": "Consulting Partners LLC",
+  "vendor_reputation": 68,
+  "amount": 705.93,
   "currency": "USD",
-  "category": "Consulting",
-  "date": "2025-10-26",
-  "po_number": "PO-7366",
+  "category": "Software",
+  "date": "2025-10-16 08:26:48",
+  "po_number": "PO-8859",
   "line_items": [
     {
-      "description": "Consulting item 1",
-      "quantity": 7,
-      "unit_price": 2313.39
-    },
-    {
-      "description": "Consulting item 2",
-      "quantity": 2,
-      "unit_price": 1388.03
-    },
-    {
-      "description": "Consulting item 3",
+      "description": "Software item 1",
       "quantity": 3,
-      "unit_price": 3470.08
+      "unit_price": 141.19
+    },
+    {
+      "description": "Software item 2",
+      "quantity": 1,
+      "unit_price": 235.31
     }
   ],
-  "tax": 555.21,
-  "total": 7495.37,
+  "tax": 56.47,
+  "total": 762.4,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

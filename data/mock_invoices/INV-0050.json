@@ -1,29 +1,34 @@
 {
   "invoice_id": "INV-0050",
-  "vendor": "Acme Corporation",
-  "vendor_reputation": 70,
-  "amount": 3244.87,
+  "vendor": "TechSupply Inc",
+  "vendor_reputation": 96,
+  "amount": 10401.11,
   "currency": "USD",
-  "category": "Utilities",
-  "date": "2025-10-04",
-  "po_number": "PO-6875",
+  "category": "Office Supplies",
+  "date": "2025-11-05 16:50:42",
+  "po_number": "PO-7688",
   "line_items": [
     {
-      "description": "Utilities item 1",
-      "quantity": 1,
-      "unit_price": 3244.87
+      "description": "Office Supplies item 1",
+      "quantity": 2,
+      "unit_price": 3467.04
     },
     {
-      "description": "Utilities item 2",
-      "quantity": 10,
-      "unit_price": 3244.87
+      "description": "Office Supplies item 2",
+      "quantity": 8,
+      "unit_price": 3467.04
+    },
+    {
+      "description": "Office Supplies item 3",
+      "quantity": 4,
+      "unit_price": 5200.56
     }
   ],
-  "tax": 259.59,
-  "total": 3504.46,
+  "tax": 832.09,
+  "total": 11233.2,
   "payment_terms": "Net 30",
-  "notes": "Edge case: Vendor has history of exceptions, review recommended",
+  "notes": "Edge case: Amount near approval threshold, requires review",
   "compliance_status": "edge_case",
-  "edge_case_reason": "Vendor has history of exceptions, review recommended",
+  "edge_case_reason": "Amount near approval threshold, requires review",
   "international": false
 }

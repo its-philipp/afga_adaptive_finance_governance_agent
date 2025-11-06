@@ -1,31 +1,21 @@
 {
   "invoice_id": "INV-0023",
-  "vendor": "Training Academy Ltd",
-  "vendor_reputation": 95,
-  "amount": 4828.96,
+  "vendor": "TechSupply Inc",
+  "vendor_reputation": 96,
+  "amount": 4301.8,
   "currency": "USD",
-  "category": "Hardware",
-  "date": "2025-10-16",
-  "po_number": "PO-3170",
+  "category": "Office Supplies",
+  "date": "2025-10-12 14:13:37",
+  "po_number": "PO-3687",
   "line_items": [
     {
-      "description": "Hardware item 1",
-      "quantity": 7,
-      "unit_price": 2414.48
-    },
-    {
-      "description": "Hardware item 2",
-      "quantity": 10,
-      "unit_price": 4828.96
-    },
-    {
-      "description": "Hardware item 3",
-      "quantity": 4,
-      "unit_price": 2414.48
+      "description": "Office Supplies item 1",
+      "quantity": 6,
+      "unit_price": 860.36
     }
   ],
-  "tax": 386.32,
-  "total": 5215.28,
+  "tax": 344.14,
+  "total": 4645.94,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

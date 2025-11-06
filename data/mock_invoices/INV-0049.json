@@ -1,24 +1,24 @@
 {
   "invoice_id": "INV-0049",
-  "vendor": "Training Academy Ltd",
-  "vendor_reputation": 95,
-  "amount": 2582.42,
+  "vendor": "Software Licensing Corp",
+  "vendor_reputation": 68,
+  "amount": 3761.59,
   "currency": "USD",
-  "category": "Professional Services",
-  "date": "2025-10-23",
-  "po_number": "PO-1228",
+  "category": "Travel",
+  "date": "2025-10-07 08:43:13",
+  "po_number": "PO-6409",
   "line_items": [
     {
-      "description": "Professional Services item 1",
-      "quantity": 2,
-      "unit_price": 516.48
+      "description": "Travel item 1",
+      "quantity": 10,
+      "unit_price": 1253.86
     }
   ],
-  "tax": 206.59,
-  "total": 2789.01,
+  "tax": 300.93,
+  "total": 4062.52,
   "payment_terms": "Net 30",
-  "notes": "Edge case: Vendor has history of exceptions, review recommended",
+  "notes": "Edge case: Rush payment requested, expedited review needed",
   "compliance_status": "edge_case",
-  "edge_case_reason": "Vendor has history of exceptions, review recommended",
+  "edge_case_reason": "Rush payment requested, expedited review needed",
   "international": false
 }

@@ -1,26 +1,26 @@
 {
   "invoice_id": "INV-0006",
-  "vendor": "Global Services Group",
-  "vendor_reputation": 72,
-  "amount": 173.93,
+  "vendor": "Marketing Solutions Co",
+  "vendor_reputation": 94,
+  "amount": 6935.65,
   "currency": "USD",
-  "category": "Marketing",
-  "date": "2025-11-02",
-  "po_number": "PO-1594",
+  "category": "Hardware",
+  "date": "2025-10-11 17:36:43",
+  "po_number": "PO-7623",
   "line_items": [
     {
-      "description": "Marketing item 1",
-      "quantity": 3,
-      "unit_price": 173.93
+      "description": "Hardware item 1",
+      "quantity": 5,
+      "unit_price": 1733.91
     },
     {
-      "description": "Marketing item 2",
-      "quantity": 7,
-      "unit_price": 173.93
+      "description": "Hardware item 2",
+      "quantity": 1,
+      "unit_price": 1733.91
     }
   ],
-  "tax": 13.91,
-  "total": 187.84,
+  "tax": 554.85,
+  "total": 7490.5,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

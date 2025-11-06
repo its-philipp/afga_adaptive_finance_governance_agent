@@ -29,42 +29,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Initialize orchestrator and services
-# IMPORTANT: Module-level globals for caching, but can be recreated
-_orchestrator = None
-_orchestrator_init_time = None
-
+# TEMPORARY DEV FIX: Force rebuild on EVERY request until LangGraph caching is resolved
 def get_orchestrator():
-    """Get orchestrator instance, recreating if needed.
+    """Get fresh orchestrator instance on every request.
     
-    This ensures LangGraph workflows are recompiled with latest code
-    when files change during development with --reload.
+    TEMPORARY: LangGraph compiles workflows ONCE and keeps old method bindings.
+    Even after restart, compiled graphs persist with old code.
+    This forces rebuild on every request for clean audit trails during development.
+    
+    TODO: Remove this hack once in production (or find better LangGraph reload solution)
     """
-    global _orchestrator, _orchestrator_init_time
-    
-    # Check if source files have changed since last init
-    import os
-    from pathlib import Path
-    
-    taa_file = Path("src/agents/taa/agent.py")
-    taa_mtime = os.path.getmtime(taa_file) if taa_file.exists() else 0
-    
-    # Recreate if orchestrator doesn't exist OR if TAA file changed
-    if _orchestrator is None or (_orchestrator_init_time and taa_mtime > _orchestrator_init_time):
-        if _orchestrator is not None:
-            logger.info("🔄 TAA source changed - recreating orchestrator with fresh LangGraph workflows...")
-        else:
-            logger.info("🔧 Initializing orchestrator...")
-        
-        _orchestrator = AFGAOrchestrator()
-        _orchestrator_init_time = taa_mtime
-        logger.info("✅ Orchestrator ready with compiled LangGraph workflows")
-    
-    return _orchestrator
+    logger.debug("Creating fresh orchestrator with recompiled LangGraph workflows")
+    return AFGAOrchestrator()
 
 
-# Legacy global references for backward compatibility
-orchestrator = get_orchestrator()
-kpi_tracker = KPITracker(memory_db=orchestrator.memory_db)
+# Legacy global references - initialize once for startup
+_startup_orch = get_orchestrator()
+kpi_tracker = KPITracker(memory_db=_startup_orch.memory_db)
 invoice_extractor = InvoiceExtractor()
 
 

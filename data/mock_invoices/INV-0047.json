@@ -1,34 +1,24 @@
 {
   "invoice_id": "INV-0047",
-  "vendor": "TechSupply Inc",
-  "vendor_reputation": 65,
-  "amount": 9799.39,
-  "currency": "USD",
-  "category": "Facilities",
-  "date": "2025-10-23",
-  "po_number": "PO-7667",
+  "vendor": "IT Infrastructure Pro",
+  "vendor_reputation": 70,
+  "amount": 6012.78,
+  "currency": "EUR",
+  "category": "Office Supplies",
+  "date": "2025-10-26 14:15:59",
+  "po_number": "PO-7576",
   "line_items": [
     {
-      "description": "Facilities item 1",
-      "quantity": 1,
-      "unit_price": 9799.39
-    },
-    {
-      "description": "Facilities item 2",
-      "quantity": 7,
-      "unit_price": 9799.39
-    },
-    {
-      "description": "Facilities item 3",
-      "quantity": 5,
-      "unit_price": 2449.85
+      "description": "Office Supplies item 1",
+      "quantity": 8,
+      "unit_price": 6012.78
     }
   ],
-  "tax": 783.95,
-  "total": 10583.34,
+  "tax": 481.02,
+  "total": 6493.8,
   "payment_terms": "Net 30",
-  "notes": "Edge case: Amount near approval threshold, requires review",
+  "notes": "Edge case: International transaction, requires compliance check",
   "compliance_status": "edge_case",
-  "edge_case_reason": "Amount near approval threshold, requires review",
-  "international": false
+  "edge_case_reason": "International transaction, requires compliance check",
+  "international": true
 }

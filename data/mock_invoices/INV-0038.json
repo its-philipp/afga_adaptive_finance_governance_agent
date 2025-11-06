@@ -1,33 +1,33 @@
 {
   "invoice_id": "INV-0038",
-  "vendor": "Unapproved Vendor LLC",
-  "vendor_reputation": 30,
-  "amount": 3525.69,
+  "vendor": "Acme Corporation",
+  "vendor_reputation": 96,
+  "amount": 35638.41,
   "currency": "USD",
-  "category": "Training",
-  "date": "2025-10-23",
-  "po_number": "PO-6262",
+  "category": "Software",
+  "date": "2025-11-03 10:58:30",
+  "po_number": "PO-3597",
   "line_items": [
     {
-      "description": "Training item 1",
-      "quantity": 4,
-      "unit_price": 3525.69
+      "description": "Software item 1",
+      "quantity": 3,
+      "unit_price": 35638.41
     },
     {
-      "description": "Training item 2",
-      "quantity": 1,
-      "unit_price": 3525.69
+      "description": "Software item 2",
+      "quantity": 9,
+      "unit_price": 7127.68
     },
     {
-      "description": "Training item 3",
-      "quantity": 10,
-      "unit_price": 1175.23
+      "description": "Software item 3",
+      "quantity": 6,
+      "unit_price": 11879.47
     }
   ],
-  "tax": 282.06,
-  "total": 3807.75,
+  "tax": 2851.07,
+  "total": 38489.48,
   "payment_terms": "Net 30",
-  "notes": "Non-compliant: Vendor not on approved vendor list",
+  "notes": "Non-compliant: Amount exceeds approval threshold",
   "compliance_status": "non_compliant",
-  "non_compliance_reason": "Vendor not on approved vendor list"
+  "non_compliance_reason": "Amount exceeds approval threshold"
 }

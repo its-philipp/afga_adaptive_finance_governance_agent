@@ -1,26 +1,26 @@
 {
   "invoice_id": "INV-0018",
   "vendor": "Marketing Solutions Co",
-  "vendor_reputation": 70,
-  "amount": 1497.12,
+  "vendor_reputation": 94,
+  "amount": 6440.13,
   "currency": "USD",
-  "category": "Training",
-  "date": "2025-10-18",
-  "po_number": "PO-3436",
+  "category": "Software",
+  "date": "2025-10-17 15:19:10",
+  "po_number": "PO-3533",
   "line_items": [
     {
-      "description": "Training item 1",
-      "quantity": 6,
-      "unit_price": 299.42
+      "description": "Software item 1",
+      "quantity": 3,
+      "unit_price": 6440.13
     },
     {
-      "description": "Training item 2",
-      "quantity": 3,
-      "unit_price": 299.42
+      "description": "Software item 2",
+      "quantity": 6,
+      "unit_price": 2146.71
     }
   ],
-  "tax": 119.77,
-  "total": 1616.89,
+  "tax": 515.21,
+  "total": 6955.34,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

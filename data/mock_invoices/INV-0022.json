@@ -1,21 +1,26 @@
 {
   "invoice_id": "INV-0022",
-  "vendor": "Marketing Solutions Co",
-  "vendor_reputation": 70,
-  "amount": 5635.85,
+  "vendor": "Software Licensing Corp",
+  "vendor_reputation": 68,
+  "amount": 5779.86,
   "currency": "USD",
-  "category": "Marketing",
-  "date": "2025-10-14",
-  "po_number": "PO-3611",
+  "category": "Office Supplies",
+  "date": "2025-10-24 11:41:28",
+  "po_number": "PO-7947",
   "line_items": [
     {
-      "description": "Marketing item 1",
-      "quantity": 2,
-      "unit_price": 1127.17
+      "description": "Office Supplies item 1",
+      "quantity": 6,
+      "unit_price": 2889.93
+    },
+    {
+      "description": "Office Supplies item 2",
+      "quantity": 7,
+      "unit_price": 2889.93
     }
   ],
-  "tax": 450.87,
-  "total": 6086.72,
+  "tax": 462.39,
+  "total": 6242.25,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

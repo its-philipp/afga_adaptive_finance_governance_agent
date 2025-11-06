@@ -1,26 +1,21 @@
 {
   "invoice_id": "INV-0033",
   "vendor": "Software Licensing Corp",
-  "vendor_reputation": 99,
-  "amount": 4194.25,
+  "vendor_reputation": 68,
+  "amount": 7966.58,
   "currency": "USD",
-  "category": "Training",
-  "date": "2025-10-27",
-  "po_number": "PO-6379",
+  "category": "Utilities",
+  "date": "2025-10-24 16:15:40",
+  "po_number": "PO-9448",
   "line_items": [
     {
-      "description": "Training item 1",
-      "quantity": 7,
-      "unit_price": 4194.25
-    },
-    {
-      "description": "Training item 2",
-      "quantity": 4,
-      "unit_price": 1048.56
+      "description": "Utilities item 1",
+      "quantity": 3,
+      "unit_price": 1991.64
     }
   ],
-  "tax": 335.54,
-  "total": 4529.79,
+  "tax": 637.33,
+  "total": 8603.91,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

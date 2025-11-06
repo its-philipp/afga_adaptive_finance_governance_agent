@@ -1,31 +1,26 @@
 {
   "invoice_id": "INV-0007",
-  "vendor": "Acme Corporation",
+  "vendor": "IT Infrastructure Pro",
   "vendor_reputation": 70,
-  "amount": 6109.43,
+  "amount": 6910.71,
   "currency": "USD",
-  "category": "Facilities",
-  "date": "2025-10-30",
-  "po_number": "PO-4546",
+  "category": "Consulting",
+  "date": "2025-10-07 11:37:18",
+  "po_number": "PO-5584",
   "line_items": [
     {
-      "description": "Facilities item 1",
-      "quantity": 2,
-      "unit_price": 3054.72
+      "description": "Consulting item 1",
+      "quantity": 1,
+      "unit_price": 2303.57
     },
     {
-      "description": "Facilities item 2",
-      "quantity": 2,
-      "unit_price": 3054.72
-    },
-    {
-      "description": "Facilities item 3",
-      "quantity": 3,
-      "unit_price": 2036.48
+      "description": "Consulting item 2",
+      "quantity": 4,
+      "unit_price": 2303.57
     }
   ],
-  "tax": 488.75,
-  "total": 6598.18,
+  "tax": 552.86,
+  "total": 7463.57,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

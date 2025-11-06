@@ -1,26 +1,26 @@
 {
   "invoice_id": "INV-0012",
-  "vendor": "TechSupply Inc",
-  "vendor_reputation": 65,
-  "amount": 2988.0,
+  "vendor": "Software Licensing Corp",
+  "vendor_reputation": 68,
+  "amount": 2106.46,
   "currency": "USD",
   "category": "Professional Services",
-  "date": "2025-10-09",
-  "po_number": "PO-7185",
+  "date": "2025-11-02 18:47:12",
+  "po_number": "PO-4490",
   "line_items": [
     {
       "description": "Professional Services item 1",
-      "quantity": 10,
-      "unit_price": 2988.0
+      "quantity": 8,
+      "unit_price": 1053.23
     },
     {
       "description": "Professional Services item 2",
-      "quantity": 1,
-      "unit_price": 996.0
+      "quantity": 7,
+      "unit_price": 526.62
     }
   ],
-  "tax": 239.04,
-  "total": 3227.04,
+  "tax": 168.52,
+  "total": 2274.98,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

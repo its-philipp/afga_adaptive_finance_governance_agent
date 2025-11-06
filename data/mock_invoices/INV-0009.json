@@ -1,31 +1,26 @@
 {
   "invoice_id": "INV-0009",
-  "vendor": "Office Essentials Ltd",
-  "vendor_reputation": 96,
-  "amount": 4478.42,
+  "vendor": "Marketing Solutions Co",
+  "vendor_reputation": 94,
+  "amount": 520.61,
   "currency": "USD",
-  "category": "Software",
-  "date": "2025-11-01",
-  "po_number": "PO-5304",
+  "category": "Office Supplies",
+  "date": "2025-10-28 11:23:16",
+  "po_number": "PO-2188",
   "line_items": [
     {
-      "description": "Software item 1",
-      "quantity": 2,
-      "unit_price": 4478.42
-    },
-    {
-      "description": "Software item 2",
+      "description": "Office Supplies item 1",
       "quantity": 9,
-      "unit_price": 4478.42
+      "unit_price": 260.31
     },
     {
-      "description": "Software item 3",
-      "quantity": 7,
-      "unit_price": 1119.61
+      "description": "Office Supplies item 2",
+      "quantity": 8,
+      "unit_price": 520.61
     }
   ],
-  "tax": 358.27,
-  "total": 4836.69,
+  "tax": 41.65,
+  "total": 562.26,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

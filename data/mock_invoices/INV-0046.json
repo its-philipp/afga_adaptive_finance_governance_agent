@@ -1,24 +1,34 @@
 {
   "invoice_id": "INV-0046",
-  "vendor": "Consulting Partners LLC",
-  "vendor_reputation": 67,
-  "amount": 7242.24,
-  "currency": "USD",
-  "category": "Training",
-  "date": "2025-10-25",
-  "po_number": "PO-4792",
+  "vendor": "Facilities Management Inc",
+  "vendor_reputation": 53,
+  "amount": 2295.65,
+  "currency": "JPY",
+  "category": "Software",
+  "date": "2025-10-24 08:39:34",
+  "po_number": "PO-7740",
   "line_items": [
     {
-      "description": "Training item 1",
-      "quantity": 4,
-      "unit_price": 1810.56
+      "description": "Software item 1",
+      "quantity": 6,
+      "unit_price": 765.22
+    },
+    {
+      "description": "Software item 2",
+      "quantity": 9,
+      "unit_price": 765.22
+    },
+    {
+      "description": "Software item 3",
+      "quantity": 1,
+      "unit_price": 573.91
     }
   ],
-  "tax": 579.38,
-  "total": 7821.62,
+  "tax": 183.65,
+  "total": 2479.3,
   "payment_terms": "Net 30",
-  "notes": "Edge case: Vendor has history of exceptions, review recommended",
+  "notes": "Edge case: International transaction, requires compliance check",
   "compliance_status": "edge_case",
-  "edge_case_reason": "Vendor has history of exceptions, review recommended",
-  "international": false
+  "edge_case_reason": "International transaction, requires compliance check",
+  "international": true
 }

@@ -1,21 +1,31 @@
 {
   "invoice_id": "INV-0028",
-  "vendor": "Marketing Solutions Co",
-  "vendor_reputation": 70,
-  "amount": 4217.24,
+  "vendor": "TechSupply Inc",
+  "vendor_reputation": 96,
+  "amount": 7193.62,
   "currency": "USD",
-  "category": "Facilities",
-  "date": "2025-10-15",
-  "po_number": "PO-1619",
+  "category": "Software",
+  "date": "2025-11-04 12:51:58",
+  "po_number": "PO-7148",
   "line_items": [
     {
-      "description": "Facilities item 1",
-      "quantity": 1,
-      "unit_price": 1054.31
+      "description": "Software item 1",
+      "quantity": 4,
+      "unit_price": 1798.4
+    },
+    {
+      "description": "Software item 2",
+      "quantity": 6,
+      "unit_price": 7193.62
+    },
+    {
+      "description": "Software item 3",
+      "quantity": 2,
+      "unit_price": 3596.81
     }
   ],
-  "tax": 337.38,
-  "total": 4554.62,
+  "tax": 575.49,
+  "total": 7769.11,
   "payment_terms": "Net 30",
   "notes": "Standard invoice, fully compliant",
   "compliance_status": "compliant"

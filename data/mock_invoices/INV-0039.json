@@ -1,23 +1,23 @@
 {
   "invoice_id": "INV-0039",
-  "vendor": "Office Essentials Ltd",
-  "vendor_reputation": 96,
-  "amount": 27647.23,
+  "vendor": "Unapproved Vendor LLC",
+  "vendor_reputation": 30,
+  "amount": 3458.04,
   "currency": "USD",
-  "category": "Facilities",
-  "date": "2025-10-24",
-  "po_number": "PO-5775",
+  "category": "Software",
+  "date": "2025-10-30 18:12:58",
+  "po_number": "PO-2093",
   "line_items": [
     {
-      "description": "Facilities item 1",
-      "quantity": 7,
-      "unit_price": 9215.74
+      "description": "Software item 1",
+      "quantity": 9,
+      "unit_price": 1729.02
     }
   ],
-  "tax": 2211.78,
-  "total": 29859.01,
+  "tax": 276.64,
+  "total": 3734.68,
   "payment_terms": "Net 30",
-  "notes": "Non-compliant: Amount exceeds approval threshold",
+  "notes": "Non-compliant: Vendor not on approved vendor list",
   "compliance_status": "non_compliant",
-  "non_compliance_reason": "Amount exceeds approval threshold"
+  "non_compliance_reason": "Vendor not on approved vendor list"
 }
