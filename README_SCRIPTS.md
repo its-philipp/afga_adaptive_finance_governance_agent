@@ -1,16 +1,16 @@
 # AFGA Scripts Guide
 
-## 🚀 **Main Script (Use This!)**
+## 🚀 **Main Scripts**
 
-### `./restart.sh`
-**The ONE script you need for everything.**
+### `./start.sh`
+**Start or restart AFGA with smart process management.**
 
 ```bash
-# Normal restart (preserves database & transactions)
-./restart.sh
+# Normal start (preserves database & transactions)
+./start.sh
 
-# Clean restart (deletes database, fresh start for demos)
-./restart.sh --clean
+# Clean start (deletes database, fresh start for demos)
+./start.sh --clean
 ```
 
 **What it does:**
@@ -24,40 +24,53 @@
 
 **Before CTO Demo:**
 ```bash
-./restart.sh --clean  # Fresh database, clean audit trails
+./start.sh --clean  # Fresh database, clean audit trails
+```
+
+### `./stop.sh`
+**Stop AFGA cleanly.**
+
+```bash
+./stop.sh
+```
+
+Stops both frontend and backend gracefully using saved PIDs. If PIDs are missing, searches for and kills AFGA processes.
+
+---
+
+## 📜 **Workflow Examples**
+
+### Normal Development
+```bash
+./start.sh          # Start AFGA
+# ... make code changes ...
+./stop.sh           # Stop when done
+./start.sh          # Restart with preserved data
+```
+
+### Demo/Presentation Prep
+```bash
+./start.sh --clean  # Fresh database, clean audit trails
+# ... do demo ...
+./stop.sh           # Clean shutdown
+```
+
+### Quick Restart
+```bash
+./stop.sh && ./start.sh  # Stop and restart
 ```
 
 ---
 
-## 📜 **Other Scripts (Legacy - Can Delete)**
+## 🛑 **Manual Stop (Emergency)**
 
-### `start.sh`
-❌ **Don't use** - Can create duplicate processes  
-➡️ **Use `./restart.sh` instead**
-
-### `restart_fresh.sh`  
-❌ **Don't use** - Doesn't check for duplicates  
-➡️ **Use `./restart.sh` instead**
-
-### `force_restart.sh`
-❌ **Don't use** - Overly aggressive, no verification  
-➡️ **Use `./restart.sh` instead**
-
-### `demo_restart.sh`
-❌ **Don't use** - Incomplete database init  
-➡️ **Use `./restart.sh --clean` instead**
-
----
-
-## 🛑 **Manual Stop**
-
-If you ever need to stop AFGA manually:
+If scripts don't work:
 
 ```bash
-# Clean stop using saved PIDs
+# Try PID-based stop first
 kill $(cat .backend.pid .frontend.pid 2>/dev/null)
 
-# Or nuclear option
+# Nuclear option (kills ALL Python processes!)
 pkill -9 -f "streamlit run"
 pkill -9 -f "uvicorn.*8000"
 ```
@@ -104,12 +117,12 @@ If you see **more than ONE of each**, run `./restart.sh` to fix it!
 **During development:**
 ```bash
 # Make code changes...
-./restart.sh  # Preserves DB & transactions
+./start.sh  # Preserves DB & transactions
 ```
 
 **Before demo/presentation:**
 ```bash
-./restart.sh --clean  # Fresh start, clean audit trails
+./start.sh --clean  # Fresh start, clean audit trails
 ```
 
 **Check logs:**
@@ -120,14 +133,11 @@ tail -f afga_frontend.log  # Frontend logs
 
 ---
 
-## 🗑️ **Cleanup Old Scripts**
+## ✅ **Current Scripts**
 
-After testing the new `restart.sh`, you can safely delete:
-- `start.sh`
-- `restart_fresh.sh`  
-- `force_restart.sh`
-- `demo_restart.sh`
+You have two simple scripts:
+- ✅ `start.sh` - Start/restart AFGA
+- ✅ `stop.sh` - Stop AFGA cleanly
 
-Keep only:
-- ✅ `restart.sh` (the ONE script to rule them all!)
+All legacy scripts have been removed.
 
