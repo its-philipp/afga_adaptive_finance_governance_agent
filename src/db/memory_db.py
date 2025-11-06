@@ -139,6 +139,28 @@ class MemoryDatabase:
         logger.info(f"Added exception {exception_id}: {description}")
         return exception_id
 
+    def delete_exception(self, exception_id: str) -> bool:
+        """Delete an exception from adaptive memory.
+        
+        Returns:
+            True if exception was deleted, False if not found
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM adaptive_memory WHERE exception_id = ?", (exception_id,))
+        deleted = cursor.rowcount > 0
+        
+        conn.commit()
+        conn.close()
+        
+        if deleted:
+            logger.info(f"Deleted exception {exception_id}")
+        else:
+            logger.warning(f"Exception {exception_id} not found for deletion")
+        
+        return deleted
+
     def query_exceptions(self, query: MemoryQuery) -> List[MemoryException]:
         """Query exceptions from adaptive memory."""
         conn = sqlite3.connect(self.db_path)
@@ -236,13 +258,13 @@ class MemoryDatabase:
 
         # Total and active exceptions
         cursor.execute("SELECT COUNT(*) FROM adaptive_memory")
-        total_exceptions = cursor.fetchone()[0]
+        total_exceptions = cursor.fetchone()[0] or 0
 
         cursor.execute("SELECT COUNT(*) FROM adaptive_memory WHERE applied_count > 0")
-        active_exceptions = cursor.fetchone()[0]
+        active_exceptions = cursor.fetchone()[0] or 0
 
-        # Total applications
-        cursor.execute("SELECT SUM(applied_count) FROM adaptive_memory")
+        # Total applications - ensure we get a number, not None
+        cursor.execute("SELECT COALESCE(SUM(applied_count), 0) FROM adaptive_memory")
         total_applications = cursor.fetchone()[0] or 0
 
         # Average success rate
@@ -384,7 +406,11 @@ class MemoryDatabase:
     # ========== KPI OPERATIONS ==========
 
     def calculate_and_save_kpis(self, date: Optional[str] = None) -> KPIMetrics:
-        """Calculate KPIs for a specific date and save to database."""
+        """Calculate KPIs for a specific date and save to database.
+        
+        If no transactions exist for the date, calculates across ALL transactions
+        to provide meaningful metrics.
+        """
         if date is None:
             date = datetime.now().strftime("%Y-%m-%d")
 
@@ -409,13 +435,30 @@ class MemoryDatabase:
         avg_time = int(row[3]) if row[3] else 0
         with_audit = row[4] or 0
 
+        # If no transactions for this date, calculate across ALL transactions
+        if total_transactions == 0:
+            cursor.execute("""
+                SELECT COUNT(*) as total,
+                       SUM(CASE WHEN human_override = 1 THEN 1 ELSE 0 END) as human_corrections,
+                       SUM(CASE WHEN final_decision = 'approved' AND human_override = 0 THEN 1 ELSE 0 END) as auto_approved,
+                       AVG(processing_time_ms) as avg_time,
+                       SUM(CASE WHEN audit_trail IS NOT NULL AND audit_trail != '[]' THEN 1 ELSE 0 END) as with_audit
+                FROM transactions
+            """)
+            row = cursor.fetchone()
+            total_transactions = row[0] or 0
+            human_corrections = row[1] or 0
+            auto_approved = row[2] or 0
+            avg_time = int(row[3]) if row[3] else 0
+            with_audit = row[4] or 0
+
         # Calculate KPIs
         hcr = (human_corrections / total_transactions * 100) if total_transactions > 0 else 0
         atar = (auto_approved / total_transactions * 100) if total_transactions > 0 else 0
         audit_traceability = (with_audit / total_transactions * 100) if total_transactions > 0 else 0
 
-        # Calculate CRS (Context Retention Score)
-        crs_calc = self.calculate_crs(date)
+        # Calculate CRS (Context Retention Score) - use all time if no date-specific data
+        crs_calc = self.calculate_crs(date if total_transactions > 0 else None)
         crs = crs_calc.crs_score
 
         # Save KPIs
@@ -444,29 +487,52 @@ class MemoryDatabase:
         return kpi_metrics
 
     def calculate_crs(self, date: Optional[str] = None) -> CRSCalculation:
-        """Calculate Context Retention Score."""
-        if date is None:
-            date = datetime.now().strftime("%Y-%m-%d")
-
+        """Calculate Context Retention Score.
+        
+        If date is None, calculates across ALL exceptions (all-time).
+        """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        # Get exceptions applied on this date
-        cursor.execute("""
-            SELECT COUNT(*) FROM adaptive_memory
-            WHERE DATE(last_applied_at) = ?
-        """, (date,))
-        
-        applications_today = cursor.fetchone()[0] or 0
+        if date:
+            # Get exceptions applied on this date
+            cursor.execute("""
+                SELECT COUNT(*) FROM adaptive_memory
+                WHERE DATE(last_applied_at) = ? AND applied_count > 0
+            """, (date,))
+            
+            applications_today = cursor.fetchone()[0] or 0
 
-        # Get successful applications (where success_rate > 0.5)
-        cursor.execute("""
-            SELECT SUM(applied_count * success_rate) / SUM(applied_count)
-            FROM adaptive_memory
-            WHERE DATE(last_applied_at) = ? AND applied_count > 0
-        """, (date,))
-        
-        avg_success = cursor.fetchone()[0] or 0.0
+            # Get successful applications (where success_rate > 0.5)
+            cursor.execute("""
+                SELECT SUM(applied_count * success_rate) / SUM(applied_count)
+                FROM adaptive_memory
+                WHERE DATE(last_applied_at) = ? AND applied_count > 0
+            """, (date,))
+            
+            avg_success = cursor.fetchone()[0] or 0.0
+        else:
+            # Calculate across ALL exceptions (all-time)
+            cursor.execute("""
+                SELECT COUNT(*) FROM adaptive_memory
+                WHERE applied_count > 0
+            """)
+            
+            applications_today = cursor.fetchone()[0] or 0
+
+            # Get successful applications (weighted by applied_count)
+            cursor.execute("""
+                SELECT 
+                    CASE 
+                        WHEN SUM(applied_count) > 0 
+                        THEN SUM(applied_count * success_rate) / SUM(applied_count)
+                        ELSE 0.0
+                    END
+                FROM adaptive_memory
+                WHERE applied_count > 0
+            """)
+            
+            avg_success = cursor.fetchone()[0] or 0.0
 
         conn.close()
 
@@ -475,7 +541,7 @@ class MemoryDatabase:
 
         return CRSCalculation(
             applicable_scenarios=applications_today,
-            successful_applications=int(applications_today * avg_success),
+            successful_applications=int(applications_today * avg_success) if applications_today > 0 else 0,
             crs_score=crs_score,
             details=f"Applied memory {applications_today} times with {crs_score:.1f}% success rate"
         )

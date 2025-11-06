@@ -33,6 +33,7 @@ with st.sidebar:
     st.page_link("pages/3_📊_KPI_Dashboard.py", label="KPI Dashboard", icon="📊")
     st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
+    st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
 # Refresh button
 if st.button("🔄 Refresh Data"):

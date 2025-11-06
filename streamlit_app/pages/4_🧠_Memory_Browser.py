@@ -32,6 +32,7 @@ with st.sidebar:
     st.page_link("pages/3_📊_KPI_Dashboard.py", label="KPI Dashboard", icon="📊")
     st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
+    st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
 # Refresh button
 if st.button("🔄 Refresh"):
@@ -173,7 +174,7 @@ if st.button("🔎 Search Exceptions", type="primary"):
                             icon = "🔴"
                         
                         with st.expander(f"{icon} {exc.get('description', 'N/A')}"):
-                            col1, col2 = st.columns(2)
+                            col1, col2, col3 = st.columns([2, 2, 1])
                             
                             with col1:
                                 st.markdown(f"**Exception ID:** `{exc.get('exception_id')}`")
@@ -187,6 +188,23 @@ if st.button("🔎 Search Exceptions", type="primary"):
                                 st.markdown(f"**Created:** {exc.get('created_at', 'N/A')}")
                                 if exc.get('last_applied_at'):
                                     st.markdown(f"**Last Applied:** {exc['last_applied_at']}")
+                            
+                            with col3:
+                                # Delete button
+                                if st.button("🗑️ Delete", key=f"delete_{exc.get('exception_id')}", use_container_width=True):
+                                    try:
+                                        with httpx.Client(timeout=10.0) as client:
+                                            delete_response = client.delete(
+                                                f"{API_BASE_URL}/memory/exceptions/{exc.get('exception_id')}"
+                                            )
+                                            
+                                            if delete_response.status_code == 200:
+                                                st.success(f"✅ Exception {exc.get('exception_id')} deleted!")
+                                                st.rerun()
+                                            else:
+                                                st.error(f"Error deleting: {delete_response.status_code}")
+                                    except Exception as e:
+                                        st.error(f"Error: {str(e)}")
                             
                             # Condition
                             st.markdown("**Condition:**")
@@ -219,20 +237,28 @@ try:
             if exceptions:
                 st.markdown(f"**Total: {len(exceptions)} exception(s)**")
                 
-                # Summary table
-                table_data = []
+                # Summary table with delete buttons
                 for exc in exceptions:
-                    table_data.append({
-                        "ID": exc.get("exception_id"),
-                        "Description": exc.get("description", "N/A")[:50] + "..." if len(exc.get("description", "")) > 50 else exc.get("description", "N/A"),
-                        "Vendor": exc.get("vendor") or "Any",
-                        "Category": exc.get("category") or "Any",
-                        "Type": exc.get("rule_type"),
-                        "Applied": exc.get("applied_count", 0),
-                        "Success Rate": f"{exc.get('success_rate', 0):.1%}",
-                    })
-                
-                st.dataframe(table_data, use_container_width=True)
+                    col1, col2 = st.columns([5, 1])
+                    with col1:
+                        st.markdown(f"**{exc.get('description', 'N/A')}** | ID: `{exc.get('exception_id')}` | Applied: {exc.get('applied_count', 0)}x | Success: {exc.get('success_rate', 0):.1%}")
+                    with col2:
+                        if st.button("🗑️ Delete", key=f"delete_all_{exc.get('exception_id')}", use_container_width=True):
+                            try:
+                                with httpx.Client(timeout=10.0) as client:
+                                    delete_response = client.delete(
+                                        f"{API_BASE_URL}/memory/exceptions/{exc.get('exception_id')}"
+                                    )
+                                    
+                                    if delete_response.status_code == 200:
+                                        st.success(f"✅ Deleted!")
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Error: {delete_response.status_code}")
+                            except Exception as e:
+                                st.error(f"Error: {str(e)}")
+                    
+                    st.markdown("---")
                 
                 # Export option
                 import json

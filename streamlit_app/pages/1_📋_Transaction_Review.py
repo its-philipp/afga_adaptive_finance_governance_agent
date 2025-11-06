@@ -34,6 +34,7 @@ with st.sidebar:
     st.page_link("pages/3_📊_KPI_Dashboard.py", label="KPI Dashboard", icon="📊")
     st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
+    st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
 # Tabs for different views
 tab1, tab2, tab3 = st.tabs(["📤 Submit Transaction", "📜 Transaction History", "👤 Human Review (HITL)"])
@@ -364,7 +365,27 @@ with tab2:
                     st.write(f"- PO Number: {invoice.get('po_number', 'N/A')}")
                     st.write(f"- International: {'Yes' if invoice.get('international') else 'No'}")
                     
-                st.markdown(f"**Created:** {trans.get('created_at', 'N/A')}")
+                # Format timestamps properly
+                from datetime import datetime
+                if trans.get('created_at'):
+                    try:
+                        if isinstance(trans.get('created_at'), str):
+                            created_dt = datetime.fromisoformat(trans.get('created_at').replace('Z', '+00:00'))
+                        else:
+                            created_dt = trans.get('created_at')
+                        st.markdown(f"**Processed:** {created_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+                    except:
+                        st.markdown(f"**Processed:** {trans.get('created_at', 'N/A')}")
+                
+                if trans.get('updated_at') and trans.get('updated_at') != trans.get('created_at'):
+                    try:
+                        if isinstance(trans.get('updated_at'), str):
+                            updated_dt = datetime.fromisoformat(trans.get('updated_at').replace('Z', '+00:00'))
+                        else:
+                            updated_dt = trans.get('updated_at')
+                        st.markdown(f"**HITL Updated:** {updated_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+                    except:
+                        st.markdown(f"**HITL Updated:** {trans.get('updated_at', 'N/A')}")
         
         with detail_tab2:
             st.markdown("**Complete Audit Trail:**")
@@ -381,6 +402,10 @@ with tab2:
         st.markdown("---")
     
     # Transaction list
+    # Refresh if HITL was updated
+    if st.session_state.get("hitl_updated", False):
+        st.session_state.hitl_updated = False
+    
     try:
         with httpx.Client(timeout=10.0) as client:
             response = client.get(f"{API_BASE_URL}/transactions?limit=20")
@@ -405,11 +430,33 @@ with tab2:
                                 st.markdown(f"**Invoice:** {trans.get('invoice_id', 'N/A')}")
                                 st.markdown(f"**Vendor:** {trans.get('invoice', {}).get('vendor', 'N/A')}")
                                 st.markdown(f"**Amount:** ${trans.get('invoice', {}).get('amount', 0):,.2f}")
+                                # Add processing timestamp
+                                if trans.get('created_at'):
+                                    from datetime import datetime
+                                    try:
+                                        if isinstance(trans.get('created_at'), str):
+                                            created_dt = datetime.fromisoformat(trans.get('created_at').replace('Z', '+00:00'))
+                                        else:
+                                            created_dt = trans.get('created_at')
+                                        st.caption(f"🕐 Processed: {created_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+                                    except:
+                                        st.caption(f"🕐 Processed: {trans.get('created_at')}")
                             
                             with col2:
                                 st.markdown(f"**Decision:** {trans.get('final_decision', 'N/A').upper()}")
                                 st.markdown(f"**Risk:** {trans.get('risk_level', 'N/A').upper()} ({trans.get('risk_score', 0):.1f})")
                                 st.markdown(f"**Override:** {'Yes' if trans.get('human_override') else 'No'}")
+                                # Add HITL timestamp if updated
+                                if trans.get('updated_at') and trans.get('updated_at') != trans.get('created_at'):
+                                    from datetime import datetime
+                                    try:
+                                        if isinstance(trans.get('updated_at'), str):
+                                            updated_dt = datetime.fromisoformat(trans.get('updated_at').replace('Z', '+00:00'))
+                                        else:
+                                            updated_dt = trans.get('updated_at')
+                                        st.caption(f"👤 HITL: {updated_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+                                    except:
+                                        st.caption(f"👤 HITL: {trans.get('updated_at')}")
                             
                             with col3:
                                 if st.button("View Details", key=f"view_{trans.get('transaction_id')}", use_container_width=True):
@@ -517,23 +564,25 @@ with tab3:
                 help="This reasoning helps the system learn from your decision"
             )
             
+            # Always show exception type selector (visible before submit)
+            st.markdown("**Exception Rule (Optional):**")
             should_create_exception = st.checkbox(
                 "Create Exception Rule",
                 value=False,
                 help="Check this if the system should learn this rule for similar future transactions"
             )
             
-            exception_type = None
-            if should_create_exception:
-                exception_type = st.selectbox(
-                    "Exception Type:",
-                    ["recurring", "temporary", "policy_gap"],
-                    format_func=lambda x: {
-                        "recurring": "Recurring (applies to similar transactions)",
-                        "temporary": "Temporary (one-time exception)",
-                        "policy_gap": "Policy Gap (missing policy coverage)"
-                    }[x]
-                )
+            exception_type = st.selectbox(
+                "Exception Type:",
+                ["recurring", "temporary", "policy_gap"],
+                format_func=lambda x: {
+                    "recurring": "Recurring (applies to similar transactions)",
+                    "temporary": "Temporary (one-time exception)",
+                    "policy_gap": "Policy Gap (missing policy coverage)"
+                }[x],
+                disabled=not should_create_exception,
+                help="Select exception type (enabled when 'Create Exception Rule' is checked)"
+            )
             
             submit_hitl = st.form_submit_button("💾 Submit Feedback", type="primary")
             
@@ -583,9 +632,15 @@ with tab3:
                                     
                                     st.info("💡 KPIs and Memory have been updated. Check the KPI Dashboard and Memory Browser!")
                                     
+                                    # Force refresh of transaction history
+                                    st.session_state.hitl_updated = True
+                                    
                                     # Clear last transaction (but keep in history)
                                     if "last_transaction" in st.session_state:
                                         del st.session_state.last_transaction
+                                    
+                                    # Rerun to refresh transaction history
+                                    st.rerun()
                                 
                                 else:
                                     st.error(f"Error: {response.status_code} - {response.text}")

@@ -345,6 +345,31 @@ def get_memory_stats():
         )
 
 
+@router.delete("/memory/exceptions/{exception_id}")
+def delete_exception(exception_id: str):
+    """Delete an exception from adaptive memory."""
+    try:
+        deleted = orchestrator.memory_manager.db.delete_exception(exception_id)
+        
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Exception {exception_id} not found"
+            )
+        
+        logger.info(f"Deleted exception {exception_id}")
+        return {"message": f"Exception {exception_id} deleted successfully", "exception_id": exception_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting exception: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting exception: {str(e)}"
+        )
+
+
 # ==================== AGENT ENDPOINTS ====================
 
 @router.get("/agents/cards")
