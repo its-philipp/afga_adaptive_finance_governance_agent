@@ -48,6 +48,11 @@ _startup_orch = get_orchestrator()
 kpi_tracker = KPITracker(memory_db=_startup_orch.memory_db)
 invoice_extractor = InvoiceExtractor()
 
+# Helper to get orchestrator instance (use cached for read operations)
+def get_orch_cached():
+    """Get cached orchestrator for read operations."""
+    return _startup_orch
+
 
 @router.get("/health")
 def health_check():
@@ -162,7 +167,7 @@ async def upload_receipt(
 @router.get("/transactions/{transaction_id}")
 def get_transaction(transaction_id: str):
     """Get transaction details by ID."""
-    transaction = orchestrator.get_transaction(transaction_id)
+    transaction = get_orch_cached().get_transaction(transaction_id)
     
     if not transaction:
         raise HTTPException(
@@ -182,7 +187,7 @@ def get_transaction(transaction_id: str):
 @router.get("/transactions", response_model=List[dict])
 def list_transactions(limit: int = 10):
     """List recent transactions."""
-    transactions = orchestrator.get_recent_transactions(limit=limit)
+    transactions = get_orch_cached().get_recent_transactions(limit=limit)
     
     # Parse JSON fields
     for trans in transactions:
@@ -203,7 +208,7 @@ def submit_hitl_feedback(transaction_id: str, feedback: HITLFeedback):
     """
     try:
         # Get original transaction
-        transaction = orchestrator.get_transaction(transaction_id)
+        transaction = get_orch_cached().get_transaction(transaction_id)
         
         if not transaction:
             raise HTTPException(
@@ -220,7 +225,9 @@ def submit_hitl_feedback(transaction_id: str, feedback: HITLFeedback):
         
         logger.info(f"Processing HITL feedback for transaction {transaction_id}")
         
-        result = orchestrator.process_hitl_feedback(
+        # Use fresh orchestrator for HITL processing
+        orch = get_orchestrator()
+        result = orch.process_hitl_feedback(
             feedback=feedback,
             invoice=invoice,
             trace_id=transaction.get("trace_id"),
@@ -321,7 +328,7 @@ def list_memory_exceptions(
             rule_type=rule_type,
         )
         
-        exceptions = orchestrator.ema.memory_manager.db.query_exceptions(query)
+        exceptions = get_orch_cached().ema.memory_manager.db.query_exceptions(query)
         return {"exceptions": [exc.model_dump() for exc in exceptions]}
     except Exception as e:
         logger.error(f"Error querying memory: {e}", exc_info=True)
@@ -335,7 +342,7 @@ def list_memory_exceptions(
 def get_memory_stats():
     """Get statistics about the adaptive memory."""
     try:
-        stats = orchestrator.get_memory_stats()
+        stats = get_orch_cached().get_memory_stats()
         return stats
     except Exception as e:
         logger.error(f"Error getting memory stats: {e}", exc_info=True)
@@ -349,7 +356,7 @@ def get_memory_stats():
 def delete_exception(exception_id: str):
     """Delete an exception from adaptive memory."""
     try:
-        deleted = orchestrator.memory_manager.db.delete_exception(exception_id)
+        deleted = get_orch_cached().ema.memory_manager.db.delete_exception(exception_id)
         
         if not deleted:
             raise HTTPException(
@@ -376,7 +383,7 @@ def delete_exception(exception_id: str):
 def get_agent_cards():
     """Get A2A agent cards for all agents."""
     try:
-        cards = orchestrator.get_agent_cards()
+        cards = get_orch_cached().get_agent_cards()
         return cards
     except Exception as e:
         logger.error(f"Error getting agent cards: {e}", exc_info=True)

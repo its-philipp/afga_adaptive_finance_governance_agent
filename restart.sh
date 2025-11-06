@@ -50,9 +50,12 @@ echo "   ✅ Cache cleared"
 
 # 3. Verify database exists (don't delete unless --clean flag)
 if [ "$1" == "--clean" ]; then
-    echo "3️⃣  🗑️  Deleting database (--clean mode)..."
+    echo "3️⃣  🗑️  Deleting database and logs (--clean mode)..."
     rm -f data/memory.db
-    echo "   ✅ Database deleted"
+    rm -f data/*.db-journal
+    rm -f governance_audit.jsonl
+    rm -f governance_violations.jsonl
+    echo "   ✅ Database and logs deleted"
 else
     echo "3️⃣  Preserving database (use --clean to reset)"
 fi

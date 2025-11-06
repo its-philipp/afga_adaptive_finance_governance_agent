@@ -158,11 +158,33 @@ with tab1:
                     invoices = data.get("invoices", [])
                     
                     if invoices:
-                        selected_invoice = st.selectbox(
+                        # Load invoice data to create better dropdown labels
+                        invoice_options = {}
+                        for inv_file in invoices:
+                            invoice_path = Path("data/mock_invoices") / inv_file
+                            if invoice_path.exists():
+                                with open(invoice_path, 'r') as f:
+                                    inv_data = json.load(f)
+                                    # Create label with invoice ID, vendor, amount, and date
+                                    inv_id = inv_data.get("invoice_id", "N/A")
+                                    vendor = inv_data.get("vendor", "N/A")
+                                    amount = inv_data.get("amount", 0)
+                                    date = inv_data.get("date", "N/A")
+                                    timestamp = inv_data.get("timestamp", "")
+                                    # Format: "INV-0001 | Acme Corp | $5,000 | 2024-01-15 10:30:00"
+                                    if timestamp:
+                                        label = f"{inv_id} | {vendor} | ${amount:,.2f} | {date} {timestamp}"
+                                    else:
+                                        label = f"{inv_id} | {vendor} | ${amount:,.2f} | {date}"
+                                    invoice_options[label] = inv_file
+                        
+                        selected_label = st.selectbox(
                             "Select Mock Invoice:",
-                            invoices,
+                            options=list(invoice_options.keys()),
                             help="Choose from pre-generated test invoices"
                         )
+                        
+                        selected_invoice = invoice_options[selected_label]
                         
                         # Load and display invoice
                         invoice_path = Path("data/mock_invoices") / selected_invoice
