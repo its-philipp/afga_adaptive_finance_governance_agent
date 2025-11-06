@@ -433,14 +433,15 @@ class MemoryDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
+        # Use datetime.now() to ensure same timezone as created_at
         cursor.execute("""
             UPDATE transactions
             SET human_override = 1,
                 final_decision = ?,
                 decision_reasoning = ?,
-                updated_at = CURRENT_TIMESTAMP
+                updated_at = ?
             WHERE transaction_id = ?
-        """, (human_decision, final_reasoning, transaction_id))
+        """, (human_decision, final_reasoning, datetime.now(), transaction_id))
         
         conn.commit()
         conn.close()

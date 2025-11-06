@@ -406,9 +406,9 @@ def restore_exception(exception_id: str):
 def list_deleted_exceptions():
     """List soft-deleted exceptions."""
     try:
-        conn = get_orch_cached().ema.memory_manager.db.db_path
+        db_path = get_orch_cached().ema.memory_manager.db.db_path
         import sqlite3
-        conn = sqlite3.connect(conn)
+        conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -421,14 +421,18 @@ def list_deleted_exceptions():
         rows = cursor.fetchall()
         conn.close()
         
-        from ..models.memory_schemas import MemoryException
+        # Convert to dicts manually (avoid MemoryException import issues)
         exceptions = []
         for row in rows:
             row_dict = dict(row)
-            row_dict["condition"] = json.loads(row_dict.get("condition", "{}"))
-            exceptions.append(MemoryException(**row_dict))
+            # Parse condition JSON
+            try:
+                row_dict["condition"] = json.loads(row_dict.get("condition", "{}"))
+            except:
+                row_dict["condition"] = {}
+            exceptions.append(row_dict)
         
-        return {"exceptions": [exc.model_dump() for exc in exceptions]}
+        return {"exceptions": exceptions}
         
     except Exception as e:
         logger.error(f"Error querying deleted exceptions: {e}", exc_info=True)

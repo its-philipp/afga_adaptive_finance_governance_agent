@@ -280,6 +280,27 @@ if audit_file.exists():
                     for violation in entry.get('violations', []):
                         st.error(f"- {violation}")
                 
+                # Show prompts and outputs for transparency
+                if entry.get('prompt_length') or entry.get('response_length'):
+                    with st.expander("🔍 View Prompt & Response"):
+                        st.markdown("**Prompt:**")
+                        prompt_text = entry.get('prompt', entry.get('input', 'Not available'))
+                        if prompt_text and prompt_text != 'Not available':
+                            # Show first 500 chars
+                            st.text_area("Input Prompt", prompt_text[:500] + ("..." if len(prompt_text) > 500 else ""), height=150, disabled=True)
+                            st.caption(f"Total length: {entry.get('prompt_length', len(prompt_text))} characters")
+                        else:
+                            st.info(f"Prompt not logged (length: {entry.get('prompt_length', 0)} chars)")
+                        
+                        st.markdown("**Response:**")
+                        response_text = entry.get('response', entry.get('output', 'Not available'))
+                        if response_text and response_text != 'Not available':
+                            # Show first 500 chars
+                            st.text_area("LLM Response", response_text[:500] + ("..." if len(response_text) > 500 else ""), height=150, disabled=True)
+                            st.caption(f"Total length: {entry.get('response_length', len(response_text))} characters")
+                        else:
+                            st.info(f"Response not logged (length: {entry.get('response_length', 0)} chars)")
+                
                 with st.expander("📄 Full Entry (JSON)"):
                     st.json(entry)
     else:

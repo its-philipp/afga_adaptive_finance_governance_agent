@@ -529,6 +529,35 @@ with tab3:
     st.markdown("### 👤 Human-in-the-Loop (HITL) Feedback")
     st.markdown("Provide feedback on transactions. Your feedback helps the system learn!")
     
+    # Show HITL result if it exists
+    if "hitl_result" in st.session_state:
+        result = st.session_state.hitl_result
+        st.success("✅ Feedback processed successfully!")
+        
+        ema_result = result.get("ema_result", {})
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.metric("Memory Updated", "✅ Yes" if result.get("memory_updated") else "No")
+        
+        with col2:
+            st.metric("H-CR Updated", "✅ Yes" if result.get("hcr_updated") else "No")
+        
+        if ema_result.get("correction_type"):
+            st.info(f"**Correction Type:** {ema_result.get('correction_type')}")
+        
+        if ema_result.get("exception_description"):
+            st.success(f"**Learned Rule:** {ema_result.get('exception_description')}")
+        
+        st.info("💡 KPIs and Memory have been updated. Check the KPI Dashboard and Memory Browser!")
+        
+        if st.button("✅ Acknowledge"):
+            del st.session_state.hitl_result
+            st.rerun()
+        
+        st.markdown("---")
+    
     # Fetch all transactions for selection
     try:
         with httpx.Client(timeout=10.0) as client:
@@ -622,7 +651,7 @@ with tab3:
         st.markdown("---")
         st.markdown("#### Provide Your Decision")
         
-        # HITL form
+        # HITL form - selectbox must be outside conditional for Streamlit forms
         with st.form("hitl_form"):
             human_decision = st.radio(
                 "Your Decision:",
@@ -637,7 +666,7 @@ with tab3:
                 help="This reasoning helps the system learn from your decision"
             )
             
-            # Always show exception type selector (visible before submit)
+            # Exception Rule section - always visible in forms
             st.markdown("**Exception Rule (Optional):**")
             should_create_exception = st.checkbox(
                 "Create Exception Rule",
@@ -645,19 +674,18 @@ with tab3:
                 help="Check this if the system should learn this rule for similar future transactions"
             )
             
-            # Only show exception type if checkbox is checked
-            exception_type = None
-            if should_create_exception:
-                exception_type = st.selectbox(
-                    "Exception Type:",
-                    ["recurring", "temporary", "policy_gap"],
-                    format_func=lambda x: {
-                        "recurring": "Recurring (applies to similar transactions)",
-                        "temporary": "Temporary (one-time exception)",
-                        "policy_gap": "Policy Gap (missing policy coverage)"
-                    }[x],
-                    help="Select the type of exception rule to create"
-                )
+            # Show selectbox always in forms (conditional rendering doesn't work in forms)
+            exception_type = st.selectbox(
+                "Exception Type:",
+                ["recurring", "temporary", "policy_gap"],
+                format_func=lambda x: {
+                    "recurring": "Recurring (applies to similar transactions)",
+                    "temporary": "Temporary (one-time exception)",
+                    "policy_gap": "Policy Gap (missing policy coverage)"
+                }[x],
+                help="Select the type of exception rule (only used if 'Create Exception Rule' is checked above)",
+                disabled=not should_create_exception
+            )
             
             submit_hitl = st.form_submit_button("💾 Submit Feedback", type="primary")
             
@@ -686,35 +714,15 @@ with tab3:
                                 if response.status_code == 200:
                                     result = response.json()
                                     
-                                    st.success("✅ Feedback processed successfully!")
-                                    
-                                    # Show EMA result
-                                    ema_result = result.get("ema_result", {})
-                                    
-                                    col1, col2 = st.columns(2)
-                                    
-                                    with col1:
-                                        st.metric("Memory Updated", "✅ Yes" if result.get("memory_updated") else "No")
-                                    
-                                    with col2:
-                                        st.metric("H-CR Updated", "✅ Yes" if result.get("hcr_updated") else "No")
-                                    
-                                    if ema_result.get("correction_type"):
-                                        st.info(f"**Correction Type:** {ema_result.get('correction_type')}")
-                                    
-                                    if ema_result.get("exception_description"):
-                                        st.success(f"**Learned Rule:** {ema_result.get('exception_description')}")
-                                    
-                                    st.info("💡 KPIs and Memory have been updated. Check the KPI Dashboard and Memory Browser!")
-                                    
-                                    # Force refresh of transaction history
+                                    # Store result in session state to show it after form clears
+                                    st.session_state.hitl_result = result
                                     st.session_state.hitl_updated = True
                                     
-                                    # Clear last transaction (but keep in history)
+                                    # Clear last transaction
                                     if "last_transaction" in st.session_state:
                                         del st.session_state.last_transaction
                                     
-                                    # Rerun to refresh transaction history
+                                    # Rerun to show results
                                     st.rerun()
                                 
                                 else:
