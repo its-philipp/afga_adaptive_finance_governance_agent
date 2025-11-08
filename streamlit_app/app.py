@@ -2,6 +2,8 @@
 
 import streamlit as st
 
+from components.chat_assistant import render_chat_sidebar
+
 # Page configuration
 st.set_page_config(
     page_title="AFGA - Home",
