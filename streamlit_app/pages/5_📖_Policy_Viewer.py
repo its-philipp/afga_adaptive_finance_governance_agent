@@ -22,7 +22,10 @@ st.title("📖 Policy Viewer")
 st.markdown("Browse the company policies used by PAA for compliance checking.")
 
 # Sidebar
-with st.sidebar:
+sidebar_nav = st.sidebar.container()
+sidebar_assistant = st.sidebar.container()
+
+with sidebar_nav:
     st.title("🤖 AFGA")
     st.caption("Adaptive Finance Governance Agent")
     st.markdown("---")
@@ -34,54 +37,59 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("Policy Viewer", context={"page_summary": "Policy viewer listing compliance documents."})
+with sidebar_assistant:
+    st.markdown("---")
+    render_chat_sidebar("Policy Viewer", context=assistant_context)
 
 # Find policies directory
 policies_dir = Path("data/policies")
+policy_files = sorted(policies_dir.glob("*.txt")) if policies_dir.exists() else []
+
+assistant_context = {
+    "page_summary": "Policy viewer listing compliance documents.",
+    "policy_directory": str(policies_dir),
+    "policy_count": len(policy_files),
+    "sample_policies": [policy.name for policy in policy_files[:10]],
+}
 
 if not policies_dir.exists():
     st.error(f"Policies directory not found: {policies_dir}")
     st.info("Run `python scripts/generate_mock_data.py` to generate mock policies.")
+elif not policy_files:
+    st.warning("No policy files found in the policies directory.")
 else:
-    # Get all policy files
-    policy_files = sorted(policies_dir.glob("*.txt"))
+    st.markdown(f"**Found {len(policy_files)} policy documents**")
+    st.markdown("---")
     
-    if not policy_files:
-        st.warning("No policy files found in the policies directory.")
-    else:
-        st.markdown(f"**Found {len(policy_files)} policy documents**")
-        st.markdown("---")
+    # Display policies
+    for policy_file in policy_files:
+        # Extract policy name from filename
+        policy_name = policy_file.stem.replace("_", " ").title()
         
-        # Display policies
-        for policy_file in policy_files:
-            # Extract policy name from filename
-            policy_name = policy_file.stem.replace("_", " ").title()
-            
-            with st.expander(f"📋 {policy_name}", expanded=False):
-                try:
-                    with open(policy_file, 'r') as f:
-                        policy_content = f.read()
-                    
-                    # Display metadata
-                    col1, col2 = st.columns([1, 4])
-                    
-                    with col1:
-                        st.metric("File", policy_file.name)
-                        st.metric("Size", f"{len(policy_content)} chars")
-                        st.metric("Lines", len(policy_content.split('\n')))
-                    
-                    with col2:
-                        st.markdown("**Policy Content:**")
-                        st.text_area(
-                            label="Content",
-                            value=policy_content,
-                            height=300,
-                            key=f"policy_{policy_file.name}",
-                            label_visibility="collapsed"
-                        )
+        with st.expander(f"📋 {policy_name}", expanded=False):
+            try:
+                with open(policy_file, 'r') as f:
+                    policy_content = f.read()
                 
-                except Exception as e:
-                    st.error(f"Error reading policy: {e}")
+                # Display metadata
+                col1, col2 = st.columns([1, 4])
+                
+                with col1:
+                    st.metric("File", policy_file.name)
+                    st.metric("Size", f"{len(policy_content)} chars")
+                    st.metric("Lines", len(policy_content.split('\n')))
+                
+                with col2:
+                    st.markdown("**Policy Content:**")
+                    st.text_area(
+                        label="Content",
+                        value=policy_content,
+                        height=300,
+                        key=f"policy_{policy_file.name}",
+                        label_visibility="collapsed"
+                    )
+            except Exception as e:
+                st.error(f"Error reading policy: {e}")
 
 # Information about how policies are used
 st.markdown("---")

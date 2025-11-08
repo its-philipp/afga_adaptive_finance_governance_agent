@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, status, UploadFile, File
+from fastapi.responses import FileResponse
+from urllib.parse import quote
 
 from ..agents import AFGAOrchestrator
 from ..models.schemas import (
@@ -126,6 +128,32 @@ def _search_memory_rules(query: str, limit: int = 3) -> list[dict]:
         matches.sort(key=lambda item: item["applied_count"], reverse=True)
 
     return matches[:limit]
+
+
+def _flatten_context_text(context: dict | None) -> str:
+    """Flatten nested context values into a single search string."""
+    if not context:
+        return ""
+
+    parts: list[str] = []
+
+    def _walk(value):
+        if value is None:
+            return
+        if isinstance(value, str):
+            parts.append(value)
+        elif isinstance(value, (int, float, bool)):
+            parts.append(str(value))
+        elif isinstance(value, dict):
+            for nested in value.values():
+                _walk(nested)
+        elif isinstance(value, (list, tuple, set)):
+            for item in value:
+                _walk(item)
+
+    _walk(context)
+    joined = " ".join(parts)
+    return joined[:2000]  # prevent excessively long queries
 
 
 @router.get("/health")
@@ -622,4 +650,165 @@ def get_langfuse_overview():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching Langfuse insights: {str(e)}"
         )
+
+
+@router.post("/assistant/chat", response_model=AssistantChatResponse)
+def assistant_chat(request: AssistantChatRequest) -> AssistantChatResponse:
+    """Handle governance assistant chat requests."""
+    logger.info("Assistant chat request received for page=%s", request.page)
+
+    policy_retriever = getattr(_startup_orch.policy_mcp, "policy_retriever", None)
+    context_dict = request.context or {}
+    flattened_context = _flatten_context_text(context_dict)
+
+    # Gather policy matches
+    policy_matches: dict[tuple[str | None, int], dict] = {}
+    if policy_retriever:
+        queries = set(filter(None, [request.message.strip(), flattened_context.strip()]))
+        # Include vendor/category hints from selected transaction if present
+        selected_txn = context_dict.get("selected_transaction", {}) if isinstance(context_dict, dict) else {}
+        vendor = selected_txn.get("vendor")
+        category = selected_txn.get("invoice", {}).get("category") if isinstance(selected_txn.get("invoice"), dict) else None
+        extra_terms = " ".join(filter(None, [vendor, category]))
+        if extra_terms:
+            queries.add(extra_terms)
+        for query in queries:
+            for match in policy_retriever.search_by_text(query, top_k=5):
+                key = (match.get("policy_filename"), match.get("chunk_index", 0))
+                if key not in policy_matches or match.get("score", 0) > policy_matches[key].get("score", 0):
+                    policy_matches[key] = match
+    else:
+        logger.warning("Policy retriever unavailable for assistant chat")
+
+    policy_list = list(policy_matches.values())[:5]
+
+    # Gather memory matches
+    memory_matches = _search_memory_rules(request.message)
+
+    # Build prompt sections
+    import json as _json
+
+    context_section = _json.dumps(context_dict, indent=2, default=str) if context_dict else "{}"
+
+    policy_section_lines = []
+    for idx, match in enumerate(policy_list, start=1):
+        snippet = match.get("snippet") or match.get("content", "")
+        snippet = (snippet or "").strip()
+        if len(snippet) > 600:
+            snippet = f"{snippet[:600]}..."
+        policy_section_lines.append(
+            f"{idx}. {match.get('policy_name', 'Unknown Policy')} (score: {match.get('score', 0):.2f})\n"
+            f"   Source: {match.get('policy_filename', 'N/A')} • Chunk #{match.get('chunk_index', 0)}\n"
+            f"   Excerpt: {snippet}"
+        )
+    policy_section = "\n".join(policy_section_lines) if policy_section_lines else "No direct policy passages retrieved."
+
+    memory_section_lines = []
+    for match in memory_matches:
+        condition_preview = match.get("condition")
+        try:
+            condition_str = _json.dumps(condition_preview, ensure_ascii=False) if condition_preview else "{}"
+        except TypeError:
+            condition_str = str(condition_preview)
+        memory_section_lines.append(
+            f"- {match.get('description', 'Learned rule')} (ID: {match.get('exception_id')})\n"
+            f"  Vendor: {match.get('vendor') or 'Any'} • Category: {match.get('category') or 'Any'} • Applied: {match.get('applied_count', 0)} times\n"
+            f"  Condition: {condition_str}"
+        )
+    memory_section = "\n".join(memory_section_lines) if memory_section_lines else "No learned exceptions matched the query."
+
+    # Construct LLM prompt
+    system_instructions = (
+        "You are the AFGA Governance Assistant. Provide precise, compliant answers based on the provided context, "
+        "policy evidence, and learned exception rules. Reference policy names or exception IDs when relevant. "
+        "Keep the tone professional and focused on auditability. Include a short 'Suggested follow-ups' list with "
+        "one or two bullet points when it helps the user continue the investigation."
+    )
+
+    prompt = (
+        f"{system_instructions}\n\n"
+        f"## Page Context\n{context_section}\n\n"
+        f"## Relevant Policy Evidence\n{policy_section}\n\n"
+        f"## Learned Exceptions\n{memory_section}\n\n"
+        f"## User Question\n{request.message.strip()}"
+    )
+
+    history_messages = [
+        {"role": entry.role, "content": entry.content}
+        for entry in request.history
+        if entry.role in {"user", "assistant"}
+    ]
+
+    client = GovernedLLMClient(agent_name="GovernanceAssistant")
+    try:
+        reply = client.completion(
+            prompt=prompt,
+            context=history_messages,
+            model=None,
+            temperature=0.2,
+        )
+    except Exception as exc:
+        logger.error("Assistant chat failed: %s", exc, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Assistant chat failed: {exc}"
+        )
+    finally:
+        try:
+            client.close()
+        except Exception:
+            pass
+
+    # Build sources for UI transparency
+    sources: List[AssistantChatSource] = []
+    for match in policy_list:
+        filename = match.get("policy_filename")
+        url = f"/api/v1/policies/{quote(filename)}" if filename else None
+        snippet = match.get("snippet") or match.get("content")
+        if snippet and len(snippet) > 280:
+            snippet = f"{snippet[:280]}..."
+        sources.append(
+            AssistantChatSource(
+                type="policy",
+                id=match.get("policy_name", filename or "policy"),
+                title=filename or match.get("policy_name", "Policy excerpt"),
+                snippet=snippet,
+                url=url,
+            )
+        )
+
+    for match in memory_matches:
+        snippet_parts = [match.get("description") or "Learned rule"]
+        vendor = match.get("vendor")
+        category = match.get("category")
+        if vendor or category:
+            snippet_parts.append(
+                " | ".join(filter(None, [f"Vendor: {vendor}" if vendor else None, f"Category: {category}" if category else None]))
+            )
+        snippet_parts.append(f"Applied {match.get('applied_count', 0)} time(s)")
+        sources.append(
+            AssistantChatSource(
+                type="memory_rule",
+                id=str(match.get("exception_id")),
+                title=match.get("description", "Adaptive memory rule"),
+                snippet="; ".join(snippet_parts),
+            )
+        )
+
+    return AssistantChatResponse(reply=reply.strip(), sources=sources)
+
+
+@router.get("/policies/{policy_filename}")
+def download_policy(policy_filename: str):
+    """Serve policy document content for transparency links."""
+    policy_retriever = getattr(_startup_orch.policy_mcp, "policy_retriever", None)
+    if not policy_retriever:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Policy retriever not available")
+
+    safe_name = Path(policy_filename).name
+    policy_path = policy_retriever.policies_dir / safe_name
+    if not policy_path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Policy file {safe_name} not found")
+
+    return FileResponse(path=policy_path, media_type="text/plain", filename=safe_name)
 

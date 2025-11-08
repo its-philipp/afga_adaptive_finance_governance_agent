@@ -121,6 +121,7 @@ class AssistantChatSource(BaseModel):
     id: str
     title: str
     snippet: Optional[str] = None
+    url: Optional[str] = None
 
 
 class AssistantChatResponse(BaseModel):

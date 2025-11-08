@@ -15,6 +15,7 @@ def _init_history():
 
 def _render_history():
     history = st.session_state.get(CHAT_HISTORY_KEY, [])
+    base_url = API_BASE_URL.rstrip("/")
     for entry in history[-12:]:  # show last 12 turns
         role = entry.get("role", "assistant")
         content = entry.get("content", "")
@@ -28,8 +29,16 @@ def _render_history():
                     for src in sources:
                         src_type = src.get("type", "source").title()
                         title = src.get("title") or src.get("id", "")
+                        url = src.get("url")
+                        display_title = title or "Untitled"
+                        if url:
+                            if not url.startswith("http"):
+                                normalized = url if url.startswith("/") else f"/{url}"
+                                url = f"{base_url}{normalized}"
+                            st.markdown(f"- {src_type}: [{display_title}]({url})")
+                        else:
+                            st.write(f"- {src_type}: {display_title}")
                         snippet = src.get("snippet")
-                        st.write(f"- {src_type}: {title}")
                         if snippet:
                             st.caption(snippet)
 

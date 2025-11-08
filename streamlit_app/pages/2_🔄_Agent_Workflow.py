@@ -9,6 +9,63 @@ from components.chat_assistant import render_chat_sidebar
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
+agent_cards = None
+agent_cards_error = None
+health_snapshot = None
+health_error = None
+
+try:
+    with httpx.Client(timeout=10.0) as client:
+        try:
+            cards_resp = client.get(f"{API_BASE_URL}/agents/cards")
+            if cards_resp.status_code == 200:
+                agent_cards = cards_resp.json()
+            else:
+                agent_cards_error = f"HTTP {cards_resp.status_code}"
+        except Exception as exc:
+            agent_cards_error = str(exc)
+
+        try:
+            health_resp = client.get(f"{API_BASE_URL}/health")
+            if health_resp.status_code == 200:
+                health_snapshot = health_resp.json()
+            else:
+                health_error = f"HTTP {health_resp.status_code}"
+        except Exception as exc:
+            health_error = str(exc)
+except Exception as exc:
+    if not agent_cards_error:
+        agent_cards_error = str(exc)
+    if not health_error:
+        health_error = str(exc)
+
+assistant_context = {
+    "page_summary": "Agent workflow diagram and protocol explanations.",
+    "workflow_layers": [
+        "Streamlit UI", "FastAPI Gateway", "TAA", "PAA", "EMA", "LangGraph", "Policy Retriever", "Adaptive Memory"
+    ],
+}
+
+if agent_cards:
+    assistant_context["agent_capabilities"] = {
+        key.upper(): {
+            "description": value.get("description"),
+            "capabilities": value.get("capabilities"),
+            "default_modes": {
+                "input": value.get("defaultInputModes"),
+                "output": value.get("defaultOutputModes"),
+            },
+        }
+        for key, value in agent_cards.items()
+        if isinstance(value, dict)
+    }
+
+if health_snapshot:
+    assistant_context["system_health"] = {
+        "agents": health_snapshot.get("agents", {}),
+        "services": health_snapshot.get("services", {}),
+    }
+
 st.set_page_config(page_title="Agent Workflow", page_icon="🔄", layout="wide")
 
 # Hide default Streamlit navigation
@@ -24,7 +81,10 @@ st.title("🔄 Agent Workflow Visualization")
 st.markdown("Understand how the three agents (TAA, PAA, EMA) work together using hybrid A2A + MCP protocols.")
 
 # Sidebar
-with st.sidebar:
+sidebar_nav = st.sidebar.container()
+sidebar_assistant = st.sidebar.container()
+
+with sidebar_nav:
     st.title("🤖 AFGA")
     st.caption("Adaptive Finance Governance Agent")
     st.markdown("---")
@@ -36,7 +96,9 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("Agent Workflow", context={"page_summary": "Agent workflow diagram and protocol explanations."})
+with sidebar_assistant:
+    st.markdown("---")
+    render_chat_sidebar("Agent Workflow", context=assistant_context)
 
 # Architecture Overview
 st.markdown("## 🏗️ System Architecture")
@@ -344,27 +406,20 @@ def render_agent_card(card: dict | None) -> None:
                         st.write(f"- {example}")
     st.markdown("---")
 
-try:
-    with httpx.Client(timeout=10.0) as client:
-        response = client.get(f"{API_BASE_URL}/agents/cards")
+if agent_cards:
+    tab1, tab2, tab3 = st.tabs(["TAA Card", "PAA Card", "EMA Card"])
 
-        if response.status_code == 200:
-            cards = response.json()
+    with tab1:
+        render_agent_card(agent_cards.get("taa"))
 
-            tab1, tab2, tab3 = st.tabs(["TAA Card", "PAA Card", "EMA Card"])
+    with tab2:
+        render_agent_card(agent_cards.get("paa"))
 
-            with tab1:
-                render_agent_card(cards.get("taa"))
-
-            with tab2:
-                render_agent_card(cards.get("paa"))
-
-            with tab3:
-                render_agent_card(cards.get("ema"))
-        else:
-            st.error(f"Failed to load agent cards: {response.status_code} {response.text}")
-except Exception as e:
-    st.error(f"Error loading agent cards: {str(e)}")
+    with tab3:
+        render_agent_card(agent_cards.get("ema"))
+else:
+    message = agent_cards_error or "Agent cards not available yet."
+    st.error(f"Failed to load agent cards: {message}")
 
 # Observability
 st.markdown("## 📊 Observability & Audit Trail")
@@ -395,37 +450,32 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("### Agent Status")
-    try:
-        with httpx.Client(timeout=5.0) as client:
-            response = client.get(f"{API_BASE_URL}/health")
-            if response.status_code == 200:
-                health = response.json()
-                agents = health.get("agents", {})
-                
-                for agent, status in agents.items():
-                    if status == "running":
-                        st.success(f"✅ {agent.upper()}: Running")
-                    else:
-                        st.error(f"❌ {agent.upper()}: {status}")
-    except:
-        st.error("❌ Cannot connect to API")
+    if health_snapshot:
+        agents = health_snapshot.get("agents", {})
+        for agent, status in agents.items():
+            if status == "running":
+                st.success(f"✅ {agent.upper()}: Running")
+            else:
+                st.error(f"❌ {agent.upper()}: {status}")
+    elif health_error:
+        st.error(f"❌ Cannot connect to API: {health_error}")
+    else:
+        st.info("Status unknown")
 
 with col2:
     st.markdown("### Services Status")
-    try:
-        with httpx.Client(timeout=5.0) as client:
-            response = client.get(f"{API_BASE_URL}/health")
-            if response.status_code == 200:
-                health = response.json()
-                services = health.get("services", {})
-                
-                for service, status in services.items():
-                    if status in ["running", "connected"]:
-                        st.success(f"✅ {service.replace('_', ' ').title()}: {status.title()}")
-                    else:
-                        st.error(f"❌ {service.replace('_', ' ').title()}: {status}")
-    except:
-        st.error("❌ Cannot check services")
+    if health_snapshot:
+        services = health_snapshot.get("services", {})
+        for service, status in services.items():
+            label = service.replace("_", " ").title()
+            if status in ["running", "connected"]:
+                st.success(f"✅ {label}: {status.title()}")
+            else:
+                st.error(f"❌ {label}: {status}")
+    elif health_error:
+        st.error(f"❌ Cannot check services: {health_error}")
+    else:
+        st.info("Status unknown")
 
 # Removed AI Governance section - now on separate page (6_🛡️_AI_Governance.py)
 st.markdown("---")

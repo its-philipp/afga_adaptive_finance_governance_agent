@@ -27,8 +27,15 @@ st.markdown("""
 st.title("🛡️ AI Governance & Safety")
 st.markdown("Monitor governance controls, audit logs, and safety features for all agent LLM calls.")
 
+assistant_context = {
+    "page_summary": "AI governance dashboard with audit logs and guardrails.",
+}
+
 # Sidebar
-with st.sidebar:
+sidebar_nav = st.sidebar.container()
+sidebar_assistant = st.sidebar.container()
+
+with sidebar_nav:
     st.title("🤖 AFGA")
     st.caption("Adaptive Finance Governance Agent")
     st.markdown("---")
@@ -41,6 +48,10 @@ with st.sidebar:
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
     render_chat_sidebar("AI Governance", context={"page_summary": "AI governance dashboard with audit logs and guardrails."})
+
+with sidebar_assistant:
+    st.markdown("---")
+    render_chat_sidebar("AI Governance", context=assistant_context)
 
 # Agent Selector
 st.markdown("## 🔍 Select Agent to View Governance Data")
@@ -59,6 +70,8 @@ selected_agent_label = st.selectbox(
 )
 
 selected_agent = agent_options[selected_agent_label]
+assistant_context["selected_agent"] = selected_agent
+assistant_context["selected_agent_label"] = selected_agent_label
 
 # Governance Overview
 st.markdown("## 📊 Governance Controls Overview")
@@ -134,6 +147,14 @@ try:
     local_metrics = insights.get("local_metrics", {})
     remote_metrics = insights.get("remote_metrics", {})
 
+    assistant_context["langfuse_status"] = langfuse_status
+    assistant_context["local_metrics_overview"] = {
+        "total_calls": local_metrics.get("total_calls", 0),
+        "violations": local_metrics.get("violations", 0),
+        "violation_rate": local_metrics.get("violation_rate", 0.0),
+        "total_cost_usd": local_metrics.get("total_cost_usd", 0.0),
+    }
+
     status_label = langfuse_status.get("status", "unknown")
     status_message = langfuse_status.get("message") or langfuse_status.get("payload")
 
@@ -156,25 +177,11 @@ try:
 
     guardrails = local_metrics.get("guardrail_summary", {})
     if guardrails:
-        st.markdown("### 🧱 Guardrail Health")
-        guardrail_cols = st.columns(len(guardrails))
-        for (guardrail_key, guardrail), col in zip(guardrails.items(), guardrail_cols):
-            label = guardrail.get("label", guardrail_key.title())
-            status = guardrail.get("status", "idle")
-            description = guardrail.get("description", "")
-
-            if status == "healthy":
-                col.success(f"{label}\n\n✅ Healthy")
-            elif status == "attention":
-                col.warning(f"{label}\n\n⚠️ Attention Needed")
-            else:
-                col.info(f"{label}\n\nℹ️ Monitoring")
-
-            col.metric("Checks", guardrail.get("checks", 0), help=description)
-            col.metric("Violations", guardrail.get("violations", 0))
-            col.caption(f"Last violation: {format_timestamp_label(guardrail.get('last_violation'))}")
+        assistant_context["guardrail_summary"] = guardrails
 
     calls_by_agent = local_metrics.get("calls_by_agent", [])
+    if calls_by_agent:
+        assistant_context["calls_by_agent"] = {agent: count for agent, count in calls_by_agent}
     if calls_by_agent:
         agents, counts = zip(*calls_by_agent)
         fig_agents = go.Figure(
@@ -184,6 +191,8 @@ try:
         st.plotly_chart(fig_agents, use_container_width=True)
 
     calls_by_model = local_metrics.get("calls_by_model", [])
+    if calls_by_model:
+        assistant_context["calls_by_model"] = {model: count for model, count in calls_by_model}
     if calls_by_model:
         models, model_counts = zip(*calls_by_model)
         fig_models = go.Figure(
@@ -217,6 +226,12 @@ try:
         fig_latency.update_layout(title="Processing Time per LLM Call", yaxis_title="Milliseconds", xaxis_title="Timestamp", margin=dict(l=40, r=20, t=60, b=40))
         st.plotly_chart(fig_latency, use_container_width=True)
 
+    if remote_metrics:
+        assistant_context["remote_metrics"] = {
+            "available": remote_metrics.get("available"),
+            "trace_count": remote_metrics.get("trace_count"),
+        }
+
     if remote_metrics.get("available"):
         st.info(f"Langfuse traces synced: {remote_metrics.get('trace_count', 0)} latest traces retrieved")
         if remote_metrics.get("recent_traces"):
@@ -225,8 +240,10 @@ try:
         st.warning("Langfuse API did not return trace metadata. Check project permissions or generate traffic to populate the dashboard.")
 
 except httpx.HTTPStatusError as err:
+    assistant_context["langfuse_error"] = err.response.text
     st.error(f"Unable to load Langfuse insights: {err.response.text}")
 except Exception as exc:
+    assistant_context["langfuse_error"] = str(exc)
     st.warning(f"Langfuse insights unavailable: {exc}")
 
 # Agent-Specific Governance Details

@@ -93,6 +93,54 @@ def render_policy_check_details(policy_check: dict | None, *, expand_sources: bo
                     st.write(snippet.strip())
                 st.markdown("---")
 
+def _summarize_policy_check(policy_check: dict | None) -> dict:
+    if not policy_check:
+        return {}
+
+    summary = {
+        "is_compliant": policy_check.get("is_compliant"),
+        "confidence": policy_check.get("confidence"),
+        "violated_policies": policy_check.get("violated_policies", []),
+        "applied_exceptions": policy_check.get("applied_exceptions", []),
+        "applied_exception_ids": policy_check.get("applied_exception_ids", []),
+        "hallucination_warnings": policy_check.get("hallucination_warnings", []),
+    }
+
+    retrieved_sources = []
+    for src in (policy_check.get("retrieved_sources") or [])[:5]:
+        retrieved_sources.append(
+            {
+                "policy_name": src.get("policy_name"),
+                "policy_filename": src.get("policy_filename"),
+                "score": src.get("score"),
+                "matched_terms": src.get("matched_terms", []),
+            }
+        )
+    if retrieved_sources:
+        summary["retrieved_sources"] = retrieved_sources
+
+    rag_metrics = policy_check.get("rag_metrics") or {}
+    if rag_metrics:
+        summary["rag_metrics"] = {
+            "coverage_ratio": rag_metrics.get("coverage_ratio"),
+            "average_relevance": rag_metrics.get("average_relevance"),
+            "missing_evidence": rag_metrics.get("missing_evidence", []),
+        }
+
+    return summary
+
+
+def _audit_preview(audit_trail: list | None, limit: int = 5) -> list[str]:
+    if not isinstance(audit_trail, list):
+        return []
+    preview = []
+    for entry in audit_trail[-limit:]:
+        if isinstance(entry, dict):
+            preview.append(entry.get("message") or json.dumps(entry))
+        else:
+            preview.append(str(entry))
+    return preview
+
 st.set_page_config(page_title="Transaction Review", page_icon="📋", layout="wide")
 
 # Hide default Streamlit navigation
@@ -108,7 +156,10 @@ st.title("📋 Transaction Review")
 st.markdown("Submit invoices for automated compliance checking and provide human feedback when needed.")
 
 # Sidebar
-with st.sidebar:
+sidebar_nav = st.sidebar.container()
+sidebar_assistant = st.sidebar.container()
+
+with sidebar_nav:
     st.title("🤖 AFGA")
     st.caption("Adaptive Finance Governance Agent")
     st.markdown("---")
@@ -120,28 +171,35 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
+with sidebar_assistant:
+    st.markdown("---")
     assistant_context = {"page_summary": "Transaction review with automated decision history."}
     last_transaction = st.session_state.get("last_transaction")
     if isinstance(last_transaction, dict):
+        policy_snapshot = _summarize_policy_check(last_transaction.get("policy_check"))
         assistant_context["recent_transaction"] = {
             "transaction_id": last_transaction.get("transaction_id"),
-            "invoice_id": last_transaction.get("invoice", {}).get("invoice_id"),
-            "vendor": last_transaction.get("invoice", {}).get("vendor"),
-            "amount": last_transaction.get("invoice", {}).get("amount"),
+            "invoice_id": (last_transaction.get("invoice") or {}).get("invoice_id"),
+            "vendor": (last_transaction.get("invoice") or {}).get("vendor"),
+            "amount": (last_transaction.get("invoice") or {}).get("amount"),
             "decision": last_transaction.get("final_decision"),
-            "confidence": last_transaction.get("policy_check", {}).get("confidence"),
+            "decision_reasoning": last_transaction.get("decision_reasoning"),
+            "policy_summary": policy_snapshot,
         }
 
     selected_transaction = st.session_state.get("selected_transaction")
     if isinstance(selected_transaction, dict):
+        policy_snapshot = _summarize_policy_check(selected_transaction.get("policy_check"))
         assistant_context["selected_transaction"] = {
             "transaction_id": selected_transaction.get("transaction_id"),
-            "invoice_id": selected_transaction.get("invoice", {}).get("invoice_id"),
-            "vendor": selected_transaction.get("invoice", {}).get("vendor"),
-            "amount": selected_transaction.get("invoice", {}).get("amount"),
+            "invoice_id": (selected_transaction.get("invoice") or {}).get("invoice_id"),
+            "vendor": (selected_transaction.get("invoice") or {}).get("vendor"),
+            "amount": (selected_transaction.get("invoice") or {}).get("amount"),
             "final_decision": selected_transaction.get("final_decision"),
             "risk_level": selected_transaction.get("risk_level"),
-            "policy_check": selected_transaction.get("policy_check"),
+            "decision_reasoning": selected_transaction.get("decision_reasoning"),
+            "policy_summary": policy_snapshot,
+            "audit_trail_preview": _audit_preview(selected_transaction.get("audit_trail")),
         }
 
     render_chat_sidebar("Transaction Review", context=assistant_context)

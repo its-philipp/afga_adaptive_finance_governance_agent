@@ -1,5 +1,8 @@
 """Main Streamlit application for AFGA."""
 
+import os
+
+import httpx
 import streamlit as st
 
 from components.chat_assistant import render_chat_sidebar
@@ -14,6 +17,84 @@ st.set_page_config(
         'About': "Adaptive Finance Governance Agent - Multi-Agent AI System for Automated Finance Compliance"
     }
 )
+
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
+
+system_health = None
+health_error = None
+kpi_summary = None
+kpi_summary_error = None
+kpi_stats = None
+kpi_stats_error = None
+
+try:
+    with httpx.Client(timeout=10.0) as client:
+        try:
+            health_resp = client.get(f"{API_BASE_URL}/health")
+            if health_resp.status_code == 200:
+                system_health = health_resp.json()
+            else:
+                health_error = f"HTTP {health_resp.status_code}"
+        except Exception as exc:
+            health_error = str(exc)
+
+        try:
+            summary_resp = client.get(f"{API_BASE_URL}/kpis/summary")
+            if summary_resp.status_code == 200:
+                kpi_summary = summary_resp.json()
+            else:
+                kpi_summary_error = f"HTTP {summary_resp.status_code}"
+        except Exception as exc:
+            kpi_summary_error = str(exc)
+
+        try:
+            stats_resp = client.get(f"{API_BASE_URL}/kpis/stats")
+            if stats_resp.status_code == 200:
+                kpi_stats = stats_resp.json()
+            else:
+                kpi_stats_error = f"HTTP {stats_resp.status_code}"
+        except Exception as exc:
+            kpi_stats_error = str(exc)
+except Exception as exc:
+    # Preserve individual errors if already captured; only override if nothing recorded yet
+    if not health_error:
+        health_error = str(exc)
+    if not kpi_summary_error:
+        kpi_summary_error = str(exc)
+    if not kpi_stats_error:
+        kpi_stats_error = str(exc)
+
+assistant_context = {"page_summary": "Home dashboard showing AFGA overview."}
+if system_health:
+    assistant_context["system_status"] = {
+        "status": system_health.get("status"),
+        "agents": system_health.get("agents", {}),
+        "services": system_health.get("services", {}),
+    }
+else:
+    assistant_context["system_status"] = {"status": "offline", "error": health_error}
+
+if kpi_summary and kpi_summary.get("current"):
+    current = kpi_summary["current"]
+    assistant_context["current_kpis"] = {
+        "total_transactions": current.get("total_transactions"),
+        "hcr": current.get("hcr"),
+        "crs": current.get("crs"),
+        "atar": current.get("atar"),
+        "audit_traceability": current.get("audit_traceability_score"),
+    }
+    assistant_context["learning_flags"] = kpi_summary.get("learning_metrics", {})
+    assistant_context["trend_indicators"] = {
+        key: value.get("improving")
+        for key, value in (kpi_summary.get("trends") or {}).items()
+    }
+
+if kpi_stats:
+    assistant_context["transaction_stats"] = {
+        "total_transactions": kpi_stats.get("total_transactions"),
+        "by_decision": kpi_stats.get("by_decision", {}),
+        "by_risk_level": kpi_stats.get("by_risk_level", {}),
+    }
 
 # Custom CSS
 st.markdown("""
@@ -74,7 +155,10 @@ st.markdown('<div class="main-header">🤖 Adaptive Finance Governance Agent</di
 st.markdown('<div class="sub-header">Multi-Agent AI System for Automated Finance Compliance with Adaptive Learning</div>', unsafe_allow_html=True)
 
 # Sidebar
-with st.sidebar:
+sidebar_nav = st.sidebar.container()
+sidebar_assistant = st.sidebar.container()
+
+with sidebar_nav:
     st.title("🤖 AFGA")
     st.caption("Adaptive Finance Governance Agent")
     st.markdown("---")
@@ -101,25 +185,24 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("**System Status**")
-    
-    # Check API health
-    import httpx
-    import os
-    
-    API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
-    
-    try:
-        with httpx.Client(timeout=5.0) as client:
-            response = client.get(f"{API_BASE_URL}/health")
-            if response.status_code == 200:
-                st.success("✅ API Connected")
-            else:
-                st.error("❌ API Error")
-    except:
+    if system_health and system_health.get("status") == "healthy":
+        st.success("✅ API Connected")
+        agents = system_health.get("agents") or {}
+        st.caption(
+            " | ".join(
+                f"{name.upper()}: {status}" for name, status in agents.items()
+            )
+        )
+    elif health_error:
+        st.error("❌ API Error")
+        st.caption(health_error)
+    else:
         st.error("❌ API Offline")
         st.caption(f"URL: {API_BASE_URL}")
 
-    render_chat_sidebar("Home", context={"page_summary": "Home dashboard showing AFGA overview."})
+with sidebar_assistant:
+    st.markdown("---")
+    render_chat_sidebar("Home", context=assistant_context)
 
 # Main content
 st.markdown("## Welcome to AFGA")
@@ -195,74 +278,66 @@ AFGA is designed to demonstrate **adaptive learning**. As you process transactio
 # Quick stats
 st.markdown("### 📊 Quick Stats")
 
-try:
-    with httpx.Client(timeout=10.0) as client:
-        # Get KPI summary
-        response = client.get(f"{API_BASE_URL}/kpis/summary")
-        if response.status_code == 200:
-            summary = response.json()
-            
-            if summary.get("current"):
-                col1, col2, col3, col4 = st.columns(4)
-                
-                current = summary["current"]
-                
-                with col1:
-                    st.metric(
-                        "Total Transactions",
-                        current.get("total_transactions", 0)
-                    )
-                
-                with col2:
-                    hcr = current.get("hcr", 0)
-                    st.metric(
-                        "H-CR",
-                        f"{hcr:.1f}%",
-                        delta=f"{'↓' if summary.get('trends', {}).get('hcr', {}).get('improving') else '↑'} Learning"
-                    )
-                
-                with col3:
-                    crs = current.get("crs", 0)
-                    st.metric(
-                        "CRS",
-                        f"{crs:.1f}%",
-                        delta=f"{'↑' if summary.get('trends', {}).get('crs', {}).get('improving') else '↓'} Memory"
-                    )
-                
-                with col4:
-                    atar = current.get("atar", 0)
-                    st.metric(
-                        "ATAR",
-                        f"{atar:.1f}%",
-                        delta=f"{'↑' if summary.get('trends', {}).get('atar', {}).get('improving') else '↓'} Automation"
-                    )
-            else:
-                st.info("No transactions processed yet. Start by reviewing a transaction!")
-        
-        # Get transaction stats
-        response = client.get(f"{API_BASE_URL}/kpis/stats")
-        if response.status_code == 200:
-            stats = response.json()
-            
-            if stats.get("total_transactions", 0) > 0:
-                st.markdown("### 📈 Transaction Distribution")
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("**By Decision:**")
-                    by_decision = stats.get("by_decision", {})
-                    for decision, count in by_decision.items():
-                        st.write(f"- {decision.title()}: {count}")
-                
-                with col2:
-                    st.markdown("**By Risk Level:**")
-                    by_risk = stats.get("by_risk_level", {})
-                    for risk, count in by_risk.items():
-                        st.write(f"- {risk.title()}: {count}")
+if kpi_summary and kpi_summary.get("current"):
+    current = kpi_summary["current"]
+    trends = kpi_summary.get("trends", {})
 
-except Exception as e:
-    st.warning(f"Could not load quick stats: {str(e)}")
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Total Transactions", current.get("total_transactions", 0))
+
+    with col2:
+        hcr = current.get("hcr", 0)
+        hcr_trend = trends.get("hcr", {}).get("improving")
+        st.metric(
+            "H-CR",
+            f"{hcr:.1f}%",
+            delta=f"{'↓' if hcr_trend else '↑'} Learning",
+            delta_color="inverse"
+        )
+
+    with col3:
+        crs = current.get("crs", 0)
+        crs_trend = trends.get("crs", {}).get("improving")
+        st.metric(
+            "CRS",
+            f"{crs:.1f}%",
+            delta=f"{'↑' if crs_trend else '↓'} Memory"
+        )
+
+    with col4:
+        atar = current.get("atar", 0)
+        atar_trend = trends.get("atar", {}).get("improving")
+        st.metric(
+            "ATAR",
+            f"{atar:.1f}%",
+            delta=f"{'↑' if atar_trend else '↓'} Automation"
+        )
+else:
+    if kpi_summary_error:
+        st.warning(f"Could not load KPI summary: {kpi_summary_error}")
+    else:
+        st.info("No transactions processed yet. Start by reviewing a transaction!")
+
+if kpi_stats and kpi_stats.get("total_transactions", 0) > 0:
+    st.markdown("### 📈 Transaction Distribution")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("**By Decision:**")
+        by_decision = kpi_stats.get("by_decision", {})
+        for decision, count in by_decision.items():
+            st.write(f"- {decision.title()}: {count}")
+
+    with col2:
+        st.markdown("**By Risk Level:**")
+        by_risk = kpi_stats.get("by_risk_level", {})
+        for risk, count in by_risk.items():
+            st.write(f"- {risk.title()}: {count}")
+elif kpi_stats_error:
+    st.warning(f"Could not load transaction stats: {kpi_stats_error}")
 
 st.markdown("---")
 st.caption("AFGA v0.1.0 | Multi-Agent AI for Finance Compliance | Built with LangGraph + A2A + MCP")

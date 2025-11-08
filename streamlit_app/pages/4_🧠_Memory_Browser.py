@@ -24,7 +24,10 @@ st.title("🧠 Adaptive Memory Browser")
 st.markdown("Explore learned exceptions, view memory statistics, and understand how the system improves over time.")
 
 # Sidebar
-with st.sidebar:
+sidebar_nav = st.sidebar.container()
+sidebar_assistant = st.sidebar.container()
+
+with sidebar_nav:
     st.title("🤖 AFGA")
     st.caption("Adaptive Finance Governance Agent")
     st.markdown("---")
@@ -36,7 +39,78 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("Memory Browser", context={"page_summary": "Adaptive memory browser with learned exceptions."})
+with sidebar_assistant:
+    st.markdown("---")
+    render_chat_sidebar("Memory Browser", context=assistant_context)
+
+memory_stats = None
+memory_stats_error = None
+deleted_exceptions_data: list[dict] = []
+deleted_error = None
+
+try:
+    with httpx.Client(timeout=12.0) as client:
+        try:
+            stats_resp = client.get(f"{API_BASE_URL}/memory/stats")
+            if stats_resp.status_code == 200:
+                memory_stats = stats_resp.json()
+            else:
+                memory_stats_error = f"HTTP {stats_resp.status_code}" \
+                    + (f" - {stats_resp.text}" if stats_resp.text else "")
+        except Exception as exc:
+            memory_stats_error = str(exc)
+
+        try:
+            deleted_resp = client.get(f"{API_BASE_URL}/memory/exceptions/deleted")
+            if deleted_resp.status_code == 200:
+                deleted_payload = deleted_resp.json()
+                deleted_exceptions_data = deleted_payload.get("exceptions", []) or []
+            else:
+                deleted_error = f"HTTP {deleted_resp.status_code}" \
+                    + (f" - {deleted_resp.text}" if deleted_resp.text else "")
+        except Exception as exc:
+            deleted_error = str(exc)
+except Exception as exc:
+    if not memory_stats_error:
+        memory_stats_error = str(exc)
+    if not deleted_error:
+        deleted_error = str(exc)
+
+assistant_context = {
+    "page_summary": "Adaptive memory browser with learned exceptions.",
+}
+
+if memory_stats:
+    assistant_context["summary"] = {
+        "totals": {
+            "total_exceptions": memory_stats.get("total_exceptions"),
+            "active_exceptions": memory_stats.get("active_exceptions"),
+            "total_applications": memory_stats.get("total_applications"),
+        },
+        "avg_success_rate": memory_stats.get("avg_success_rate"),
+        "top_rules": [
+            {
+                "exception_id": rule.get("exception_id"),
+                "description": rule.get("description"),
+                "applied_count": rule.get("applied_count"),
+                "success_rate": rule.get("success_rate"),
+            }
+            for rule in (memory_stats.get("most_applied_rules") or [])[:5]
+        ],
+    }
+
+if deleted_exceptions_data:
+    assistant_context["deleted_exceptions"] = {
+        "count": len(deleted_exceptions_data),
+        "examples": [
+            {
+                "exception_id": exc.get("exception_id"),
+                "description": exc.get("description"),
+                "applied_count": exc.get("applied_count"),
+            }
+            for exc in deleted_exceptions_data[:5]
+        ],
+    }
 
 # Refresh button - force memory stats recalculation
 if st.button("🔄 Refresh"):
@@ -53,86 +127,77 @@ if st.button("🔄 Refresh"):
 # Memory Statistics
 st.markdown("## 📊 Memory Statistics")
 
-try:
-    with httpx.Client(timeout=10.0) as client:
-        response = client.get(f"{API_BASE_URL}/memory/stats")
-        
-        if response.status_code == 200:
-            stats = response.json()
-            
-            # Key metrics
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.metric(
-                    "Total Exceptions",
-                    stats.get("total_exceptions", 0),
-                    help="Total number of learned exceptions in memory"
-                )
-            
-            with col2:
-                st.metric(
-                    "Active Exceptions",
-                    stats.get("active_exceptions", 0),
-                    help="Exceptions that have been applied at least once"
-                )
-            
-            with col3:
-                st.metric(
-                    "Total Applications",
-                    stats.get("total_applications", 0),
-                    help="Total times memory rules have been applied"
-                )
-            
-            with col4:
-                avg_success = stats.get("avg_success_rate", 0)
-                st.metric(
-                    "Avg Success Rate",
-                    f"{avg_success:.1%}",
-                    help="Average success rate of applied memory rules"
-                )
-            
-            # Most Applied Rules
-            st.markdown("### 🏆 Most Applied Rules")
-            
-            most_applied = stats.get("most_applied_rules", [])
-            
-            if most_applied:
-                for idx, rule in enumerate(most_applied, 1):
-                    with st.expander(f"#{idx} - {rule.get('description', 'N/A')} (Applied {rule.get('applied_count', 0)} times)"):
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            st.markdown(f"**Exception ID:** {rule.get('exception_id')}")
-                            st.markdown(f"**Applied Count:** {rule.get('applied_count', 0)}")
-                        
-                        with col2:
-                            st.markdown(f"**Success Rate:** {rule.get('success_rate', 0):.1%}")
-                            
-                            # Progress bar for success rate
-                            success_rate = rule.get('success_rate', 0)
-                            if success_rate >= 0.8:
-                                st.success(f"High confidence: {success_rate:.1%}")
-                            elif success_rate >= 0.6:
-                                st.warning(f"Medium confidence: {success_rate:.1%}")
-                            else:
-                                st.error(f"Low confidence: {success_rate:.1%}")
-            else:
-                st.info("No rules have been applied yet. Process transactions with HITL feedback to create learned rules!")
-            
-            # Recent Additions
-            st.markdown("### 🆕 Recently Added Rules")
-            
-            recent = stats.get("recent_additions", [])
-            
-            if recent:
-                for rule in recent:
-                    st.write(f"- **{rule.get('description', 'N/A')}** (ID: {rule.get('exception_id')}, Added: {rule.get('created_at', 'N/A')})")
-            else:
-                st.info("No recent additions")
-
-except Exception as e:
-    st.error(f"Error loading memory stats: {str(e)}")
+if memory_stats:
+    stats = memory_stats
+    
+    # Key metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "Total Exceptions",
+            stats.get("total_exceptions", 0),
+            help="Total number of learned exceptions in memory"
+        )
+    
+    with col2:
+        st.metric(
+            "Active Exceptions",
+            stats.get("active_exceptions", 0),
+            help="Exceptions that have been applied at least once"
+        )
+    
+    with col3:
+        st.metric(
+            "Total Applications",
+            stats.get("total_applications", 0),
+            help="Total times memory rules have been applied"
+        )
+    
+    with col4:
+        avg_success = stats.get("avg_success_rate", 0)
+        st.metric(
+            "Avg Success Rate",
+            f"{avg_success:.1%}",
+            help="Average success rate of applied memory rules"
+        )
+    
+    st.markdown("### 🏆 Most Applied Rules")
+    most_applied = stats.get("most_applied_rules", [])
+    
+    if most_applied:
+        for idx, rule in enumerate(most_applied, 1):
+            with st.expander(f"#{idx} - {rule.get('description', 'N/A')} (Applied {rule.get('applied_count', 0)} times)"):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown(f"**Exception ID:** {rule.get('exception_id')}")
+                    st.markdown(f"**Applied Count:** {rule.get('applied_count', 0)}")
+                
+                with col2:
+                    st.markdown(f"**Success Rate:** {rule.get('success_rate', 0):.1%}")
+                    success_rate = rule.get("success_rate", 0)
+                    if success_rate >= 0.8:
+                        st.success(f"High confidence: {success_rate:.1%}")
+                    elif success_rate >= 0.6:
+                        st.warning(f"Medium confidence: {success_rate:.1%}")
+                    else:
+                        st.error(f"Low confidence: {success_rate:.1%}")
+    else:
+        st.info("No rules have been applied yet. Process transactions with HITL feedback to create learned rules!")
+    
+    st.markdown("### 🆕 Recently Added Rules")
+    recent = stats.get("recent_additions", [])
+    if recent:
+        for rule in recent:
+            st.write(f"- **{rule.get('description', 'N/A')}** (ID: {rule.get('exception_id')}, Added: {rule.get('created_at', 'N/A')})")
+    else:
+        st.info("No recent additions")
+else:
+    if memory_stats_error:
+        st.error(f"Error loading memory stats: {memory_stats_error}")
+    else:
+        st.info("Memory statistics will appear after processing transactions.")
 
 # Browse Exceptions
 st.markdown("## 🔍 Browse Exceptions")
@@ -356,42 +421,33 @@ with st.expander("📖 How Adaptive Memory Works"):
 st.markdown("---")
 st.markdown("## 🗑️ Deleted Exceptions")
 
-try:
-    with httpx.Client(timeout=10.0) as client:
-        response = client.get(f"{API_BASE_URL}/memory/exceptions/deleted")
-        
-        if response.status_code == 200:
-            data = response.json()
-            deleted_exceptions = data.get("exceptions", [])
-            
-            if deleted_exceptions:
-                st.warning(f"**{len(deleted_exceptions)} deleted exception(s)**")
-                
-                for exc in deleted_exceptions:
-                    col1, col2 = st.columns([4, 1])
-                    with col1:
-                        st.markdown(f"~~{exc.get('description', 'N/A')}~~ | ID: `{exc.get('exception_id')}` | Was applied: {exc.get('applied_count', 0)}x")
-                    with col2:
-                        if st.button("♻️ Restore", key=f"restore_{exc.get('exception_id')}", use_container_width=True):
-                            try:
-                                restore_response = client.post(
-                                    f"{API_BASE_URL}/memory/exceptions/{exc.get('exception_id')}/restore"
-                                )
-                                
-                                if restore_response.status_code == 200:
-                                    st.success(f"✅ Restored!")
-                                    st.rerun()
-                                else:
-                                    st.error(f"Error: {restore_response.status_code}")
-                            except Exception as e:
-                                st.error(f"Error: {str(e)}")
-                    st.markdown("---")
-            else:
-                st.info("No deleted exceptions. Deleted exceptions can be restored here.")
-        else:
-            st.error(f"Error loading deleted exceptions: {response.status_code}")
-except Exception as e:
-    st.error(f"Error: {str(e)}")
+if deleted_exceptions_data:
+    st.warning(f"**{len(deleted_exceptions_data)} deleted exception(s)**")
+    for exc in deleted_exceptions_data:
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.markdown(
+                f"~~{exc.get('description', 'N/A')}~~ | ID: `{exc.get('exception_id')}` | Was applied: {exc.get('applied_count', 0)}x"
+            )
+        with col2:
+            if st.button("♻️ Restore", key=f"restore_{exc.get('exception_id')}", use_container_width=True):
+                try:
+                    with httpx.Client(timeout=10.0) as client:
+                        restore_response = client.post(
+                            f"{API_BASE_URL}/memory/exceptions/{exc.get('exception_id')}/restore"
+                        )
+                    if restore_response.status_code == 200:
+                        st.success("✅ Restored!")
+                        st.rerun()
+                    else:
+                        st.error(f"Error: {restore_response.status_code} {restore_response.text}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+        st.markdown("---")
+elif deleted_error:
+    st.error(f"Error loading deleted exceptions: {deleted_error}")
+else:
+    st.info("No deleted exceptions. Deleted exceptions can be restored here.")
 
 # Memory Management (Admin)
 st.markdown("---")
