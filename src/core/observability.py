@@ -78,6 +78,12 @@ class Observability:
                     yield trace_id
                     trace.update(output={"status": "completed"})
                 finally:
+                    try:
+                        trace.end()
+                        if hasattr(self.client, "flush"):
+                            self.client.flush()
+                    except Exception as flush_exc:
+                        logger.warning(f"Langfuse trace end failed: {flush_exc}")
                     self._current_trace = None  # Clear trace context
             except Exception as e:
                 logger.warning(f"Langfuse trace failed: {e}")

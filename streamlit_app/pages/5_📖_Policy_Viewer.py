@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from urllib.parse import unquote
 
 import streamlit as st
 
@@ -23,6 +24,11 @@ st.markdown("Browse the company policies used by PAA for compliance checking.")
 
 policies_dir = Path("data/policies")
 policy_files = sorted(policies_dir.glob("*.txt")) if policies_dir.exists() else []
+
+query_params = st.experimental_get_query_params()
+selected_policy_param = None
+if "policy" in query_params and query_params["policy"]:
+    selected_policy_param = unquote(query_params["policy"][0])
 
 assistant_context = {
     "page_summary": "Policy viewer listing compliance documents.",
@@ -67,8 +73,11 @@ else:
     for policy_file in policy_files:
         # Extract policy name from filename
         policy_name = policy_file.stem.replace("_", " ").title()
+        default_expanded = False
+        if selected_policy_param:
+            default_expanded = selected_policy_param in {policy_file.name, policy_name, policy_file.stem}
         
-        with st.expander(f"📋 {policy_name}", expanded=False):
+        with st.expander(f"📋 {policy_name}", expanded=default_expanded):
             try:
                 with open(policy_file, 'r') as f:
                     policy_content = f.read()

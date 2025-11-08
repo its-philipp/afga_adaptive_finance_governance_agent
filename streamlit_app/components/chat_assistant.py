@@ -6,6 +6,7 @@ import httpx
 import streamlit as st
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
+STREAMLIT_BASE_URL = os.getenv("STREAMLIT_BASE_URL", "")
 CHAT_HISTORY_KEY = "assistant_chat_history"
 SENSITIVE_KEYS = {
     "credit_card",
@@ -43,10 +44,17 @@ def _render_history():
                         url = src.get("url")
                         display_title = title or "Untitled"
                         if url:
-                            if not url.startswith("http"):
+                            href = url
+                            if url.startswith("streamlit://"):
+                                front_path = url.replace("streamlit://", "", 1)
+                                if STREAMLIT_BASE_URL:
+                                    href = f"{STREAMLIT_BASE_URL.rstrip('/')}/{front_path.lstrip('/')}"
+                                else:
+                                    href = f"/{front_path.lstrip('/')}"
+                            elif not url.startswith("http"):
                                 normalized = url if url.startswith("/") else f"/{url}"
-                                url = f"{base_url}{normalized}"
-                            st.markdown(f"- {src_type}: [{display_title}]({url})")
+                                href = f"{API_BASE_URL.rstrip('/')}{normalized}"
+                            st.markdown(f"- {src_type}: [{display_title}]({href})")
                         else:
                             st.write(f"- {src_type}: {display_title}")
                         snippet = src.get("snippet")

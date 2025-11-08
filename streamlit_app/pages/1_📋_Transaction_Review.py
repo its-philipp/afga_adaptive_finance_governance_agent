@@ -239,81 +239,107 @@ with tab1:
             else:
                 st.info(f"📄 PDF document: {uploaded_file.name}")
             
-            # Process button
-            if st.button("🔍 Extract & Process Invoice", type="primary"):
-                with st.spinner("Extracting invoice data with Vision LLM..."):
-                    try:
-                        # Upload to API for extraction
-                        files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
-                        
-                        with httpx.Client(timeout=120.0) as client:
-                            response = client.post(
-                                f"{API_BASE_URL}/transactions/upload-receipt",
-                                files=files
-                            )
-                            
+            if st.session_state.upload_receipt_result is None:
+                if st.button("🔍 Extract & Process Invoice", type="primary", key="process_uploaded_invoice"):
+                    with st.spinner("Extracting invoice data with Vision LLM..."):
+                        try:
+                            files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                            with httpx.Client(timeout=120.0) as client:
+                                response = client.post(
+                                    f"{API_BASE_URL}/transactions/upload-receipt",
+                                    files=files
+                                )
                             if response.status_code == 201:
                                 result = response.json()
-                                
-                                st.success("✅ Invoice extracted and processed!")
-                                
-                                # Show extracted invoice data
-                                st.markdown("#### 📋 Extracted Invoice Data")
-                                extracted_invoice = result.get("invoice", {})
-                                
-                                col1, col2, col3 = st.columns(3)
-                                with col1:
-                                    st.metric("Invoice ID", extracted_invoice.get("invoice_id"))
-                                    st.metric("Vendor", extracted_invoice.get("vendor"))
-                                
-                                with col2:
-                                    st.metric("Amount", f"${extracted_invoice.get('amount', 0):,.2f}")
-                                    st.metric("Category", extracted_invoice.get("category"))
-                                
-                                with col3:
-                                    st.metric("PO Number", extracted_invoice.get("po_number") or "N/A")
-                                    st.metric("Date", extracted_invoice.get("date"))
-                                
-                                with st.expander("📋 Full Extracted Data"):
-                                    st.json(extracted_invoice)
-                                
-                                # Show processing result (same as structured submission)
-                                st.markdown("---")
-                                st.markdown("#### 🎯 Processing Result")
-                                
-                                # Store in session for HITL
-                                st.session_state.last_transaction = result
-                                
-                                # Decision badge
-                                decision = result.get("final_decision")
-                                if decision == "approved":
-                                    st.success(f"✅ **APPROVED**")
-                                elif decision == "rejected":
-                                    st.error(f"❌ **REJECTED**")
-                                else:
-                                    st.warning(f"⚠️ **HITL REQUIRED**")
-                                
-                                # Risk and policy check (same as before)
-                                risk = result.get("risk_assessment", {})
-                                if risk:
-                                    st.metric("Risk Level", risk.get("risk_level", "N/A").upper())
-                                    st.metric("Risk Score", f"{risk.get('risk_score', 0):.1f}/100")
-                                
-                                # Audit trail
-                                with st.expander("📜 Complete Audit Trail"):
-                                    audit_trail = result.get("audit_trail", [])
-                                    for idx, step in enumerate(audit_trail, 1):
-                                        st.write(f"{idx}. {step}")
-                            
+                                st.session_state.upload_receipt_result = result
+                                st.session_state.upload_receipt_file_meta = {
+                                    "name": uploaded_file.name,
+                                    "size": uploaded_file.size,
+                                    "type": uploaded_file.type,
+                                }
+                                st.rerun()
                             elif response.status_code == 422:
-                                st.error(f"❌ Could not extract valid invoice data from document")
+                                st.error("❌ Could not extract valid invoice data from document")
                                 st.error(f"Details: {response.json().get('detail', 'Unknown error')}")
                             else:
                                 st.error(f"❌ Error: {response.status_code} - {response.text}")
-                    
-                    except Exception as e:
-                        st.error(f"❌ Error processing document: {str(e)}")
-                        st.info("Make sure the backend is running and has Vision LLM access")
+                        except Exception as e:
+                            st.error(f"❌ Error processing document: {str(e)}")
+                            st.info("Make sure the backend is running and has Vision LLM access")
+            else:
+                result = st.session_state.upload_receipt_result
+                file_meta = st.session_state.upload_receipt_file_meta or {}
+                st.markdown("---")
+                st.markdown("#### 📄 Latest Uploaded Document")
+                st.caption(
+                    f"{file_meta.get('name', 'Uploaded document')} • {file_meta.get('type', 'unknown type')} • {file_meta.get('size', 0):,} bytes"
+                )
+
+                extracted_invoice = result.get("invoice", {})
+
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Invoice ID", extracted_invoice.get("invoice_id"))
+                    st.metric("Vendor", extracted_invoice.get("vendor"))
+                with col2:
+                    st.metric("Amount", f"${extracted_invoice.get('amount', 0):,.2f}")
+                    st.metric("Category", extracted_invoice.get("category"))
+                with col3:
+                    st.metric("PO Number", extracted_invoice.get("po_number") or "N/A")
+                    st.metric("Date", extracted_invoice.get("date"))
+                with col4:
+                    st.metric("Risk Level", (result.get("risk_assessment") or {}).get("risk_level", "N/A").upper())
+                    st.metric("Risk Score", f"{(result.get('risk_assessment') or {}).get('risk_score', 0):.1f}/100")
+
+                with st.expander("📋 Full Extracted Data"):
+                    st.json(extracted_invoice)
+
+                st.markdown("### 🎯 Processing Result")
+                decision = result.get("final_decision")
+                if decision == "approved":
+                    st.success("✅ **APPROVED**")
+                elif decision == "rejected":
+                    st.error("❌ **REJECTED**")
+                else:
+                    st.warning("⚠️ **HITL REQUIRED**")
+
+                risk = result.get("risk_assessment", {})
+                if risk:
+                    with st.expander("🎯 Risk Assessment Details"):
+                        st.markdown(f"**Risk Level:** {risk.get('risk_level', 'N/A').upper()}")
+                        st.markdown(f"**Risk Score:** {risk.get('risk_score', 0):.1f}/100")
+                        st.markdown("**Risk Factors:**")
+                        for factor in risk.get("risk_factors", []):
+                            st.write(f"- {factor}")
+
+                policy_check_raw = result.get("policy_check") or result.get("policy_check_json")
+                if isinstance(policy_check_raw, str):
+                    try:
+                        policy_check = json.loads(policy_check_raw)
+                    except json.JSONDecodeError:
+                        policy_check = None
+                else:
+                    policy_check = policy_check_raw
+
+                if policy_check:
+                    st.markdown("### 📋 Policy Compliance & RAG Transparency")
+                    render_policy_check_details(policy_check, expand_sources=False)
+                else:
+                    st.info("No policy compliance data returned for this transaction.")
+
+                st.markdown("### 💭 Decision Reasoning")
+                st.info(result.get("decision_reasoning", "No reasoning provided"))
+
+                with st.expander("📜 Complete Audit Trail"):
+                    for idx, step in enumerate(result.get("audit_trail", []), 1):
+                        st.write(f"{idx}. {step}")
+
+                col_reset, _ = st.columns([1, 3])
+                with col_reset:
+                    if st.button("Process another document", key="reset_uploaded_invoice"):
+                        st.session_state.upload_receipt_result = None
+                        st.session_state.upload_receipt_file_meta = None
+                        st.rerun()
     
     elif data_source == "Mock Invoices (Test Data)":
         st.markdown("### 🧪 Mock Invoice Testing")

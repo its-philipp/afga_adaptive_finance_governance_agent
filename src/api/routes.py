@@ -763,7 +763,7 @@ def assistant_chat(request: AssistantChatRequest) -> AssistantChatResponse:
     sources: List[AssistantChatSource] = []
     for match in policy_list:
         filename = match.get("policy_filename")
-        url = f"/api/v1/policies/{quote(filename)}" if filename else None
+        streamlit_path = f"Policy_Viewer?policy={quote(filename)}" if filename else None
         snippet = match.get("snippet") or match.get("content")
         if snippet and len(snippet) > 280:
             snippet = f"{snippet[:280]}..."
@@ -773,7 +773,7 @@ def assistant_chat(request: AssistantChatRequest) -> AssistantChatResponse:
                 id=match.get("policy_name", filename or "policy"),
                 title=filename or match.get("policy_name", "Policy excerpt"),
                 snippet=snippet,
-                url=url,
+                url=f"streamlit://{streamlit_path}" if streamlit_path else None,
             )
         )
 
