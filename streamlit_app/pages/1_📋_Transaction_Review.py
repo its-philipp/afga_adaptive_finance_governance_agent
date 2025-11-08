@@ -120,7 +120,31 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("Transaction Review")
+    assistant_context = {"page_summary": "Transaction review with automated decision history."}
+    last_transaction = st.session_state.get("last_transaction")
+    if isinstance(last_transaction, dict):
+        assistant_context["recent_transaction"] = {
+            "transaction_id": last_transaction.get("transaction_id"),
+            "invoice_id": last_transaction.get("invoice", {}).get("invoice_id"),
+            "vendor": last_transaction.get("invoice", {}).get("vendor"),
+            "amount": last_transaction.get("invoice", {}).get("amount"),
+            "decision": last_transaction.get("final_decision"),
+            "confidence": last_transaction.get("policy_check", {}).get("confidence"),
+        }
+
+    selected_transaction = st.session_state.get("selected_transaction")
+    if isinstance(selected_transaction, dict):
+        assistant_context["selected_transaction"] = {
+            "transaction_id": selected_transaction.get("transaction_id"),
+            "invoice_id": selected_transaction.get("invoice", {}).get("invoice_id"),
+            "vendor": selected_transaction.get("invoice", {}).get("vendor"),
+            "amount": selected_transaction.get("invoice", {}).get("amount"),
+            "final_decision": selected_transaction.get("final_decision"),
+            "risk_level": selected_transaction.get("risk_level"),
+            "policy_check": selected_transaction.get("policy_check"),
+        }
+
+    render_chat_sidebar("Transaction Review", context=assistant_context)
 
 # Tabs for different views
 tab1, tab2, tab3 = st.tabs(["📤 Submit Transaction", "📜 Transaction History", "👤 Human Review (HITL)"])

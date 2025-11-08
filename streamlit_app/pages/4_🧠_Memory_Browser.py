@@ -36,7 +36,7 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("Memory Browser")
+    render_chat_sidebar("Memory Browser", context={"page_summary": "Adaptive memory browser with learned exceptions."})
 
 # Refresh button - force memory stats recalculation
 if st.button("🔄 Refresh"):

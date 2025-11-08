@@ -37,7 +37,7 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("KPI Dashboard")
+    render_chat_sidebar("KPI Dashboard", context={"page_summary": "KPI dashboard with H-CR, CRS, ATAR, and audit traceability metrics."})
 
 # Refresh button - force KPI recalculation
 if st.button("🔄 Refresh Data"):

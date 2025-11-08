@@ -36,7 +36,7 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("Agent Workflow")
+    render_chat_sidebar("Agent Workflow", context={"page_summary": "Agent workflow diagram and protocol explanations."})
 
 # Architecture Overview
 st.markdown("## 🏗️ System Architecture")

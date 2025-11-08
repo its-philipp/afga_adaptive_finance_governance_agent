@@ -119,7 +119,7 @@ with st.sidebar:
         st.error("❌ API Offline")
         st.caption(f"URL: {API_BASE_URL}")
 
-    render_chat_sidebar("Home")
+    render_chat_sidebar("Home", context={"page_summary": "Home dashboard showing AFGA overview."})
 
 # Main content
 st.markdown("## Welcome to AFGA")

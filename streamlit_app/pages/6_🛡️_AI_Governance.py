@@ -40,7 +40,7 @@ with st.sidebar:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("AI Governance")
+    render_chat_sidebar("AI Governance", context={"page_summary": "AI governance dashboard with audit logs and guardrails."})
 
 # Agent Selector
 st.markdown("## 🔍 Select Agent to View Governance Data")
