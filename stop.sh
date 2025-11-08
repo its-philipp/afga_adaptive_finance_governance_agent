@@ -13,14 +13,15 @@ if [ -f .backend.pid ] || [ -f .frontend.pid ]; then
     
     # Verify they're stopped
     streamlit_count=$(pgrep -f "streamlit run" 2>/dev/null | wc -l | tr -d ' ')
-    uvicorn_count=$(pgrep -f "uvicorn.*8000" 2>/dev/null | wc -l | tr -d ' ')
+    uvicorn_pattern="uvicorn.*(8000|src\\.api\\.main:app)"
+    uvicorn_count=$(pgrep -f "$uvicorn_pattern" 2>/dev/null | wc -l | tr -d ' ')
     
     if [ "$streamlit_count" -eq 0 ] && [ "$uvicorn_count" -eq 0 ]; then
         echo "✅ All processes stopped cleanly"
     else
         echo "⚠️  Some processes still running, forcing shutdown..."
         pkill -9 -f "streamlit run" 2>/dev/null || true
-        pkill -9 -f "uvicorn.*8000" 2>/dev/null || true
+        pkill -9 -f "$uvicorn_pattern" 2>/dev/null || true
         sleep 1
         echo "✅ Forced shutdown complete"
     fi
@@ -33,7 +34,8 @@ else
     echo "⚠️  No PID files found, searching for running processes..."
     
     streamlit_count=$(pgrep -f "streamlit run" 2>/dev/null | wc -l | tr -d ' ')
-    uvicorn_count=$(pgrep -f "uvicorn.*8000" 2>/dev/null | wc -l | tr -d ' ')
+    uvicorn_pattern="uvicorn.*(8000|src\\.api\\.main:app)"
+    uvicorn_count=$(pgrep -f "$uvicorn_pattern" 2>/dev/null | wc -l | tr -d ' ')
     
     if [ "$streamlit_count" -eq 0 ] && [ "$uvicorn_count" -eq 0 ]; then
         echo "✅ No AFGA processes running"
@@ -41,7 +43,7 @@ else
         echo "   Found: Streamlit=$streamlit_count, Uvicorn=$uvicorn_count"
         echo "   Killing..."
         pkill -9 -f "streamlit run" 2>/dev/null || true
-        pkill -9 -f "uvicorn.*8000" 2>/dev/null || true
+        pkill -9 -f "$uvicorn_pattern" 2>/dev/null || true
         sleep 1
         echo "✅ Processes stopped"
     fi

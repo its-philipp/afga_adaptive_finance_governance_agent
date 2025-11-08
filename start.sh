@@ -11,7 +11,7 @@ echo "=================================================="
 # Function to check for running processes
 check_processes() {
     local streamlit_count=$(pgrep -f "streamlit run" | wc -l | tr -d ' ')
-    local uvicorn_count=$(pgrep -f "uvicorn.*8000" | wc -l | tr -d ' ')
+    local uvicorn_count=$(pgrep -f "uvicorn.*(8000|src\\.api\\.main:app)" | wc -l | tr -d ' ')
     
     if [ "$streamlit_count" -gt 0 ] || [ "$uvicorn_count" -gt 0 ]; then
         echo "⚠️  Found running processes:"
@@ -27,7 +27,7 @@ echo "1️⃣  Checking for existing AFGA processes..."
 if ! check_processes; then
     echo "   🛑 Stopping all AFGA processes..."
     pkill -9 -f "streamlit run" 2>/dev/null || true
-    pkill -9 -f "uvicorn.*8000" 2>/dev/null || true
+    pkill -9 -f "uvicorn.*(8000|src\\.api\\.main:app)" 2>/dev/null || true
     sleep 3
     
     # Verify they're gone
@@ -131,7 +131,7 @@ echo "✅ AFGA STARTED SUCCESSFULLY!"
 echo ""
 echo "📊 Process Status:"
 streamlit_count=$(pgrep -f "streamlit run" | wc -l | tr -d ' ')
-uvicorn_count=$(pgrep -f "uvicorn.*8000" | wc -l | tr -d ' ')
+uvicorn_count=$(pgrep -f "uvicorn.*(8000|src\\.api\\.main:app)" | wc -l | tr -d ' ')
 echo "   - Streamlit: $streamlit_count process (expected: 1)"
 echo "   - Uvicorn: $uvicorn_count process (expected: 1)"
 
