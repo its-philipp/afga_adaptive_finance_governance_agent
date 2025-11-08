@@ -424,8 +424,47 @@ if audit_file.exists():
                     st.json(entry)
     else:
         st.info(f"💡 No audit entries found for {selected_agent_label}. Process transactions to generate audit logs.")
-else:
-    st.info("💡 Governance audit logs will appear here after processing transactions")
+
+st.markdown("---")
+st.markdown("## 📘 AI Governance Best Practices")
+with st.expander("📖 View Guardrail Playbook"):
+    st.markdown("""
+    ### Input Governance
+    
+    **What We Check:**
+    - PII (Personally Identifiable Information)
+    - Forbidden words (passwords, keys, secrets)
+    - Prompt length and quality
+    
+    **Why It Matters:**
+    - Prevents data leaks to LLM providers
+    - Ensures compliance with privacy regulations
+    - Protects sensitive company information
+    
+    ### Output Governance
+    
+    **What We Check:**
+    - Response quality (not empty, reasonable length)
+    - PII in model outputs (shouldn't leak data)
+    - Content policy compliance
+    
+    **Why It Matters:**
+    - Keeps model outputs safe and compliant
+    - Prevents hallucinated disclosures of sensitive data
+    - Demonstrates responsible AI behavior
+    
+    ### Policy Enforcement
+    
+    - Role-based controls for which agents can invoke which tools
+    - Rate limiting to prevent abuse
+    - Emergency bypass logging for regulators
+    
+    ### Audit Logging & Transparency
+    
+    - Every call logged with redacted prompt/response
+    - Persisted to governance_audit.jsonl + violations JSONL
+    - Guardrail dashboard highlights recent incidents
+    """)
 
 # Violations
 if violations_file.exists():
@@ -458,59 +497,6 @@ if violations_file.exists():
                 st.json(violation)
     else:
         st.success("✅ No violations found!")
-
-# Governance Best Practices
-with st.expander("📖 AI Governance Best Practices"):
-    st.markdown("""
-    ### Input Governance
-    
-    **What We Check:**
-    - PII (Personally Identifiable Information)
-    - Forbidden words (passwords, keys, secrets)
-    - Prompt length and quality
-    
-    **Why It Matters:**
-    - Prevents data leaks to LLM providers
-    - Ensures compliance with privacy regulations
-    - Protects sensitive company information
-    
-    ### Output Governance
-    
-    **What We Check:**
-    - Response quality (not empty, reasonable length)
-    - PII in model outputs (shouldn't leak data)
-    - Content policy compliance
-    
-    **Why It Matters:**
-    - Ensures LLM responses are safe to use
-    - Detects potential data exposure
-    - Maintains quality standards
-    
-    ### Audit Logging
-    
-    **What We Log:**
-    - Every LLM call (with PII redaction)
-    - All governance violations
-    - Cost per call
-    - Processing time
-    
-    **Why It Matters:**
-    - Complete transparency
-    - Regulatory compliance
-    - Cost accountability
-    - Performance monitoring
-    
-    ### Files Created
-    
-    - `governance_audit.jsonl` - All LLM calls
-    - `governance_violations.jsonl` - Violations only
-    
-    These can be ingested into:
-    - ELK Stack (Elasticsearch, Logstash, Kibana)
-    - Splunk
-    - Azure Monitor
-    - Prometheus + Grafana
-    """)
 
 st.markdown("---")
 st.caption("AFGA AI Governance & Safety | Comprehensive LLM Call Monitoring")

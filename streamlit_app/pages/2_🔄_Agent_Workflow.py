@@ -286,54 +286,79 @@ This hybrid approach follows MIT GenAI research recommendations for scalable, go
 # Get Agent Cards
 st.markdown("### 📋 Agent Cards (A2A Discovery)")
 
+def render_agent_card(card: dict | None) -> None:
+    if not card:
+        st.info("Agent card unavailable")
+        return
+
+    st.markdown(f"**Name:** {card.get('name', 'Unknown Agent')}")
+    st.markdown(f"**Description:** {card.get('description', 'N/A')}")
+    st.markdown(f"**Version:** {card.get('version', 'N/A')}")
+    if card.get("url"):
+        st.caption(f"Endpoint: {card['url']}")
+
+    default_inputs = card.get("defaultInputModes") or card.get("default_input_modes") or []
+    default_outputs = card.get("defaultOutputModes") or card.get("default_output_modes") or []
+    if default_inputs or default_outputs:
+        st.markdown("**Default Modes:**")
+        if default_inputs:
+            st.write("• Input: " + ", ".join(default_inputs))
+        if default_outputs:
+            st.write("• Output: " + ", ".join(default_outputs))
+
+    capabilities = card.get("capabilities") or {}
+    st.markdown("**Capabilities:**")
+    if isinstance(capabilities, dict) and capabilities:
+        for key, enabled in capabilities.items():
+            if key is None:
+                continue
+            label = str(key).replace("_", " ").replace("-", " ").title()
+            icon = "✅" if enabled else "⏸️"
+            st.write(f"{icon} {label}")
+    elif isinstance(capabilities, list) and capabilities:
+        for cap in capabilities:
+            if isinstance(cap, dict):
+                name = cap.get("name") or cap.get("id") or "Capability"
+                with st.expander(f"🔧 {name}"):
+                    st.write(cap.get("description", "No description"))
+    else:
+        st.write("No explicit capabilities declared")
+
+    skills = card.get("skills") or []
+    if skills:
+        st.markdown("**Skills:**")
+        for skill in skills:
+            if not isinstance(skill, dict):
+                continue
+            title = skill.get("name") or skill.get("id") or "Skill"
+            with st.expander(f"🧠 {title}"):
+                st.write(skill.get("description", "No description"))
+                examples = skill.get("examples")
+                if examples:
+                    st.markdown("**Examples:**")
+                    for example in examples:
+                        st.write(f"- {example}")
+    st.markdown("---")
+
 try:
     with httpx.Client(timeout=10.0) as client:
         response = client.get(f"{API_BASE_URL}/agents/cards")
-        
+
         if response.status_code == 200:
             cards = response.json()
-            
-            tab1, tab2, tab3 = st.tabs(["TAA Card", "PAA Card", "EMA Card"])
-            
-            with tab1:
-                if "taa" in cards:
-                    taa_card = cards["taa"]
-                    st.markdown(f"**Name:** {taa_card.get('name')}")
-                    st.markdown(f"**Description:** {taa_card.get('description')}")
-                    st.markdown(f"**Version:** {taa_card.get('version')}")
-                    
-                    capabilities = taa_card.get("capabilities", [])
-                    st.markdown(f"**Capabilities:** {len(capabilities)}")
-                    for cap in capabilities:
-                        with st.expander(f"🔧 {cap.get('name')}"):
-                            st.write(cap.get("description"))
-            
-            with tab2:
-                if "paa" in cards:
-                    paa_card = cards["paa"]
-                    st.markdown(f"**Name:** {paa_card.get('name')}")
-                    st.markdown(f"**Description:** {paa_card.get('description')}")
-                    st.markdown(f"**Version:** {paa_card.get('version')}")
-                    
-                    capabilities = paa_card.get("capabilities", [])
-                    st.markdown(f"**Capabilities:** {len(capabilities)}")
-                    for cap in capabilities:
-                        with st.expander(f"🔧 {cap.get('name')}"):
-                            st.write(cap.get("description"))
-            
-            with tab3:
-                if "ema" in cards:
-                    ema_card = cards["ema"]
-                    st.markdown(f"**Name:** {ema_card.get('name')}")
-                    st.markdown(f"**Description:** {ema_card.get('description')}")
-                    st.markdown(f"**Version:** {ema_card.get('version')}")
-                    
-                    capabilities = ema_card.get("capabilities", [])
-                    st.markdown(f"**Capabilities:** {len(capabilities)}")
-                    for cap in capabilities:
-                        with st.expander(f"🔧 {cap.get('name')}"):
-                            st.write(cap.get("description"))
 
+            tab1, tab2, tab3 = st.tabs(["TAA Card", "PAA Card", "EMA Card"])
+
+            with tab1:
+                render_agent_card(cards.get("taa"))
+
+            with tab2:
+                render_agent_card(cards.get("paa"))
+
+            with tab3:
+                render_agent_card(cards.get("ema"))
+        else:
+            st.error(f"Failed to load agent cards: {response.status_code} {response.text}")
 except Exception as e:
     st.error(f"Error loading agent cards: {str(e)}")
 
