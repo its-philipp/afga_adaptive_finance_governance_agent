@@ -43,6 +43,17 @@ def _render_history():
                             st.caption(snippet)
 
 
+def _trigger_rerun() -> None:
+    """Trigger a Streamlit rerun, supporting both new and legacy APIs."""
+    rerun_fn = getattr(st, "rerun", None)
+    if callable(rerun_fn):
+        rerun_fn()
+        return
+    legacy_rerun = getattr(st, "experimental_rerun", None)
+    if callable(legacy_rerun):
+        legacy_rerun()
+
+
 def render_chat_sidebar(page_label: str, context: Optional[Dict[str, Any]] = None) -> None:
     """Render the governance assistant chat in the sidebar."""
     _init_history()
@@ -53,7 +64,7 @@ def render_chat_sidebar(page_label: str, context: Optional[Dict[str, Any]] = Non
     with col2:
         if st.button("Clear", key=f"assistant_clear_{page_label}"):
             st.session_state[CHAT_HISTORY_KEY] = []
-            st.experimental_rerun()
+            _trigger_rerun()
 
     _render_history()
 
@@ -104,4 +115,4 @@ def render_chat_sidebar(page_label: str, context: Optional[Dict[str, Any]] = Non
                 }
             )
 
-        st.experimental_rerun()
+        _trigger_rerun()

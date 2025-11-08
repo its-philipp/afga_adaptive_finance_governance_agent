@@ -21,6 +21,19 @@ st.markdown("""
 st.title("📖 Policy Viewer")
 st.markdown("Browse the company policies used by PAA for compliance checking.")
 
+policies_dir = Path("data/policies")
+policy_files = sorted(policies_dir.glob("*.txt")) if policies_dir.exists() else []
+
+assistant_context = {
+    "page_summary": "Policy viewer listing compliance documents.",
+    "policy_directory": str(policies_dir),
+    "policy_count": len(policy_files),
+    "sample_policies": [policy.name for policy in policy_files[:10]],
+}
+
+if not policies_dir.exists():
+    assistant_context["error"] = "Policies directory missing"
+
 # Sidebar
 sidebar_nav = st.sidebar.container()
 sidebar_assistant = st.sidebar.container()
@@ -40,17 +53,6 @@ with sidebar_nav:
 with sidebar_assistant:
     st.markdown("---")
     render_chat_sidebar("Policy Viewer", context=assistant_context)
-
-# Find policies directory
-policies_dir = Path("data/policies")
-policy_files = sorted(policies_dir.glob("*.txt")) if policies_dir.exists() else []
-
-assistant_context = {
-    "page_summary": "Policy viewer listing compliance documents.",
-    "policy_directory": str(policies_dir),
-    "policy_count": len(policy_files),
-    "sample_policies": [policy.name for policy in policy_files[:10]],
-}
 
 if not policies_dir.exists():
     st.error(f"Policies directory not found: {policies_dir}")

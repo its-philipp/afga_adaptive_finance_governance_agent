@@ -23,26 +23,6 @@ st.markdown("""
 st.title("🧠 Adaptive Memory Browser")
 st.markdown("Explore learned exceptions, view memory statistics, and understand how the system improves over time.")
 
-# Sidebar
-sidebar_nav = st.sidebar.container()
-sidebar_assistant = st.sidebar.container()
-
-with sidebar_nav:
-    st.title("🤖 AFGA")
-    st.caption("Adaptive Finance Governance Agent")
-    st.markdown("---")
-    st.page_link("app.py", label="Home", icon="🏠")
-    st.page_link("pages/1_📋_Transaction_Review.py", label="Transaction Review", icon="📋")
-    st.page_link("pages/2_🔄_Agent_Workflow.py", label="Agent Workflow", icon="🔄")
-    st.page_link("pages/3_📊_KPI_Dashboard.py", label="KPI Dashboard", icon="📊")
-    st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
-    st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
-    st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
-
-with sidebar_assistant:
-    st.markdown("---")
-    render_chat_sidebar("Memory Browser", context=assistant_context)
-
 memory_stats = None
 memory_stats_error = None
 deleted_exceptions_data: list[dict] = []
@@ -111,6 +91,26 @@ if deleted_exceptions_data:
             for exc in deleted_exceptions_data[:5]
         ],
     }
+
+# Sidebar
+sidebar_nav = st.sidebar.container()
+sidebar_assistant = st.sidebar.container()
+
+with sidebar_nav:
+    st.title("🤖 AFGA")
+    st.caption("Adaptive Finance Governance Agent")
+    st.markdown("---")
+    st.page_link("app.py", label="Home", icon="🏠")
+    st.page_link("pages/1_📋_Transaction_Review.py", label="Transaction Review", icon="📋")
+    st.page_link("pages/2_🔄_Agent_Workflow.py", label="Agent Workflow", icon="🔄")
+    st.page_link("pages/3_📊_KPI_Dashboard.py", label="KPI Dashboard", icon="📊")
+    st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
+    st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
+    st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
+
+with sidebar_assistant:
+    st.markdown("---")
+    render_chat_sidebar("Memory Browser", context=assistant_context)
 
 # Refresh button - force memory stats recalculation
 if st.button("🔄 Refresh"):

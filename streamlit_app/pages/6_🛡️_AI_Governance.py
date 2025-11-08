@@ -47,12 +47,6 @@ with sidebar_nav:
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
 
-    render_chat_sidebar("AI Governance", context={"page_summary": "AI governance dashboard with audit logs and guardrails."})
-
-with sidebar_assistant:
-    st.markdown("---")
-    render_chat_sidebar("AI Governance", context=assistant_context)
-
 # Agent Selector
 st.markdown("## 🔍 Select Agent to View Governance Data")
 
@@ -245,6 +239,10 @@ except httpx.HTTPStatusError as err:
 except Exception as exc:
     assistant_context["langfuse_error"] = str(exc)
     st.warning(f"Langfuse insights unavailable: {exc}")
+
+with sidebar_assistant:
+    st.markdown("---")
+    render_chat_sidebar("AI Governance", context=assistant_context)
 
 # Agent-Specific Governance Details
 st.markdown("---")
