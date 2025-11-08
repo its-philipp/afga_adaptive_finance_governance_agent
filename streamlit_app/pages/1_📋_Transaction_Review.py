@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from pathlib import Path
 
 import httpx
@@ -18,7 +19,9 @@ def render_policy_check_details(policy_check: dict | None, *, expand_sources: bo
 
     st.markdown(f"**Is Compliant:** {'✅ Yes' if policy_check.get('is_compliant') else '❌ No'}")
     st.markdown(f"**Confidence:** {policy_check.get('confidence', 0):.2%}")
-    st.markdown(f"**Reasoning:** {policy_check.get('reasoning', 'N/A')}")
+    reasoning = policy_check.get("reasoning")
+    cleaned_reasoning = " ".join((reasoning or "").replace("\u200b", "").replace("\u200c", "").replace("\u200d", "").split())
+    st.markdown(f"**Reasoning:** {cleaned_reasoning}")
 
     if policy_check.get("violated_policies"):
         st.markdown("**Violated Policies:**")
