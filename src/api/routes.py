@@ -18,11 +18,15 @@ from ..models.schemas import (
     TransactionSummary,
     KPIMetrics,
     DecisionType,
+    AssistantChatRequest,
+    AssistantChatResponse,
+    AssistantChatSource,
 )
 from ..models.memory_schemas import MemoryQuery, MemoryStats
 from ..services import KPITracker
 from ..services.invoice_extractor import InvoiceExtractor
 from ..services.langfuse_insights import get_langfuse_insights
+from ..governance import GovernedLLMClient
 
 
 logger = logging.getLogger(__name__)
@@ -69,6 +73,59 @@ def _coerce_json(value):
             logger.warning("Failed to json.loads value; returning raw string", exc_info=True)
             return value
     return value
+
+
+def _search_memory_rules(query: str, limit: int = 3) -> list[dict]:
+    """Return matching adaptive memory rules for assistant context."""
+    memory_manager = get_orch_cached().ema.memory_manager
+    try:
+        exceptions = memory_manager.db.query_exceptions(MemoryQuery())
+    except Exception as exc:
+        logger.warning(f"Memory query failed: {exc}")
+        return []
+
+    if not exceptions:
+        return []
+
+    query_terms = {term for term in (query or "").lower().split() if term}
+    scored: list[tuple[float, MemoryStats]] = []  # type: ignore[assignment]
+
+    matches = []
+    for exc in exceptions:
+        searchable = " ".join(
+            filter(
+                None,
+                [
+                    exc.vendor or "",
+                    exc.category or "",
+                    exc.description,
+                    json.dumps(exc.condition),
+                ],
+            )
+        ).lower()
+        score = 0.0
+        for term in query_terms:
+            if term in searchable:
+                score += 1.0
+        score += exc.applied_count * 0.1
+        matches.append(
+            {
+                "exception_id": exc.exception_id,
+                "vendor": exc.vendor,
+                "category": exc.category,
+                "description": exc.description,
+                "condition": exc.condition,
+                "applied_count": exc.applied_count,
+                "score": score,
+            }
+        )
+
+    matches.sort(key=lambda item: item["score"], reverse=True)
+
+    if all(match["score"] == 0 for match in matches):
+        matches.sort(key=lambda item: item["applied_count"], reverse=True)
+
+    return matches[:limit]
 
 
 @router.get("/health")

@@ -104,6 +104,30 @@ class PolicyCheckResult(BaseModel):
     applied_exception_ids: List[str] = Field(default_factory=list)
 
 
+class AssistantChatHistoryEntry(BaseModel):
+    role: str
+    content: str
+
+
+class AssistantChatRequest(BaseModel):
+    message: str
+    page: Optional[str] = None
+    context: Optional[Dict[str, Any]] = None
+    history: List[AssistantChatHistoryEntry] = Field(default_factory=list)
+
+
+class AssistantChatSource(BaseModel):
+    type: str
+    id: str
+    title: str
+    snippet: Optional[str] = None
+
+
+class AssistantChatResponse(BaseModel):
+    reply: str
+    sources: List[AssistantChatSource] = Field(default_factory=list)
+
+
 class HITLFeedback(BaseModel):
     """Human-in-the-loop feedback for EMA."""
     transaction_id: str

@@ -6,6 +6,8 @@ import httpx
 import plotly.graph_objects as go
 import streamlit as st
 
+from components.chat_assistant import render_chat_sidebar
+
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
 st.set_page_config(page_title="KPI Dashboard", page_icon="📊", layout="wide")
@@ -34,6 +36,8 @@ with st.sidebar:
     st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
+
+    render_chat_sidebar("KPI Dashboard")
 
 # Refresh button - force KPI recalculation
 if st.button("🔄 Refresh Data"):

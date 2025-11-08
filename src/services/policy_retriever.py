@@ -158,3 +158,31 @@ class PolicyRetriever:
             for name, data in self.policies.items()
         ]
 
+    def search_by_text(self, query: str, top_k: int = 5) -> List[dict]:
+        """Retrieve policy chunks relevant to a free-form query."""
+        if not self.policies or not query:
+            return []
+
+        relevant_chunks = []
+        lowered_query = query.lower()
+
+        for policy_name, policy_data in self.policies.items():
+            for chunk_idx, chunk in enumerate(policy_data["chunks"]):
+                score, matched_terms = self._calculate_relevance_score(lowered_query, chunk)
+                if score <= 0 and not matched_terms:
+                    continue
+                relevant_chunks.append(
+                    {
+                        "policy_name": policy_name,
+                        "policy_filename": policy_data.get("filename"),
+                        "chunk_index": chunk_idx,
+                        "content": chunk,
+                        "score": score,
+                        "snippet": chunk[:400],
+                        "matched_terms": matched_terms,
+                    }
+                )
+
+        relevant_chunks.sort(key=lambda item: item["score"], reverse=True)
+        return relevant_chunks[:top_k]
+

@@ -5,6 +5,8 @@ from pathlib import Path
 
 import streamlit as st
 
+from components.chat_assistant import render_chat_sidebar
+
 st.set_page_config(page_title="Policy Viewer", page_icon="📖", layout="wide")
 
 # Hide default Streamlit navigation
@@ -31,6 +33,8 @@ with st.sidebar:
     st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
+
+    render_chat_sidebar("Policy Viewer")
 
 # Find policies directory
 policies_dir = Path("data/policies")
