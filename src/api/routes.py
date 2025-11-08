@@ -161,7 +161,8 @@ async def upload_receipt(
         logger.info(f"Extracted invoice: {invoice.invoice_id} from {file.filename}")
         
         # Process through normal workflow
-        result = orchestrator.process_transaction(invoice=invoice)
+        orch = get_orchestrator()
+        result = orch.process_transaction(invoice=invoice)
         
         logger.info(f"Document {file.filename} processed: {result.final_decision.value}")
         return result
@@ -514,7 +515,8 @@ def process_mock_invoice(invoice_file: str):
         
         invoice = Invoice(**invoice_data)
         
-        result = orchestrator.process_transaction(invoice=invoice)
+        orch = get_orchestrator()
+        result = orch.process_transaction(invoice=invoice)
         
         return result.model_dump()
         
