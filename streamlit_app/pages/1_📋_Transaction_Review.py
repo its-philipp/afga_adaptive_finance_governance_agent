@@ -458,8 +458,8 @@ with tab1:
                             # Policy Check
                             policy_check = result.get("policy_check")
                             if policy_check:
-                                with st.expander("📋 Policy Compliance Check"):
-                                    render_policy_check_details(policy_check, expand_sources=False)
+                                st.markdown("### 📋 Policy Compliance & RAG Transparency")
+                                render_policy_check_details(policy_check, expand_sources=False)
                             
                             # Decision Reasoning
                             st.markdown("### 💭 Decision Reasoning")

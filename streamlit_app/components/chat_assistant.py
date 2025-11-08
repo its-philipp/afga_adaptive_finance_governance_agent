@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any, Dict, Optional
 
 import httpx
@@ -6,6 +7,16 @@ import streamlit as st
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 CHAT_HISTORY_KEY = "assistant_chat_history"
+SENSITIVE_KEYS = {
+    "credit_card",
+    "card_number",
+    "cc_number",
+    "account_number",
+    "iban",
+    "routing_number",
+    "ssn",
+    "social_security_number",
+}
 
 
 def _init_history():
@@ -43,6 +54,34 @@ def _render_history():
                             st.caption(snippet)
 
 
+def _sanitize_value(value: Any) -> Any:
+    if isinstance(value, str):
+        redacted = re.sub(r"\b\d{12,}\b", "[redacted]", value)
+        return redacted
+    return value
+
+
+def _sanitize_context(context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    if not isinstance(context, dict):
+        return {}
+
+    def sanitize(obj: Any, parent_key: str = "") -> Any:
+        if isinstance(obj, dict):
+            sanitized_dict = {}
+            for key, val in obj.items():
+                lower_key = key.lower()
+                if lower_key in SENSITIVE_KEYS:
+                    sanitized_dict[key] = "[redacted]"
+                else:
+                    sanitized_dict[key] = sanitize(val, lower_key)
+            return sanitized_dict
+        if isinstance(obj, list):
+            return [sanitize(item, parent_key) for item in obj]
+        return _sanitize_value(obj)
+
+    return sanitize(context)  # type: ignore[return-value]
+
+
 def _trigger_rerun() -> None:
     """Trigger a Streamlit rerun, supporting both new and legacy APIs."""
     rerun_fn = getattr(st, "rerun", None)
@@ -76,10 +115,12 @@ def render_chat_sidebar(page_label: str, context: Optional[Dict[str, Any]] = Non
         user_message = message.strip()
         st.session_state[CHAT_HISTORY_KEY].append({"role": "user", "content": user_message})
 
+        sanitized_context = _sanitize_context(context)
+
         payload = {
             "message": user_message,
             "page": page_label,
-            "context": context or {},
+            "context": sanitized_context,
             "history": [
                 {"role": entry.get("role", "assistant"), "content": entry.get("content", "")}
                 for entry in st.session_state[CHAT_HISTORY_KEY][-10:]
