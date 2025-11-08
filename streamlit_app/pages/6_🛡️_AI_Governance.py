@@ -419,9 +419,9 @@ if audit_file.exists():
                             st.caption(f"Total length: {entry.get('response_length', len(response_text))} characters")
                         else:
                             st.info(f"Response not logged (length: {entry.get('response_length', 0)} chars)")
-                 
-                 with st.expander("📄 Full Entry (JSON)"):
-                     st.json(entry)
+
+                with st.expander("📄 Full Entry (JSON)"):
+                    st.json(entry)
     else:
         st.info(f"💡 No audit entries found for {selected_agent_label}. Process transactions to generate audit logs.")
 else:
