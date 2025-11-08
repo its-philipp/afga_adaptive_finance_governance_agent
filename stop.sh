@@ -52,4 +52,7 @@ fi
 echo ""
 echo "🏁 AFGA is now stopped."
 echo ""
+echo "▶️  Start again with:"
+echo "   ./start.sh"
+echo ""
 

@@ -152,6 +152,6 @@ echo "   Backend:  tail -f afga_backend.log"
 echo "   Frontend: tail -f afga_frontend.log"
 echo ""
 echo "🛑 Stop:"
-echo "   kill \$(cat .backend.pid .frontend.pid 2>/dev/null)"
+echo "   ./stop.sh"
 echo ""
 
