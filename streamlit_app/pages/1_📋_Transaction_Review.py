@@ -204,6 +204,11 @@ with sidebar_assistant:
 
     render_chat_sidebar("Transaction Review", context=assistant_context)
 
+if "upload_receipt_result" not in st.session_state:
+    st.session_state.upload_receipt_result = None
+if "upload_receipt_file_meta" not in st.session_state:
+    st.session_state.upload_receipt_file_meta = None
+
 # Tabs for different views
 tab1, tab2, tab3 = st.tabs(["📤 Submit Transaction", "📜 Transaction History", "👤 Human Review (HITL)"])
 
