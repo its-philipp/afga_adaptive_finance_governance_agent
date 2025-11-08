@@ -72,6 +72,25 @@ class RiskAssessment(BaseModel):
     assessment_details: Dict[str, Any]
 
 
+class RetrievedSource(BaseModel):
+    """Metadata about a retrieved policy chunk used as evidence."""
+    policy_name: str
+    policy_filename: Optional[str] = None
+    chunk_index: int
+    score: float
+    snippet: str
+    matched_terms: List[str] = Field(default_factory=list)
+
+
+class RAGTriadMetrics(BaseModel):
+    """RAG transparency metrics for policy evidence."""
+    supporting_evidence: List[str] = Field(default_factory=list)
+    missing_evidence: List[str] = Field(default_factory=list)
+    hallucinated_references: List[str] = Field(default_factory=list)
+    coverage_ratio: float = 0.0
+    average_relevance: float = 0.0
+
+
 class PolicyCheckResult(BaseModel):
     """Policy adherence check result from PAA."""
     is_compliant: bool
@@ -79,6 +98,9 @@ class PolicyCheckResult(BaseModel):
     applied_exceptions: List[str] = Field(default_factory=list)
     reasoning: str
     confidence: float = Field(ge=0, le=1)
+    retrieved_sources: List[RetrievedSource] = Field(default_factory=list)
+    rag_metrics: Optional[RAGTriadMetrics] = None
+    hallucination_warnings: List[str] = Field(default_factory=list)
 
 
 class HITLFeedback(BaseModel):

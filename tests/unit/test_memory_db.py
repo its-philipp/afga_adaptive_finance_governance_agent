@@ -205,3 +205,95 @@ def test_calculate_kpis(temp_db):
     assert kpis.atar == 100.0  # 100% auto-approved
     assert kpis.audit_traceability_score == 100.0
 
+
+def test_transaction_persists_policy_check_metadata(temp_db):
+    """Ensure policy_check JSON is stored and hydrated when retrieving transactions."""
+    from src.models.schemas import (
+        Invoice,
+        RiskAssessment,
+        RiskLevel,
+        PolicyCheckResult,
+        TransactionResult,
+        DecisionType,
+        LineItem,
+        RetrievedSource,
+        RAGTriadMetrics,
+    )
+
+    invoice = Invoice(
+        invoice_id="TEST-002",
+        vendor="Policy Corp",
+        vendor_reputation=90,
+        amount=2500.0,
+        currency="USD",
+        category="Travel",
+        date="2025-11-04",
+        po_number=None,
+        line_items=[LineItem(description="Flight", quantity=1, unit_price=2500.0)],
+        tax=0.0,
+        total=2500.0,
+    )
+
+    risk = RiskAssessment(
+        risk_score=55.0,
+        risk_level=RiskLevel.MEDIUM,
+        risk_factors=["High amount", "Missing PO"],
+        assessment_details={}
+    )
+
+    retrieved_sources = [
+        RetrievedSource(
+            policy_name="expense_limits_policy",
+            policy_filename="expense_limits_policy.txt",
+            chunk_index=0,
+            score=0.75,
+            snippet="Expense approvals required over $2000",
+            matched_terms=["expense", "approvals", "$2000"],
+        )
+    ]
+
+    rag_metrics = RAGTriadMetrics(
+        supporting_evidence=["Expense Thresholds"],
+        missing_evidence=[],
+        hallucinated_references=[],
+        coverage_ratio=1.0,
+        average_relevance=0.75,
+    )
+
+    policy = PolicyCheckResult(
+        is_compliant=False,
+        violated_policies=["Expense Thresholds"],
+        applied_exceptions=[],
+        reasoning="Amount exceeds automatic approval limit.",
+        confidence=0.6,
+        retrieved_sources=retrieved_sources,
+        rag_metrics=rag_metrics,
+        hallucination_warnings=["Missing manual approval evidence"],
+    )
+
+    result = TransactionResult(
+        transaction_id="T-002",
+        invoice=invoice,
+        risk_assessment=risk,
+        policy_check=policy,
+        final_decision=DecisionType.REJECTED,
+        decision_reasoning="Policy violation",
+        human_override=False,
+        processing_time_ms=210,
+        audit_trail=["Policy violation detected"],
+        trace_id="trace-002",
+        created_at=datetime.now(),
+    )
+
+    temp_db.save_transaction(result)
+
+    stored = temp_db.get_transaction("T-002")
+    assert stored is not None
+    assert "policy_check" in stored
+
+    policy_data = stored["policy_check"]
+    assert policy_data["is_compliant"] is False
+    assert policy_data["retrieved_sources"][0]["policy_name"] == "expense_limits_policy"
+    assert policy_data["rag_metrics"]["coverage_ratio"] == 1.0
+    assert policy_data["hallucination_warnings"] == ["Missing manual approval evidence"]
+

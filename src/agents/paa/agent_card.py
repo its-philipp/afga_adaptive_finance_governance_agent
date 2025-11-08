@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from a2a.types import AgentCard, AgentSkill
+from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 
 
 def get_paa_agent_card() -> AgentCard:
@@ -19,6 +19,9 @@ def get_paa_agent_card() -> AgentCard:
         ),
         url="http://localhost:8000/api/v1/agents/paa",
         version="1.0.0",
+        capabilities=AgentCapabilities(streaming=True),
+        defaultInputModes=["application/json"],
+        defaultOutputModes=["application/json"],
         skills=[
             AgentSkill(
                 id="policy_checking",

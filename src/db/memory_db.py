@@ -8,7 +8,7 @@ import sqlite3
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from ..models.memory_schemas import MemoryQuery, MemoryStats, CRSCalculation
 from ..models.schemas import MemoryException, KPIMetrics, TransactionResult
@@ -70,6 +70,7 @@ class MemoryDatabase:
                 risk_score REAL,
                 risk_level TEXT,
                 paa_decision TEXT,
+                policy_check_json TEXT,
                 final_decision TEXT,
                 decision_reasoning TEXT,
                 human_override INTEGER,
@@ -89,6 +90,11 @@ class MemoryDatabase:
             
         try:
             cursor.execute("ALTER TABLE transactions ADD COLUMN updated_at TIMESTAMP")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        try:
+            cursor.execute("ALTER TABLE transactions ADD COLUMN policy_check_json TEXT")
         except sqlite3.OperationalError:
             pass  # Column already exists
 
@@ -366,9 +372,9 @@ class MemoryDatabase:
         cursor.execute("""
             INSERT INTO transactions
             (transaction_id, invoice_id, invoice_data, risk_score, risk_level, 
-             paa_decision, final_decision, decision_reasoning, human_override, processing_time_ms, 
+             paa_decision, policy_check_json, final_decision, decision_reasoning, human_override, processing_time_ms, 
              audit_trail, trace_id, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             result.transaction_id,
             result.invoice.invoice_id,
@@ -376,6 +382,7 @@ class MemoryDatabase:
             result.risk_assessment.risk_score,
             result.risk_assessment.risk_level.value,
             "compliant" if result.policy_check.is_compliant else "non_compliant",
+            result.policy_check.model_dump_json(),
             result.final_decision.value,
             result.decision_reasoning,
             1 if result.human_override else 0,
@@ -404,7 +411,16 @@ class MemoryDatabase:
         if not row:
             return None
 
-        return dict(row)
+        transaction = dict(row)
+        if "invoice_data" in transaction:
+            transaction["invoice"] = json.loads(transaction["invoice_data"])
+        if "audit_trail" in transaction:
+            transaction["audit_trail"] = json.loads(transaction["audit_trail"])
+        if transaction.get("policy_check_json"):
+            transaction["policy_check"] = json.loads(transaction["policy_check_json"])
+            del transaction["policy_check_json"]
+    
+        return transaction
 
     def get_recent_transactions(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get recent transactions."""
@@ -421,7 +437,19 @@ class MemoryDatabase:
         rows = cursor.fetchall()
         conn.close()
 
-        return [dict(row) for row in rows]
+        transactions = []
+        for row in rows:
+            trans = dict(row)
+            if "invoice_data" in trans:
+                trans["invoice"] = json.loads(trans["invoice_data"])
+            if "audit_trail" in trans:
+                trans["audit_trail"] = json.loads(trans["audit_trail"])
+            if trans.get("policy_check_json"):
+                trans["policy_check"] = json.loads(trans["policy_check_json"])
+                del trans["policy_check_json"]
+    
+            transactions.append(trans)
+        return transactions
 
     def update_transaction_after_hitl(
         self,

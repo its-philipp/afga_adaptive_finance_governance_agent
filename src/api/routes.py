@@ -22,6 +22,7 @@ from ..models.schemas import (
 from ..models.memory_schemas import MemoryQuery, MemoryStats
 from ..services import KPITracker
 from ..services.invoice_extractor import InvoiceExtractor
+from ..services.langfuse_insights import get_langfuse_insights
 
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ def get_orchestrator():
 _startup_orch = get_orchestrator()
 kpi_tracker = KPITracker(memory_db=_startup_orch.memory_db)
 invoice_extractor = InvoiceExtractor()
+langfuse_insights = get_langfuse_insights()
 
 # Helper to get orchestrator instance (use cached for read operations)
 def get_orch_cached():
@@ -517,5 +519,20 @@ def list_mock_invoices():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error listing mock invoices: {str(e)}"
+        )
+
+
+# ==================== OBSERVABILITY ====================
+
+@router.get("/observability/langfuse")
+def get_langfuse_overview():
+    """Return Langfuse connectivity status and local audit analytics."""
+    try:
+        return langfuse_insights.get_summary()
+    except Exception as e:
+        logger.error(f"Error fetching Langfuse insights: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching Langfuse insights: {str(e)}"
         )
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, TypedDict
 
-from ...models.schemas import Invoice, PolicyCheckResult, MemoryException
+from ...models.schemas import Invoice, PolicyCheckResult, MemoryException, RetrievedSource, RAGTriadMetrics
 
 
 class PolicyAdherenceState(TypedDict, total=False):
@@ -16,6 +16,9 @@ class PolicyAdherenceState(TypedDict, total=False):
     
     # Policy Retrieval
     retrieved_policies: List[Dict[str, Any]]
+    retrieved_sources: List[RetrievedSource]
+    rag_metrics: RAGTriadMetrics
+    hallucination_warnings: List[str]
     
     # Memory Check
     memory_exceptions: List[MemoryException]

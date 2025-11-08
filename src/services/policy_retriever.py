@@ -85,12 +85,15 @@ class PolicyRetriever:
         
         for policy_name, policy_data in self.policies.items():
             for chunk_idx, chunk in enumerate(policy_data["chunks"]):
-                score = self._calculate_relevance_score(query, chunk)
+                score, matched_terms = self._calculate_relevance_score(query, chunk)
                 relevant_chunks.append({
                     "policy_name": policy_name,
+                    "policy_filename": policy_data.get("filename"),
                     "chunk_index": chunk_idx,
                     "content": chunk,
                     "score": score,
+                    "snippet": chunk[:400],
+                    "matched_terms": matched_terms,
                 })
         
         # Sort by relevance score and return top_k
@@ -128,22 +131,21 @@ class PolicyRetriever:
         
         return " ".join(query_parts).lower()
 
-    def _calculate_relevance_score(self, query: str, chunk: str) -> float:
-        """Calculate relevance score using simple keyword matching.
+    def _calculate_relevance_score(self, query: str, chunk: str) -> tuple[float, List[str]]:
+        """Calculate relevance score and matched terms using simple keyword matching.
         
         This is a basic implementation. Can be upgraded to embeddings-based similarity.
         """
         query_terms = set(query.lower().split())
         chunk_terms = set(chunk.lower().split())
-        
-        # Jaccard similarity
+
         if not query_terms:
-            return 0.0
-        
+            return 0.0, []
+
         intersection = query_terms.intersection(chunk_terms)
-        score = len(intersection) / len(query_terms)
-        
-        return score
+        score = len(intersection) / len(query_terms) if query_terms else 0.0
+
+        return score, sorted(intersection)
 
     def get_all_policies_summary(self) -> List[dict]:
         """Get a summary of all loaded policies."""

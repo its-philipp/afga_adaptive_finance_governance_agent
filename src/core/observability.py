@@ -37,8 +37,12 @@ class Observability:
                     secret_key=settings.langfuse_secret_key,
                     host=settings.langfuse_host,
                 )
-                self.enabled = True
-                logger.info("Langfuse observability enabled")
+                if hasattr(self.client, "trace"):
+                    self.enabled = True
+                    logger.info("Langfuse observability enabled")
+                else:
+                    logger.warning("Langfuse client missing trace() API; disabling observability integration")
+                    self.client = None
             except Exception as e:
                 logger.warning(f"Failed to initialize Langfuse, falling back to logging: {e}")
         else:

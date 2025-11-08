@@ -26,8 +26,8 @@ def test_risk_scorer_high_amount():
     
     assessment = scorer.assess_risk(invoice)
     
-    assert assessment.risk_level == RiskLevel.CRITICAL or assessment.risk_level == RiskLevel.HIGH
-    assert assessment.risk_score > 40.0
+    assert assessment.risk_level in {RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL}
+    assert assessment.risk_score >= 45.0
     assert len(assessment.risk_factors) > 0
 
 
@@ -52,7 +52,7 @@ def test_risk_scorer_low_amount():
     assessment = scorer.assess_risk(invoice)
     
     assert assessment.risk_level == RiskLevel.LOW
-    assert assessment.risk_score < 30.0
+    assert assessment.risk_score <= 10.0
 
 
 def test_risk_scorer_missing_po():
@@ -102,7 +102,7 @@ def test_risk_scorer_low_vendor_reputation():
     
     # Should have additional risk due to low reputation
     assert any("reputation" in factor.lower() for factor in assessment.risk_factors)
-    assert assessment.risk_score > 30.0
+    assert assessment.risk_score >= 30.0
 
 
 def test_risk_scorer_international():

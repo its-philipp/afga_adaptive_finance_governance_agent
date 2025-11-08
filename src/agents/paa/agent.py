@@ -12,7 +12,7 @@ from ...core.observability import Observability
 from ...governance import GovernedLLMClient
 from ...mcp_servers.policy_server import PolicyMCPServer
 from ...models.memory_schemas import MemoryQuery
-from ...models.schemas import Invoice, PolicyCheckResult
+from ...models.schemas import Invoice, PolicyCheckResult, RetrievedSource, RAGTriadMetrics
 from .state import PolicyAdherenceState
 
 
@@ -92,9 +92,24 @@ class PolicyAdherenceAgent:
             # This provides a clean abstraction - PAA doesn't directly access files
             relevant_policies = self.policy_mcp.search_relevant_policies_sync(invoice, top_k=5)
             state["retrieved_policies"] = relevant_policies
-            
-            policy_names = list(set(p["policy_name"] for p in relevant_policies))
-            audit_trail.append(f"Retrieved {len(relevant_policies)} policy chunks via MCP from: {', '.join(policy_names)}")
+
+            retrieved_sources = [
+                RetrievedSource(
+                    policy_name=chunk["policy_name"],
+                    policy_filename=chunk.get("policy_filename"),
+                    chunk_index=chunk.get("chunk_index", idx),
+                    score=float(chunk.get("score") or 0.0),
+                    snippet=chunk.get("snippet") or chunk.get("content", "")[:400],
+                    matched_terms=chunk.get("matched_terms", []),
+                )
+                for idx, chunk in enumerate(relevant_policies)
+            ]
+            state["retrieved_sources"] = retrieved_sources
+
+            policy_names = list({src.policy_name for src in retrieved_sources})
+            audit_trail.append(
+                f"Retrieved {len(relevant_policies)} policy chunks via MCP from: {', '.join(policy_names) if policy_names else 'N/A'}"
+            )
             
             if self.observability:
                 self.observability.log_agent_step(
@@ -154,9 +169,25 @@ class PolicyAdherenceAgent:
         invoice = state["invoice"]
         policies = state.get("retrieved_policies", [])
         exceptions = state.get("memory_exceptions", [])
+        raw_retrieved_sources = state.get("retrieved_sources", [])
+        retrieved_sources: list[RetrievedSource] = []
+        for src in raw_retrieved_sources:
+            if isinstance(src, RetrievedSource):
+                retrieved_sources.append(src)
+            elif isinstance(src, dict):
+                try:
+                    retrieved_sources.append(RetrievedSource(**src))
+                except Exception:
+                    continue
+        state["retrieved_sources"] = retrieved_sources
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("Evaluating compliance with LLM")
+
+        def _normalize_text(value: str | None) -> str:
+            if not value:
+                return ""
+            return " ".join(value.lower().replace("_", " ").replace("-", " ").split())
 
         # Build context for LLM
         policy_context = "\n\n".join([
@@ -233,12 +264,77 @@ REASONING: [detailed explanation]
                 elif line.startswith("REASONING:"):
                     reasoning = line.split(":", 1)[1].strip()
 
+            supporting_evidence: list[str] = []
+            missing_evidence: list[str] = []
+            retrieved_policy_names = {_normalize_text(src.policy_name) for src in retrieved_sources}
+            retrieved_policy_filenames = {
+                _normalize_text(src.policy_filename) for src in retrieved_sources if src.policy_filename
+            }
+            retrieved_snippet_tokens = [_normalize_text(src.snippet) for src in retrieved_sources if src.snippet]
+
+            for policy_name in violated_policies:
+                normalized_policy = _normalize_text(policy_name)
+                if not normalized_policy:
+                    continue
+                evidence_found = (
+                    normalized_policy in retrieved_policy_names
+                    or normalized_policy in retrieved_policy_filenames
+                    or any(normalized_policy in snippet for snippet in retrieved_snippet_tokens)
+                )
+                if evidence_found:
+                    supporting_evidence.append(policy_name)
+                else:
+                    missing_evidence.append(policy_name)
+
+            coverage_ratio = (
+                len(supporting_evidence) / len(violated_policies)
+                if violated_policies
+                else (1.0 if retrieved_sources else 0.0)
+            )
+            average_relevance = (
+                sum(src.score for src in retrieved_sources) / len(retrieved_sources)
+                if retrieved_sources
+                else 0.0
+            )
+
+            known_exceptions = {
+                exc.description.lower(): exc.exception_id for exc in exceptions
+            }
+            known_exceptions.update({exc.exception_id.lower(): exc.exception_id for exc in exceptions})
+            hallucinated_exceptions = [
+                exc_name for exc_name in applied_exceptions if exc_name and exc_name.lower() not in known_exceptions
+            ]
+
+            hallucination_warnings: list[str] = []
+            if missing_evidence:
+                hallucination_warnings.append(
+                    "Policies referenced but not covered by retrieved evidence: " + ", ".join(missing_evidence)
+                )
+            if hallucinated_exceptions:
+                hallucination_warnings.append(
+                    "Applied exceptions not found in adaptive memory: " + ", ".join(hallucinated_exceptions)
+                )
+
+            rag_metrics = RAGTriadMetrics(
+                supporting_evidence=supporting_evidence,
+                missing_evidence=missing_evidence,
+                hallucinated_references=hallucinated_exceptions,
+                coverage_ratio=round(coverage_ratio, 3),
+                average_relevance=round(average_relevance, 3),
+            )
+
+            state["rag_metrics"] = rag_metrics
+            state["hallucination_warnings"] = hallucination_warnings
+
             compliance_result = PolicyCheckResult(
                 is_compliant=is_compliant,
                 violated_policies=violated_policies,
                 applied_exceptions=applied_exceptions,
                 reasoning=reasoning,
                 confidence=confidence,
+                retrieved_sources=retrieved_sources,
+                rag_metrics=rag_metrics,
+                hallucination_warnings=hallucination_warnings,
             )
 
             state["compliance_result"] = compliance_result
@@ -246,12 +342,16 @@ REASONING: [detailed explanation]
 
             status = "✅ Compliant" if is_compliant else "❌ Non-compliant"
             audit_trail.append(f"Compliance check: {status} (confidence: {confidence:.2f})")
-            
+
             if violated_policies:
                 audit_trail.append(f"Violated policies: {', '.join(violated_policies)}")
+            if supporting_evidence:
+                audit_trail.append(f"Evidence found for: {', '.join(supporting_evidence)}")
+            if missing_evidence:
+                audit_trail.append(f"⚠️ Missing evidence for: {', '.join(missing_evidence)}")
             if applied_exceptions:
                 audit_trail.append(f"Applied {len(applied_exceptions)} exception(s)")
-                
+
                 # Update exception usage stats
                 memory_exceptions = state.get("memory_exceptions", [])
                 for exc in memory_exceptions:
@@ -259,8 +359,27 @@ REASONING: [detailed explanation]
                     if exc.description in applied_exceptions or exc.exception_id in applied_exceptions:
                         self.memory_manager.update_exception_usage(exc.exception_id)
                         audit_trail.append(f"  - {exc.description}")
-            
+
+            if hallucination_warnings:
+                for warning in hallucination_warnings:
+                    audit_trail.append(f"⚠️ {warning}")
+
             if self.observability:
+                self.observability.log_agent_step(
+                    trace_id=state.get("trace_id", ""),
+                    agent_name="PAA",
+                    step_name="evaluate_compliance_summary",
+                    input_data={
+                        "violated_policies": violated_policies,
+                        "applied_exceptions": applied_exceptions,
+                    },
+                    output_data={
+                        "coverage_ratio": rag_metrics.coverage_ratio,
+                        "supporting_evidence": supporting_evidence,
+                        "missing_evidence": missing_evidence,
+                        "hallucination_warnings": hallucination_warnings,
+                    },
+                )
                 self.observability.log_llm_call(
                     trace_id=state.get("trace_id", ""),
                     prompt=prompt,
