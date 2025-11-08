@@ -89,6 +89,8 @@ class ExceptionManagerAgent:
         
         audit_trail.append("Analyzing correction type with LLM")
 
+        llm_should_learn: bool | None = None
+
         # Use LLM to classify the correction
         prompt = f"""You are an AI compliance analyst. A human has overridden an automated decision.
 
@@ -124,23 +126,19 @@ REASONING: [brief explanation]
 
             # Parse LLM response
             correction_type = "one_time_override"
-            should_learn = False
             description = ""
 
             for line in response.split("\n"):
                 if line.startswith("CORRECTION_TYPE:"):
                     correction_type = line.split(":", 1)[1].strip()
                 elif line.startswith("SHOULD_LEARN:"):
-                    should_learn = "yes" in line.lower()
+                    llm_should_learn = "yes" in line.lower()
                 elif line.startswith("DESCRIPTION:"):
                     description = line.split(":", 1)[1].strip()
 
             state["correction_type"] = correction_type
-            state["should_learn"] = should_learn and feedback.should_create_exception
             state["exception_description"] = description
 
-            audit_trail.append(f"Correction classified as: {correction_type}, should_learn={should_learn}")
-            
             if self.observability:
                 self.observability.log_llm_call(
                     trace_id=state.get("trace_id", ""),
@@ -151,10 +149,15 @@ REASONING: [brief explanation]
 
         except Exception as e:
             logger.error(f"Error analyzing correction: {e}")
-            state["correction_type"] = "one_time_override"
-            state["should_learn"] = False
-            state["exception_description"] = ""
+            state["correction_type"] = feedback.exception_type or "one_time_override"
+            state["exception_description"] = feedback.reasoning or ""
             audit_trail.append(f"Error analyzing correction: {str(e)}")
+
+        should_learn_final = feedback.should_create_exception or (llm_should_learn if llm_should_learn is not None else False)
+        state["should_learn"] = should_learn_final
+        audit_trail.append(
+            f"Correction classified as: {state.get('correction_type', 'one_time_override')}, should_learn={should_learn_final}"
+        )
 
         state["audit_trail"] = audit_trail
         return state

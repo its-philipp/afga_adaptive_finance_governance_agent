@@ -56,6 +56,21 @@ def get_orch_cached():
     return _startup_orch
 
 
+def _coerce_json(value):
+    """Ensure database JSON fields are returned as native Python objects."""
+    if value is None:
+        return None
+    if isinstance(value, (dict, list)):
+        return value
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            logger.warning("Failed to json.loads value; returning raw string", exc_info=True)
+            return value
+    return value
+
+
 @router.get("/health")
 def health_check():
     """Health check endpoint."""
@@ -179,9 +194,14 @@ def get_transaction(transaction_id: str):
     
     # Parse JSON fields
     if "invoice_data" in transaction:
-        transaction["invoice"] = json.loads(transaction["invoice_data"])
+        transaction["invoice"] = _coerce_json(transaction["invoice_data"])
     if "audit_trail" in transaction:
-        transaction["audit_trail"] = json.loads(transaction["audit_trail"])
+        transaction["audit_trail"] = _coerce_json(transaction["audit_trail"])
+    if "policy_check" in transaction:
+        transaction["policy_check"] = _coerce_json(transaction["policy_check"])
+    elif "policy_check_json" in transaction:
+        transaction["policy_check"] = _coerce_json(transaction["policy_check_json"])
+        del transaction["policy_check_json"]
     
     return transaction
 
@@ -194,9 +214,14 @@ def list_transactions(limit: int = 10):
     # Parse JSON fields
     for trans in transactions:
         if "invoice_data" in trans:
-            trans["invoice"] = json.loads(trans["invoice_data"])
+            trans["invoice"] = _coerce_json(trans["invoice_data"])
         if "audit_trail" in trans:
-            trans["audit_trail"] = json.loads(trans["audit_trail"])
+            trans["audit_trail"] = _coerce_json(trans["audit_trail"])
+        if "policy_check" in trans:
+            trans["policy_check"] = _coerce_json(trans["policy_check"])
+        elif "policy_check_json" in trans:
+            trans["policy_check"] = _coerce_json(trans["policy_check_json"])
+            del trans["policy_check_json"]
     
     return transactions
 
@@ -219,8 +244,11 @@ def submit_hitl_feedback(transaction_id: str, feedback: HITLFeedback):
             )
         
         # Parse invoice data
-        invoice_data = json.loads(transaction["invoice_data"])
-        invoice = Invoice(**invoice_data)
+        invoice_payload = _coerce_json(transaction.get("invoice_data"))
+        if not isinstance(invoice_payload, dict):
+            # Fallback to already parsed invoice payload if available
+            invoice_payload = transaction.get("invoice", {})
+        invoice = Invoice(**invoice_payload)
         
         # Update feedback with transaction ID
         feedback.transaction_id = transaction_id
