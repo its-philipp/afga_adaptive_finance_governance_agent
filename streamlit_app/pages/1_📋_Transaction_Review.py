@@ -327,8 +327,8 @@ with tab1:
                     policy_check = policy_check_raw
 
                 if policy_check:
-                    st.markdown("### 📋 Policy Compliance & RAG Transparency")
-                    render_policy_check_details(policy_check, expand_sources=False)
+                    with st.expander("📋 Policy Compliance & RAG Transparency", expanded=False):
+                        render_policy_check_details(policy_check, expand_sources=True)
                 else:
                     st.info("No policy compliance data returned for this transaction.")
 
