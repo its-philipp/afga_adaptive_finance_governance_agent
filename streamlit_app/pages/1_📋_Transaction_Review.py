@@ -27,8 +27,17 @@ def render_policy_check_details(policy_check: dict | None, *, expand_sources: bo
 
     if policy_check.get("applied_exceptions"):
         st.markdown("**Applied Exceptions:**")
-        for exc in policy_check["applied_exceptions"]:
-            st.write(f"- {exc}")
+        applied_ids = policy_check.get("applied_exception_ids") or []
+        labels = policy_check.get("applied_exceptions", [])
+        for idx, exc in enumerate(labels):
+            if idx < len(applied_ids):
+                st.write(f"- {exc} (ID: {applied_ids[idx]})")
+            else:
+                st.write(f"- {exc}")
+
+    applied_ids = policy_check.get("applied_exception_ids") or []
+    if applied_ids and len(applied_ids) != len(policy_check.get("applied_exceptions", [])):
+        st.caption("Applied Exception IDs: " + ", ".join(applied_ids))
 
     rag_metrics = policy_check.get("rag_metrics") or {}
     retrieved_sources = policy_check.get("retrieved_sources") or []

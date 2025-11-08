@@ -264,6 +264,52 @@ REASONING: [detailed explanation]
                 elif line.startswith("REASONING:"):
                     reasoning = line.split(":", 1)[1].strip()
 
+            applied_exceptions_raw = applied_exceptions.copy()
+
+            normalized_applied = {_normalize_text(val) for val in applied_exceptions_raw if val}
+            treat_all_as_applied = len(applied_exceptions_raw) == 0
+            applied_exception_records: list[tuple[str, str]] = []  # (label, id)
+            applied_exception_ids: list[str] = []
+            processed_exception_ids: set[str] = set()
+
+            memory_exceptions = state.get("memory_exceptions", [])
+
+            for exc in memory_exceptions:
+                matches = treat_all_as_applied
+                normalized_exception_id = _normalize_text(exc.exception_id)
+                normalized_description = _normalize_text(exc.description)
+                vendor_token = _normalize_text(exc.vendor or "")
+                category_token = _normalize_text(exc.category or "")
+
+                if not matches:
+                    if exc.exception_id in applied_exceptions_raw:
+                        matches = True
+                    elif normalized_exception_id and normalized_exception_id in normalized_applied:
+                        matches = True
+                    elif normalized_description and normalized_description in normalized_applied:
+                        matches = True
+                    elif vendor_token and vendor_token in normalized_applied:
+                        matches = True
+                    elif category_token and category_token in normalized_applied:
+                        matches = True
+
+                if matches and exc.exception_id not in processed_exception_ids:
+                    processed_exception_ids.add(exc.exception_id)
+                    label = exc.description or f"Learned exception {exc.exception_id}"
+                    if exc.vendor:
+                        label = f"{label} – Vendor {exc.vendor}"
+                    applied_exception_records.append((label, exc.exception_id))
+                    applied_exception_ids.append(exc.exception_id)
+                    try:
+                        self.memory_manager.update_exception_usage(exc.exception_id)
+                    except Exception as update_err:
+                        logger.warning(f"Failed to update usage for exception {exc.exception_id}: {update_err}")
+
+            if applied_exception_records:
+                applied_exceptions = [record[0] for record in applied_exception_records]
+            else:
+                applied_exceptions = applied_exceptions_raw
+
             supporting_evidence: list[str] = []
             missing_evidence: list[str] = []
             retrieved_policy_names = {_normalize_text(src.policy_name) for src in retrieved_sources}
@@ -302,7 +348,7 @@ REASONING: [detailed explanation]
             }
             known_exceptions.update({exc.exception_id.lower(): exc.exception_id for exc in exceptions})
             hallucinated_exceptions = [
-                exc_name for exc_name in applied_exceptions if exc_name and exc_name.lower() not in known_exceptions
+                exc_name for exc_name in applied_exceptions_raw if exc_name and exc_name.lower() not in known_exceptions
             ]
 
             hallucination_warnings: list[str] = []
@@ -335,6 +381,7 @@ REASONING: [detailed explanation]
                 retrieved_sources=retrieved_sources,
                 rag_metrics=rag_metrics,
                 hallucination_warnings=hallucination_warnings,
+                applied_exception_ids=applied_exception_ids,
             )
 
             state["compliance_result"] = compliance_result
@@ -349,16 +396,10 @@ REASONING: [detailed explanation]
                 audit_trail.append(f"Evidence found for: {', '.join(supporting_evidence)}")
             if missing_evidence:
                 audit_trail.append(f"⚠️ Missing evidence for: {', '.join(missing_evidence)}")
-            if applied_exceptions:
-                audit_trail.append(f"Applied {len(applied_exceptions)} exception(s)")
-
-                # Update exception usage stats
-                memory_exceptions = state.get("memory_exceptions", [])
-                for exc in memory_exceptions:
-                    # Check if this exception was applied
-                    if exc.description in applied_exceptions or exc.exception_id in applied_exceptions:
-                        self.memory_manager.update_exception_usage(exc.exception_id)
-                        audit_trail.append(f"  - {exc.description}")
+            if applied_exception_records:
+                audit_trail.append(f"Applied {len(applied_exception_records)} learned exception(s)")
+                for label, exc_id in applied_exception_records:
+                    audit_trail.append(f"  - {label} [ID: {exc_id}]")
 
             if hallucination_warnings:
                 for warning in hallucination_warnings:
@@ -372,6 +413,7 @@ REASONING: [detailed explanation]
                     input_data={
                         "violated_policies": violated_policies,
                         "applied_exceptions": applied_exceptions,
+                        "applied_exception_ids": applied_exception_ids,
                     },
                     output_data={
                         "coverage_ratio": rag_metrics.coverage_ratio,

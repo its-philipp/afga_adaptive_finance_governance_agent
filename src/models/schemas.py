@@ -101,6 +101,7 @@ class PolicyCheckResult(BaseModel):
     retrieved_sources: List[RetrievedSource] = Field(default_factory=list)
     rag_metrics: Optional[RAGTriadMetrics] = None
     hallucination_warnings: List[str] = Field(default_factory=list)
+    applied_exception_ids: List[str] = Field(default_factory=list)
 
 
 class HITLFeedback(BaseModel):
