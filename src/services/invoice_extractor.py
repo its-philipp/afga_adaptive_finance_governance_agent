@@ -169,9 +169,15 @@ Return ONLY JSON:
             if "currency" not in invoice_data or not invoice_data["currency"]:
                 invoice_data["currency"] = "EUR" if "€" in cleaned_text else "USD"
 
-            invoice_data.setdefault("vendor_reputation", 75)
-            invoice_data.setdefault("payment_terms", "Net 30")
-            invoice_data.setdefault("international", invoice_data.get("currency", "USD") != "USD")
+            if not invoice_data.get("vendor_reputation"):
+                invoice_data["vendor_reputation"] = 75
+
+            if not invoice_data.get("payment_terms"):
+                invoice_data["payment_terms"] = "Net 30"
+
+            if "international" not in invoice_data or invoice_data["international"] is None:
+                invoice_data["international"] = invoice_data.get("currency", "USD") != "USD"
+
             logger.info(f"Parsed invoice via OCR text: {invoice_data.get('invoice_id', 'N/A')}")
             return invoice_data
         except json.JSONDecodeError as e:
