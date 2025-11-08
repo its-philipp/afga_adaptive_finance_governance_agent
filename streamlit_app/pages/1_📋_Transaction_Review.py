@@ -9,6 +9,76 @@ import streamlit as st
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
+
+def render_policy_check_details(policy_check: dict | None, *, expand_sources: bool = False) -> None:
+    """Render policy compliance details with RAG transparency."""
+    if not policy_check:
+        st.info("No policy compliance data available yet.")
+        return
+
+    st.markdown(f"**Is Compliant:** {'✅ Yes' if policy_check.get('is_compliant') else '❌ No'}")
+    st.markdown(f"**Confidence:** {policy_check.get('confidence', 0):.2%}")
+    st.markdown(f"**Reasoning:** {policy_check.get('reasoning', 'N/A')}")
+
+    if policy_check.get("violated_policies"):
+        st.markdown("**Violated Policies:**")
+        for policy in policy_check["violated_policies"]:
+            st.write(f"- {policy}")
+
+    if policy_check.get("applied_exceptions"):
+        st.markdown("**Applied Exceptions:**")
+        for exc in policy_check["applied_exceptions"]:
+            st.write(f"- {exc}")
+
+    rag_metrics = policy_check.get("rag_metrics") or {}
+    retrieved_sources = policy_check.get("retrieved_sources") or []
+    hallucination_warnings = policy_check.get("hallucination_warnings") or []
+
+    if rag_metrics or retrieved_sources or hallucination_warnings:
+        st.markdown("---")
+        st.markdown("#### 🔎 RAG Transparency")
+
+    if rag_metrics:
+        coverage_ratio = rag_metrics.get("coverage_ratio", 0) * 100
+        average_relevance = rag_metrics.get("average_relevance", 0)
+        hallucinated_refs = len(rag_metrics.get("hallucinated_references", []))
+
+        col_rag1, col_rag2, col_rag3 = st.columns(3)
+        with col_rag1:
+            st.metric("Evidence Coverage", f"{coverage_ratio:.0f}%")
+        with col_rag2:
+            st.metric("Average Relevance", f"{average_relevance:.2f}", help="Average retrieval score across policy chunks")
+        with col_rag3:
+            st.metric("Hallucination Flags", str(hallucinated_refs))
+
+        if rag_metrics.get("supporting_evidence"):
+            st.success(
+                "Supporting evidence for: " + ", ".join(rag_metrics["supporting_evidence"])
+            )
+        if rag_metrics.get("missing_evidence"):
+            st.warning(
+                "Evidence gap for: " + ", ".join(rag_metrics["missing_evidence"])
+            )
+
+    if hallucination_warnings:
+        for warning in hallucination_warnings:
+            st.error(f"⚠️ {warning}")
+
+    if retrieved_sources:
+        with st.expander("📚 Retrieved Policy Evidence", expanded=expand_sources):
+            for idx, src in enumerate(retrieved_sources, 1):
+                score = src.get("score", 0)
+                st.markdown(f"**{idx}. {src.get('policy_name', 'Unknown Policy')}** (score: {score:.2f})")
+                filename = src.get("policy_filename")
+                if filename is not None:
+                    st.caption(f"Source: {filename} • Chunk #{src.get('chunk_index', 0)}")
+                if src.get("matched_terms"):
+                    st.caption("Matched terms: " + ", ".join(src["matched_terms"]))
+                snippet = src.get("snippet") or src.get("content")
+                if snippet:
+                    st.write(snippet.strip())
+                st.markdown("---")
+
 st.set_page_config(page_title="Transaction Review", page_icon="📋", layout="wide")
 
 # Hide default Streamlit navigation
@@ -724,73 +794,4 @@ with tab3:
                         except Exception as e:
                             st.error(f"Error submitting feedback: {str(e)}")
 
-def render_policy_check_details(policy_check: dict, *, expand_sources: bool = False) -> None:
-    """Render policy compliance details with RAG transparency."""
-    if not policy_check:
-        st.info("No policy compliance data available yet.")
-        return
-
-    st.markdown(f"**Is Compliant:** {'✅ Yes' if policy_check.get('is_compliant') else '❌ No'}")
-    st.markdown(f"**Confidence:** {policy_check.get('confidence', 0):.2%}")
-    st.markdown(f"**Reasoning:** {policy_check.get('reasoning', 'N/A')}")
-
-    if policy_check.get("violated_policies"):
-        st.markdown("**Violated Policies:**")
-        for policy in policy_check["violated_policies"]:
-            st.write(f"- {policy}")
-
-    if policy_check.get("applied_exceptions"):
-        st.markdown("**Applied Exceptions:**")
-        for exc in policy_check["applied_exceptions"]:
-            st.write(f"- {exc}")
-
-    rag_metrics = policy_check.get("rag_metrics") or {}
-    retrieved_sources = policy_check.get("retrieved_sources") or []
-    hallucination_warnings = policy_check.get("hallucination_warnings") or []
-
-    if rag_metrics or retrieved_sources or hallucination_warnings:
-        st.markdown("---")
-        st.markdown("#### 🔎 RAG Transparency")
-
-    if rag_metrics:
-        coverage_ratio = rag_metrics.get("coverage_ratio", 0) * 100
-        average_relevance = rag_metrics.get("average_relevance", 0)
-        hallucinated_refs = len(rag_metrics.get("hallucinated_references", []))
-
-        col_rag1, col_rag2, col_rag3 = st.columns(3)
-        with col_rag1:
-            st.metric("Evidence Coverage", f"{coverage_ratio:.0f}%")
-        with col_rag2:
-            st.metric("Average Relevance", f"{average_relevance:.2f}", help="Average retrieval score across policy chunks")
-        with col_rag3:
-            st.metric("Hallucination Flags", str(hallucinated_refs))
-
-        if rag_metrics.get("supporting_evidence"):
-            st.success(
-                "Supporting evidence for: " + ", ".join(rag_metrics["supporting_evidence"])
-            )
-        if rag_metrics.get("missing_evidence"):
-            st.warning(
-                "Evidence gap for: " + ", ".join(rag_metrics["missing_evidence"])
-            )
-
-    if hallucination_warnings:
-        for warning in hallucination_warnings:
-            st.error(f"⚠️ {warning}")
-
-    if retrieved_sources:
-        with st.expander("📚 Retrieved Policy Evidence", expanded=expand_sources):
-            for idx, src in enumerate(retrieved_sources, 1):
-                score = src.get("score", 0)
-                st.markdown(f"**{idx}. {src.get('policy_name', 'Unknown Policy')}** (score: {score:.2f})")
-                filename = src.get("policy_filename")
-                if filename is not None:
-                    st.caption(f"Source: {filename} • Chunk #{src.get('chunk_index', 0)}")
-                if src.get("matched_terms"):
-                    st.caption("Matched terms: " + ", ".join(src["matched_terms"]))
-                snippet = src.get("snippet") or src.get("content")
-                if snippet:
-                    st.write(snippet.strip())
-                st.markdown("---")
-    
 
