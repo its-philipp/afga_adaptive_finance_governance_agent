@@ -344,12 +344,14 @@ REASONING: [detailed explanation]
                 else 0.0
             )
 
-            known_exceptions = {
-                exc.description.lower(): exc.exception_id for exc in exceptions
-            }
-            known_exceptions.update({exc.exception_id.lower(): exc.exception_id for exc in exceptions})
+            known_exceptions = {}
+            for label, exc_id in applied_exception_records:
+                known_exceptions[label.lower()] = exc_id
+                known_exceptions[exc_id.lower()] = exc_id
             hallucinated_exceptions = [
-                exc_name for exc_name in applied_exceptions_raw if exc_name and exc_name.lower() not in known_exceptions
+                exc_name
+                for exc_name in applied_exceptions
+                if exc_name and exc_name.lower() not in known_exceptions
             ]
 
             hallucination_warnings: list[str] = []
