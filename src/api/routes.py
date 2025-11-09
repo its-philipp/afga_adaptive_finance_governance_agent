@@ -754,7 +754,15 @@ def assistant_chat(request: AssistantChatRequest) -> AssistantChatResponse:
             f"Details: {exc}.\n"
             "Please remove sensitive data or forbidden terms and try again."
         )
-        return AssistantChatResponse(reply=friendly_message, sources=[])
+        violation_sources = [
+            AssistantChatSource(
+                type="governance_violation",
+                id="input_validation",
+                title="Input validation blocked the request",
+                snippet=str(exc),
+            )
+        ]
+        return AssistantChatResponse(reply=friendly_message, sources=violation_sources)
     except Exception as exc:
         logger.error("Assistant chat failed: %s", exc, exc_info=True)
         raise HTTPException(
