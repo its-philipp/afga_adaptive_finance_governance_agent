@@ -266,7 +266,8 @@ REASONING: [detailed explanation]
 
             applied_exceptions_raw = applied_exceptions.copy()
 
-            normalized_applied = {_normalize_text(val) for val in applied_exceptions_raw if val}
+            normalized_applied_list = [_normalize_text(val) for val in applied_exceptions_raw if val]
+            normalized_applied = set(normalized_applied_list)
             treat_all_as_applied = len(applied_exceptions_raw) == 0
             applied_exception_records: list[tuple[str, str]] = []  # (label, id)
             applied_exception_ids: list[str] = []
@@ -288,9 +289,9 @@ REASONING: [detailed explanation]
                         matches = True
                     elif normalized_description and normalized_description in normalized_applied:
                         matches = True
-                    elif vendor_token and vendor_token in normalized_applied:
+                    elif vendor_token and any(vendor_token in value for value in normalized_applied_list):
                         matches = True
-                    elif category_token and category_token in normalized_applied:
+                    elif category_token and any(category_token in value for value in normalized_applied_list):
                         matches = True
 
                 if matches and exc.exception_id not in processed_exception_ids:
