@@ -747,6 +747,14 @@ def assistant_chat(request: AssistantChatRequest) -> AssistantChatResponse:
             model=None,
             temperature=0.2,
         )
+    except ValueError as exc:
+        logger.warning("Assistant chat blocked by governance: %s", exc)
+        friendly_message = (
+            "🚫 Request blocked by guardrails.\n"
+            f"Details: {exc}.\n"
+            "Please remove sensitive data or forbidden terms and try again."
+        )
+        return AssistantChatResponse(reply=friendly_message, sources=[])
     except Exception as exc:
         logger.error("Assistant chat failed: %s", exc, exc_info=True)
         raise HTTPException(
