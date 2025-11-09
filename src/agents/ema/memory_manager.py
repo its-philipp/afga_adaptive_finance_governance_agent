@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from ...core.config import get_settings
 from ...db.memory_db import MemoryDatabase
@@ -29,32 +29,23 @@ class MemoryManager:
         description: str,
         reason: str,
     ) -> str:
-        """Add a new learned exception to adaptive memory.
-        
-        Args:
-            invoice: The invoice that triggered this exception
-            exception_type: Type of exception (temporary, recurring, policy_gap)
-            description: Human-readable description
-            reason: Detailed reasoning for this exception
-            
-        Returns:
-            exception_id: ID of the created exception
-        """
-        # Build structured condition based on invoice characteristics
+        """Add a new learned exception to adaptive memory."""
+        vendor_value = invoice.vendor or None
+        category_value = invoice.category or None
+
         condition = {
-            "vendor": invoice.vendor if exception_type in ["recurring", "policy_gap"] else None,
-            "category": invoice.category if exception_type == "recurring" else None,
-            "amount_threshold": invoice.amount if "threshold" in description.lower() else None,
+            "vendor": vendor_value,
+            "category": category_value,
+            "amount_threshold": invoice.amount if "threshold" in (description or "").lower() else None,
             "international": invoice.international if invoice.international else None,
             "reason": reason,
         }
 
-        # Remove None values
         condition = {k: v for k, v in condition.items() if v is not None}
 
         exception_id = self.db.add_exception(
-            vendor=invoice.vendor if exception_type in ["recurring", "policy_gap"] else None,
-            category=invoice.category if exception_type == "recurring" else None,
+            vendor=vendor_value,
+            category=category_value,
             rule_type=exception_type,
             description=description,
             condition=condition,
@@ -111,13 +102,8 @@ class MemoryManager:
         # If we get here, it matches
         return True
 
-    def update_exception_usage(self, exception_id: str, success: bool) -> None:
-        """Update exception usage statistics.
-        
-        Args:
-            exception_id: ID of the exception that was applied
-            success: Whether the application was successful
-        """
+    def update_exception_usage(self, exception_id: str, success: bool = True) -> None:
+        """Update exception usage statistics."""
         self.db.update_exception_usage(exception_id, success)
 
     def get_context_retention_score(self) -> float:

@@ -25,10 +25,12 @@ st.markdown("Browse the company policies used by PAA for compliance checking.")
 policies_dir = Path("data/policies")
 policy_files = sorted(policies_dir.glob("*.txt")) if policies_dir.exists() else []
 
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 selected_policy_param = None
-if "policy" in query_params and query_params["policy"]:
-    selected_policy_param = unquote(query_params["policy"][0])
+if "policy" in query_params:
+    policy_values = query_params.get_all("policy")
+    if policy_values:
+        selected_policy_param = unquote(policy_values[0])
 
 assistant_context = {
     "page_summary": "Policy viewer listing compliance documents.",
