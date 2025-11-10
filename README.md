@@ -74,6 +74,34 @@ Navigate to http://localhost:8501 to explore the workflow dashboard.
 ### 📊 KPIs & Dashboarding
 - Streamlit visualizes KPIs (H-CR, CRS, ATAR), learned exceptions, and RAG transparency.
 
+## Demo Screenshots
+
+| Home (Overview) | Home (Workflow CTA) | Submit Transaction |
+| --- | --- | --- |
+| ![Home Overview](screenshots/1-home.png) | ![Home Workflow CTA](screenshots/2-home2.png) | ![Submit Transaction](screenshots/3-submit_transaction.png) |
+
+| Submit Transaction (Data Entry) | Transaction Review (Summary) | Transaction Review (Details) |
+| --- | --- | --- |
+| ![Submit Transaction Details](screenshots/4-submit-transaction2.png) | ![Transaction Review Summary](screenshots/5-transaction_review.png) | ![Transaction Review Expanded](screenshots/6-transaction_review2.png) |
+
+| Agent Workflow Diagram | Agent Workflow (Protocols) | KPI Dashboard |
+| --- | --- | --- |
+| ![Agent Workflow Diagram](screenshots/7-agent_workflow.png) | ![Agent Workflow Protocol View](screenshots/8-agent_workflow2.png) | ![KPI Dashboard](screenshots/9-kpi_dashboard.png) |
+
+| Memory Browser | Memory Browser (Exceptions) | Policy Viewer |
+| --- | --- | --- |
+| ![Memory Browser](screenshots/10-memory_browser.png) | ![Memory Browser Exceptions](screenshots/11-memory_browser2.png) | ![Policy Viewer](screenshots/12-policy_viewer.png) |
+
+| AI Governance Overview | AI Governance (Trace Detail) |  |
+| --- | --- | --- |
+| ![AI Governance Overview](screenshots/13-ai_governance.png) | ![AI Governance Detail](screenshots/14-ai_governance2.png) |  |
+
+Highlights:
+- Home pages introduce the AFGA architecture and provide quick links into the workflow demo.
+- Transaction submission and review screens demonstrate the A2A delegation, policy compliance reasoning, and adaptive memory surfacing.
+- Workflow, KPI, memory, and policy views visualize the hybrid A2A + MCP protocols and system health.
+- AI Governance pages showcase Langfuse traces, redaction logs, and compliance safeguards.
+
 ## API Surface (selected endpoints)
 - `POST /api/v1/transactions/submit`
 - `POST /api/v1/transactions/upload-receipt`
