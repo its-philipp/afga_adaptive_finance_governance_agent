@@ -105,47 +105,41 @@ st.markdown("## 🏗️ System Architecture")
 
 st.markdown("""
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    Streamlit UI (Frontend)                   │
-└────────────────────────┬─────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│                    Streamlit UI (Frontend)                 │
+└────────────────────────┬───────────────────────────────────┘
                          │ HTTP REST API
-┌────────────────────────▼─────────────────────────────────────┐
-│                    FastAPI Gateway                           │
-│  /transactions/submit   /transactions/{id}/hitl   /kpis/*    │
-└────────────────────────┬─────────────────────────────────────┘
+┌────────────────────────▼───────────────────────────────────┐
+│                    FastAPI Gateway                         │
+│  /transactions/*     /memory/*      /agents/cards          │
+└────────────────────────┬───────────────────────────────────┘
                          │
-        ┌────────────────┼────────────────┐
-        │                │                │
-┌───────▼────────┐  ┌────▼─────┐  ┌─────▼──────┐
-│  TAA (Client)  │  │   PAA    │  │    EMA     │
-│  Transaction   │  │  Policy  │  │  Exception │
-│  Auditor Agent │  │ Adherence│  │  Manager   │
-│                │  │  Agent   │  │   Agent    │
-└───────┬────────┘  └────┬─────┘  └─────┬──────┘
-        │ A2A            │ A2A           │ A2A
-        │ Protocol       │ Protocol      │ Protocol
-        ▼                ▼               ▼
-┌──────────────────────────────────────────────┐
-│           LangGraph State Machines           │
-│  (6 nodes)        (5 nodes)      (4 nodes)   │
-└──────────────────────────────────────────────┘
-        │                │               │
-        │                ▼               ▼
-        │         ┌─────────────┐ ┌──────────┐
-        │         │  Policy     │ │ Adaptive │
-        │         │  Retriever  │ │  Memory  │
-        │         │  (RAG)      │ │  Manager │
-        │         └─────────────┘ └──────────┘
-        │                │               │
-        ▼                ▼               ▼
-┌──────────────────────────────────────────────┐
-│          SQLite Database (Local MVP)         │
-│  ┌───────────────┬────────────┬──────────┐   │
-│  │adaptive_memory│transactions│   kpis   │   │
-│  └───────────────┴────────────┴──────────┘   │
-└──────────────────────────────────────────────┘
+┌────────────────────────▼───────────────────────────────────┐
+│        AFGA Orchestrator (TAA LangGraph workflow)          │
+│  • Ingests invoices, assesses risk, composes final decision│
+└───────────────┬──────────────────────────────┬─────────────┘
+                │ A2A HTTP (JSON-RPC)          │ A2A HTTP (JSON-RPC)
+                │                              │
+        ┌───────▼───────┐               ┌──────▼───────┐
+        │ PAA Agent     │               │ EMA Agent    │
+        │ Executor      │               │ Executor     │
+        │ (LangGraph)   │               │ (LangGraph)  │
+        └───────┬───────┘               └──────┬───────┘
+                │ MCP (Model Context Protocol) │ MCP (Model Context Protocol)
+                │                              │
+        ┌───────▼────────────┐        ┌────────▼───────────┐
+        │ Policy MCP Server  │        │ Memory MCP Server  │
+        │ • RAG over policy  │        │ • Adaptive memory  │
+        │   documents        │        │   (SQLite)         │
+        └────────────────────┘        └────────────────────┘
+                     │                         │
+                     └──────────────┬──────────┘
+                                    ▼
+                        SQLite Database (transactions, KPIs)
 ```
 """)
+
+st.caption("A2A handles cross-agent task delegation over HTTP, while MCP exposes shared resources like policies and adaptive memory.")
 
 # Agent Details
 st.markdown("## 🤖 Agent Responsibilities")
@@ -172,6 +166,10 @@ with col1:
     - evaluate_paa_response
     - make_final_decision
     - log_audit_trail
+    
+    **Protocols:**
+    - A2A HTTP client for cross-agent requests
+    - Direct DB writes for audit trails
     """)
 
 with col2:
@@ -192,6 +190,10 @@ with col2:
     - check_memory
     - evaluate_compliance
     - return_response
+    
+    **Protocols:**
+    - A2A HTTP server (JSON-RPC)
+    - MCP resource calls → Policy MCP server (vector store)
     """)
 
 with col3:
@@ -201,15 +203,20 @@ with col3:
     st.markdown("""
     **Workflow:**
     1. Receive HITL feedback
-    2. Analyze correction type
-    3. Update adaptive memory
-    4. Calculate H-CR KPI
+    2. Classify correction (LLM)
+    3. Update adaptive memory (MCP tool)
+    4. Recompute KPIs / confirm persistence
+    5. Respond to TAA with updated state
     
     **LangGraph Nodes:** 4
-    - receive_hitl_request
+    - receive_feedback
     - analyze_correction
     - update_memory
-    - calculate_hcr
+    - update_kpis
+    
+    **Protocols:**
+    - A2A HTTP server (JSON-RPC)
+    - MCP tool calls → Memory MCP server (SQLite persistence)
     """)
 
 # Transaction Flow
@@ -333,24 +340,13 @@ AFGA uses **two industry-standard protocols** working together, as recommended b
   - `add_exception()` - Create learned rules
   - `query_exceptions()` - Search memory
   - `update_exception_usage()` - Track usage
-  - `get_memory_stats()` - Memory statistics
+  - `get_memory_stats()` - Power KPIs and dashboards
 
-**Benefits:**
-- ✅ Clean abstraction (agents don't touch databases directly)
-- ✅ Standardized interfaces (MCP resources/tools)
-- ✅ Observable (MCP calls are logged)
-- ✅ Testable (can mock MCP servers)
-
-### Why Both Protocols?
-
-**A2A** = Agent orchestration (TAA delegates to PAA/EMA)  
-**MCP** = Data access (PAA/EMA access policies/memory)
-
-This hybrid approach follows MIT GenAI research recommendations for scalable, governable AI systems.
+Together, A2A keeps agent workflows loosely coupled, while MCP provides a shared contract for resources like policy documents and adaptive memory.
 """)
 
-# Get Agent Cards
 st.markdown("### 📋 Agent Cards (A2A Discovery)")
+
 
 def render_agent_card(card: dict | None) -> None:
     if not card:
@@ -362,6 +358,8 @@ def render_agent_card(card: dict | None) -> None:
     st.markdown(f"**Version:** {card.get('version', 'N/A')}")
     if card.get("url"):
         st.caption(f"Endpoint: {card['url']}")
+    if card.get("agentCardUrl"):
+        st.caption(f"Agent Card URL: {card['agentCardUrl']}")
 
     default_inputs = card.get("defaultInputModes") or card.get("default_input_modes") or []
     default_outputs = card.get("defaultOutputModes") or card.get("default_output_modes") or []
@@ -405,6 +403,7 @@ def render_agent_card(card: dict | None) -> None:
                     for example in examples:
                         st.write(f"- {example}")
     st.markdown("---")
+
 
 if agent_cards:
     tab1, tab2, tab3 = st.tabs(["TAA Card", "PAA Card", "EMA Card"])

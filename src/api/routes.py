@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 from pathlib import Path
 from typing import List, Optional
+from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status, UploadFile, File
 from fastapi.responses import FileResponse
@@ -79,9 +81,9 @@ def _coerce_json(value):
 
 def _search_memory_rules(query: str, limit: int = 3) -> list[dict]:
     """Return matching adaptive memory rules for assistant context."""
-    memory_manager = get_orch_cached().ema.memory_manager
+    memory_db = get_orch_cached().memory_db
     try:
-        exceptions = memory_manager.db.query_exceptions(MemoryQuery())
+        exceptions = memory_db.query_exceptions(MemoryQuery())
     except Exception as exc:
         logger.warning(f"Memory query failed: {exc}")
         return []
@@ -231,9 +233,15 @@ async def upload_receipt(
             )
         
         logger.info(f"Uploading document: {file.filename}")
-        
+        uploads_dir = Path("data/uploads")
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        temp_name = f"{uuid4().hex}{file_ext}"
+        temp_path = uploads_dir / temp_name
+
         # Read file bytes
         file_bytes = await file.read()
+        with open(temp_path, "wb") as temp_file:
+            temp_file.write(file_bytes)
         
         # Extract invoice data using Vision LLM
         logger.info(f"Extracting invoice data from {file.filename}")
@@ -248,6 +256,29 @@ async def upload_receipt(
         # Process through normal workflow
         orch = get_orchestrator()
         result = orch.process_transaction(invoice=invoice)
+
+        final_path = temp_path
+        try:
+            final_filename = f"{result.transaction_id}{file_ext}"
+            final_path = uploads_dir / final_filename
+            shutil.move(str(temp_path), str(final_path))
+        except Exception as move_err:
+            logger.warning(f"Unable to rename uploaded file {temp_path} -> {final_path}: {move_err}")
+
+        if final_path.exists():
+            final_path_str = str(final_path)
+        elif temp_path.exists():
+            final_path = temp_path
+            final_path_str = str(final_path)
+        else:
+            final_path_str = None
+
+        if final_path_str:
+            result.source_document_path = final_path_str
+            try:
+                orch.memory_db.update_transaction_source(result.transaction_id, final_path_str)
+            except Exception as update_err:
+                logger.warning(f"Failed to update transaction with source document path: {update_err}")
         
         logger.info(f"Document {file.filename} processed: {result.final_decision.value}")
         return result
@@ -444,7 +475,7 @@ def list_memory_exceptions(
             rule_type=rule_type,
         )
         
-        exceptions = get_orch_cached().ema.memory_manager.db.query_exceptions(query)
+        exceptions = get_orch_cached().memory_db.query_exceptions(query)
         return {"exceptions": [exc.model_dump() for exc in exceptions]}
     except Exception as e:
         logger.error(f"Error querying memory: {e}", exc_info=True)
@@ -472,7 +503,7 @@ def get_memory_stats():
 def delete_exception(exception_id: str):
     """Soft-delete an exception from adaptive memory."""
     try:
-        deleted = get_orch_cached().ema.memory_manager.db.delete_exception(exception_id)
+        deleted = get_orch_cached().memory_db.delete_exception(exception_id)
         
         if not deleted:
             raise HTTPException(
@@ -497,7 +528,7 @@ def delete_exception(exception_id: str):
 def restore_exception(exception_id: str):
     """Restore a soft-deleted exception."""
     try:
-        restored = get_orch_cached().ema.memory_manager.db.restore_exception(exception_id)
+        restored = get_orch_cached().memory_db.restore_exception(exception_id)
         
         if not restored:
             raise HTTPException(
@@ -522,7 +553,7 @@ def restore_exception(exception_id: str):
 def list_deleted_exceptions():
     """List soft-deleted exceptions."""
     try:
-        db_path = get_orch_cached().ema.memory_manager.db.db_path
+        db_path = get_orch_cached().memory_db.db_path
         import sqlite3
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row

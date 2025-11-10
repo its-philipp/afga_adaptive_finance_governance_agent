@@ -1,0 +1,33 @@
+# Development environment overrides
+replicaCount: 1
+
+image:
+  tag: "dev"
+
+env:
+  ENVIRONMENT: "development"
+  CLOUD_MODE: "local"  # Start with local mode for dev
+  LOG_LEVEL: "DEBUG"
+
+autoscaling:
+  enabled: false
+
+keyVaultSecrets:
+  vaultName: "kv-dev-adaptive-finance-governance"
+  tenantId: ""  # Set via terraform output
+
+serviceAccount:
+  annotations:
+    azure.workload.identity/client-id: ""  # Set via terraform output
+
+istio:
+  enabled: false  # Disable Istio for dev to simplify
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+

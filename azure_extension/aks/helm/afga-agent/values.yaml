@@ -1,0 +1,199 @@
+# Default values for afga-agent
+replicaCount: 2
+
+image:
+  repository: <ACR_NAME>.azurecr.io/adaptive-finance-governance-agent
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets:
+  - name: acr-secret
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    azure.workload.identity/client-id: ""  # Set via overlay
+  name: ""
+
+podAnnotations:
+  azure.workload.identity/use: "true"
+
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+ingress:
+  enabled: false
+  className: "istio"
+  annotations:
+    istio.io/ingress-gateway: "istio-gateway"
+  hosts:
+    - host: afga-agent.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Environment variables
+env:
+  # Application
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  
+  # Cloud mode configuration
+  CLOUD_MODE: "local"  # "local" or "databricks"
+  LLM_PROVIDER: "openai"  # "openai" or "openrouter"
+  
+  # OpenAI (when LLM_PROVIDER=openai)
+  OPENAI_MODEL: "gpt-4o-mini"
+  OPENAI_EMBEDDING_MODEL: "text-embedding-3-small"
+  OPENAI_BASE_URL: "https://api.openai.com/v1"
+  
+  # OpenRouter (when LLM_PROVIDER=openrouter)
+  OPENROUTER_API_KEY: ""  # Set via secret
+  PRIMARY_MODEL: "openrouter/openai/gpt-4o"
+  
+  # Weaviate (local mode)
+  WEAVIATE_URL: "http://weaviate:8080"
+  WEAVIATE_API_KEY: ""  # Set via secret
+  
+  # Azure Storage (databricks mode)
+  AZURE_STORAGE_ACCOUNT: ""  # Set via secret
+  AZURE_STORAGE_CONTAINER: "raw-transactions"
+  AZURE_USE_MANAGED_IDENTITY: "true"
+  
+  # Databricks (databricks mode)
+  DATABRICKS_WORKSPACE_URL: ""  # Set via secret
+  DATABRICKS_JOB_ID: ""  # Set via secret
+  
+  # Langfuse
+  LANGFUSE_PUBLIC_KEY: ""  # Set via secret
+  LANGFUSE_SECRET_KEY: ""  # Set via secret
+  LANGFUSE_HOST: ""  # Set via secret
+  
+  # SharePoint (optional)
+  SHAREPOINT_TENANT_ID: ""  # Set via secret
+  SHAREPOINT_CLIENT_ID: ""  # Set via secret
+  SHAREPOINT_CLIENT_SECRET: ""  # Set via secret
+  SHAREPOINT_SITE_URL: ""  # Set via secret
+
+# Secrets from Key Vault (via CSI driver)
+keyVaultSecrets:
+  enabled: true
+  vaultName: ""  # Set via overlay
+  tenantId: ""  # Set via overlay
+  objects:
+    - objectName: openai-api-key
+      objectType: secret
+      objectFormat: text
+      objectEncoding: utf-8
+      envVarName: OPENAI_API_KEY
+    
+    - objectName: openrouter-api-key
+      objectType: secret
+      objectFormat: text
+      objectEncoding: utf-8
+      envVarName: OPENROUTER_API_KEY
+    
+    - objectName: weaviate-api-key
+      objectType: secret
+      objectFormat: text
+      objectEncoding: utf-8
+      envVarName: WEAVIATE_API_KEY
+    
+    - objectName: langfuse-public-key
+      objectType: secret
+      objectFormat: text
+      objectEncoding: utf-8
+      envVarName: LANGFUSE_PUBLIC_KEY
+    
+    - objectName: langfuse-secret-key
+      objectType: secret
+      objectFormat: text
+      objectEncoding: utf-8
+      envVarName: LANGFUSE_SECRET_KEY
+    
+    - objectName: databricks-workspace-url
+      objectType: secret
+      objectFormat: text
+      objectEncoding: utf-8
+      envVarName: DATABRICKS_WORKSPACE_URL
+    
+    - objectName: databricks-job-id
+      objectType: secret
+      objectFormat: text
+      objectEncoding: utf-8
+      envVarName: DATABRICKS_JOB_ID
+
+# Istio configuration
+istio:
+  enabled: true
+  gateway:
+    name: afga-agent-gateway
+    hosts:
+      - afga-agent.example.com
+  virtualService:
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+  destinationRule:
+    mTLS:
+      mode: STRICT
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+

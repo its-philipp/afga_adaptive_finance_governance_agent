@@ -1,0 +1,14 @@
+{{- if .Values.istio.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "afga-agent.fullname" . }}
+  labels:
+    {{- include "afga-agent.labels" . | nindent 4 }}
+spec:
+  host: {{ include "afga-agent.fullname" . }}
+  trafficPolicy:
+    tls:
+      mode: {{ .Values.istio.destinationRule.mTLS.mode }}
+{{- end }}
+

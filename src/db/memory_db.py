@@ -23,6 +23,7 @@ class MemoryDatabase:
     def __init__(self, db_path: str = "data/memory.db"):
         self.db_path = db_path
         self._ensure_database()
+        self._backfill_missing_descriptions()
 
     def _ensure_database(self) -> None:
         """Create database and tables if they don't exist."""
@@ -58,6 +59,11 @@ class MemoryDatabase:
         
         try:
             cursor.execute("ALTER TABLE adaptive_memory ADD COLUMN is_active INTEGER DEFAULT 1")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        try:
+            cursor.execute("ALTER TABLE transactions ADD COLUMN source_document_path TEXT")
         except sqlite3.OperationalError:
             pass  # Column already exists
 
@@ -130,6 +136,61 @@ class MemoryDatabase:
         conn.close()
         logger.info(f"Memory database initialized at {self.db_path}")
 
+    def _normalize_description(
+        self,
+        description: Optional[str],
+        vendor: Optional[str],
+        condition: Optional[Dict[str, Any]],
+        rule_type: Optional[str],
+    ) -> str:
+        """Ensure descriptions are human-readable instead of placeholders like 'N/A'."""
+        text = (description or "").strip()
+        if text.lower() in {"", "n/a", "na", "none"}:
+            reason = None
+            if isinstance(condition, dict):
+                reason = condition.get("reason")
+            if isinstance(reason, str) and reason.strip():
+                text = reason.strip()
+            elif vendor:
+                rule_label = (rule_type or "Learned exception").replace("_", " ").title()
+                text = f"{rule_label} – Vendor {vendor}"
+            elif rule_type:
+                text = (rule_type or "Learned exception").replace("_", " ").title()
+            else:
+                text = "Learned exception"
+        return text
+
+    def _backfill_missing_descriptions(self) -> None:
+        """Update existing rows that still have placeholder descriptions."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT exception_id, vendor, rule_type, description, condition
+            FROM adaptive_memory
+            WHERE description IS NULL
+               OR TRIM(description) = ''
+               OR LOWER(description) IN ('n/a', 'na', 'none')
+        """
+        )
+        rows = cursor.fetchall()
+        updated = 0
+        for exception_id, vendor, rule_type, description, condition_json in rows:
+            try:
+                condition = json.loads(condition_json or "{}")
+            except json.JSONDecodeError:
+                condition = {}
+            normalized = self._normalize_description(description, vendor, condition, rule_type)
+            cursor.execute(
+                "UPDATE adaptive_memory SET description = ? WHERE exception_id = ?",
+                (normalized, exception_id),
+            )
+            updated += 1
+        if updated:
+            conn.commit()
+            logger.info(f"Backfilled descriptions for {updated} adaptive memory rule(s)")
+        conn.close()
+
     # ========== ADAPTIVE MEMORY OPERATIONS ==========
 
     def add_exception(
@@ -142,6 +203,7 @@ class MemoryDatabase:
     ) -> str:
         """Add a new exception to adaptive memory."""
         exception_id = str(uuid.uuid4())[:8]
+        normalized_description = self._normalize_description(description, vendor, condition, rule_type)
         
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -150,12 +212,12 @@ class MemoryDatabase:
             INSERT INTO adaptive_memory 
             (exception_id, vendor, category, rule_type, description, condition, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (exception_id, vendor, category, rule_type, description, json.dumps(condition), datetime.now()))
+        """, (exception_id, vendor, category, rule_type, normalized_description, json.dumps(condition), datetime.now()))
         
         conn.commit()
         conn.close()
         
-        logger.info(f"Added exception {exception_id}: {description}")
+        logger.info(f"Added exception {exception_id}: {normalized_description}")
         return exception_id
 
     def delete_exception(self, exception_id: str) -> bool:
@@ -249,13 +311,14 @@ class MemoryDatabase:
 
         exceptions = []
         for row in rows:
+            condition = json.loads(row["condition"]) if row["condition"] else {}
             exceptions.append(MemoryException(
                 exception_id=row["exception_id"],
                 vendor=row["vendor"],
                 category=row["category"],
                 rule_type=row["rule_type"],
-                description=row["description"],
-                condition=json.loads(row["condition"]),
+                description=self._normalize_description(row["description"], row["vendor"], condition, row["rule_type"]),
+                condition=condition,
                 applied_count=row["applied_count"],
                 success_rate=row["success_rate"],
                 created_at=datetime.fromisoformat(row["created_at"]),
@@ -321,35 +384,63 @@ class MemoryDatabase:
         avg_success_rate = cursor.fetchone()[0] or 0.0
 
         # Most applied rules (only active)
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT exception_id, description, applied_count, success_rate
             FROM adaptive_memory
             WHERE applied_count > 0 AND is_active = 1
-            ORDER BY applied_count DESC
+            ORDER BY applied_count DESC, created_at DESC
             LIMIT 5
-        """)
-        most_applied = [
-            {
-                "exception_id": row[0],
-                "description": row[1],
-                "applied_count": row[2],
-                "success_rate": row[3],
-            }
-            for row in cursor.fetchall()
-        ]
+        """
+        )
+        most_applied = []
+        for row in cursor.fetchall():
+            cursor.execute(
+                "SELECT vendor, rule_type, condition FROM adaptive_memory WHERE exception_id = ?",
+                (row[0],),
+            )
+            vendor_row = cursor.fetchone()
+            if vendor_row:
+                vendor, rule_type, condition_json = vendor_row
+            else:
+                vendor = rule_type = None
+                condition_json = "{}"
+            try:
+                condition = json.loads(condition_json or "{}")
+            except json.JSONDecodeError:
+                condition = {}
+            most_applied.append(
+                {
+                    "exception_id": row[0],
+                    "description": self._normalize_description(row[1], vendor, condition, rule_type),
+                    "applied_count": row[2],
+                    "success_rate": row[3],
+                }
+            )
 
         # Recent additions (only active)
-        cursor.execute("""
-            SELECT exception_id, description, created_at
+        cursor.execute(
+            """
+            SELECT exception_id, description, created_at, vendor, rule_type, condition
             FROM adaptive_memory
             WHERE is_active = 1
             ORDER BY created_at DESC
             LIMIT 5
-        """)
-        recent_additions = [
-            {"exception_id": row[0], "description": row[1], "created_at": row[2]}
-            for row in cursor.fetchall()
-        ]
+        """
+        )
+        recent_additions = []
+        for row in cursor.fetchall():
+            try:
+                condition = json.loads(row[5] or "{}")
+            except json.JSONDecodeError:
+                condition = {}
+            recent_additions.append(
+                {
+                    "exception_id": row[0],
+                    "description": self._normalize_description(row[1], row[3], condition, row[4]),
+                    "created_at": row[2],
+                }
+            )
 
         conn.close()
 
@@ -373,8 +464,8 @@ class MemoryDatabase:
             INSERT INTO transactions
             (transaction_id, invoice_id, invoice_data, risk_score, risk_level, 
              paa_decision, policy_check_json, final_decision, decision_reasoning, human_override, processing_time_ms, 
-             audit_trail, trace_id, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             audit_trail, trace_id, created_at, updated_at, source_document_path)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             result.transaction_id,
             result.invoice.invoice_id,
@@ -391,12 +482,25 @@ class MemoryDatabase:
             result.trace_id,
             result.created_at,
             result.created_at,  # updated_at initially same as created_at
+            result.source_document_path,
         ))
 
         conn.commit()
         conn.close()
         
         logger.info(f"Saved transaction {result.transaction_id}")
+
+    def update_transaction_source(self, transaction_id: str, path: str) -> None:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            """UPDATE transactions SET source_document_path = ?, updated_at = ? WHERE transaction_id = ?""",
+            (path, datetime.now(), transaction_id),
+        )
+        conn.commit()
+        conn.close()
+
+        logger.info(f"Updated source document for transaction {transaction_id}")
 
     def get_transaction(self, transaction_id: str) -> Optional[Dict[str, Any]]:
         """Get transaction by ID."""

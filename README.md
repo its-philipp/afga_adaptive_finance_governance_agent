@@ -5,196 +5,120 @@
 
 ## Overview
 
-The Adaptive Finance Governance Agent (AFGA) is a multi-agent agentic AI system for automated compliance and release checking of finance documents (invoices, expense reports). The system learns from human corrections and reduces the Human Correction Rate (H-CR) over time through adaptive memory.
+Adaptive Finance Governance Agent (AFGA) is a production-ready, multi-agent compliance assistant for finance operations. It automates invoice auditing, enforces policy adherence, and learns from human reviewers via adaptive memory so the Human Correction Rate (H-CR) drops over time.
+
+The system now ships with **real HTTP-based A2A communication** between agents, **MCP resources/tools** for shared knowledge, end-to-end observability, and a Streamlit UI tailored for demos.
 
 ## Architecture
 
-**3 Specialized LangGraph Agents (Hybrid A2A + MCP Architecture):**
+AFGA runs three specialized LangGraph agents connected through a hybrid protocol stack:
 
-- **TAA (Transaction Auditor Agent)**: Orchestrator - receives transactions, performs risk scoring, delegates via A2A protocol
-- **PAA (Policy Adherence Agent)**: Server - uses MCP to access policies, performs RAG-based compliance checking
-- **EMA (Exception Manager Agent)**: Server - uses MCP for memory tools, manages HITL feedback and learning
+- **TAA – Transaction Auditor Agent** (client): orchestrates the workflow, scores risk, and calls downstream agents through the A2A protocol.
+- **PAA – Policy Adherence Agent** (server): exposes an A2A executor that consults MCP policy resources + RAG to evaluate compliance.
+- **EMA – Exception Manager Agent** (server): processes HITL feedback, updates adaptive memory through MCP tools, and feeds improvements back into PAA.
 
-**Key Technologies:**
-- LangGraph for agent state management
-- **A2A Protocol** for inter-agent communication (TAA ↔ PAA, TAA ↔ EMA)
-- **MCP Protocol** for resource/tool access (PAA ↔ Policies, EMA ↔ Memory)
-- SQLite for local memory persistence (upgradeable to Databricks)
-- FastAPI as API Gateway
-- Streamlit for UI with agent workflow visualization
-- Langfuse for observability
-- OpenRouter for LLM calls
+**Key technologies**
+- LangGraph state machines for each agent
+- A2A HTTP/JSON-RPC for cross-agent delegation
+- MCP (Model Context Protocol) for policies, adaptive memory, and KPI tooling
+- FastAPI gateway, Streamlit front-end, Langfuse observability
+- SQLite (local) with upgrade path to Databricks Delta for persistence
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/HYBRID_A2A_MCP.md`](docs/HYBRID_A2A_MCP.md) for full diagrams.
 
 ## Quick Start
 
 ### Prerequisites
-
 - Python 3.11+
-- uv package manager
+- [uv](https://github.com/astral-sh/uv) package manager
+- OpenRouter API key (or compatible LLM provider)
 
-### Setup
-
+### Setup & Run
 ```bash
 # Install dependencies
-uv sync
-
-# Install with all features (UI, dev tools)
 uv sync --extra all
 
-# Create environment configuration
+# Copy environment template and add secrets (no keys are committed)
 cp .env.example .env
-# Edit .env and add your OpenRouter API key
+$EDITOR .env
 
 # Activate virtual environment
 source .venv/bin/activate
+
+# Start FastAPI backend
+uvicorn src.api.main:app --reload
+
+# In a second terminal start Streamlit UI
+streamlit run streamlit_app/app.py
 ```
+Navigate to http://localhost:8501 to explore the workflow dashboard.
 
-### Run Services Locally
+## Flagship Capabilities
 
-1. Start FastAPI backend:
-   ```bash
-   uvicorn src.api.main:app --reload
-   ```
-
-2. Start Streamlit UI:
-   ```bash
-   streamlit run streamlit_app/app.py
-   ```
-
-3. Navigate to http://localhost:8501
-
-## Key Features
-
-### 🤖 Multi-Agent System
-- **TAA**: Orchestrates transaction flow and risk assessment
-- **PAA**: Performs compliance checking with RAG and memory
-- **EMA**: Manages human feedback and adaptive learning
+### 🤖 Multi-Agent Orchestration
+- TAA delegates to PAA/EMA over authenticated A2A HTTP calls.
+- Each agent exposes LangGraph nodes with typed state transitions.
 
 ### 🧠 Adaptive Memory
-- Learns from human corrections
-- Stores institutional knowledge in SQLite (local) or Databricks (production)
-- Context Retention Score (CRS) tracks memory effectiveness
+- HITL feedback creates learned exceptions persisted via MCP tools.
+- Context Retention Score (CRS) and Human Correction Rate (H-CR) track learning effectiveness.
 
 ### 📄 Document Intelligence
-- Upload receipts/invoices in PDF or image format
-- AI extraction using Vision LLM (GPT-4 Vision)
-- Supports German invoices ("Rechnung", "Spesenabrechnung")
-- Handles handwriting, photos, scans, and multi-page PDFs
+- Upload PDF or image receipts for extraction and validation.
+- Zero-width characters are normalized for clean UI rendering.
 
-### 🛡️ AI Governance
-- **Input Governance:** PII detection, forbidden word filtering, prompt validation
-- **Output Governance:** Content filtering, response quality validation
-- **Audit Logging:** JSONL format with PII redaction
-- **Cost Tracking:** Per-agent and per-call LLM cost monitoring
-- **Policy Enforcement:** Access controls and compliance checks
+### 🛡️ AI Governance & Auditability
+- Input/output governance, redaction, and KPI tracking.
+- Langfuse captures traces, spans, and LLM generations.
 
-### 📊 KPI Dashboard
-- **H-CR (Human Correction Rate)**: Measures learning progress
-- **CRS (Context Retention Score)**: Memory effectiveness
-- **ATAR (Automated Transaction Approval Rate)**: Operational efficiency
-- **Audit Traceability**: Complete decision transparency
+### 📊 KPIs & Dashboarding
+- Streamlit visualizes KPIs (H-CR, CRS, ATAR), learned exceptions, and RAG transparency.
 
-### 🔍 Agent Workflow Visualization
-- Real-time LangGraph state visualization
-- A2A message flow tracking
-- Complete audit trail for all decisions
+## API Surface (selected endpoints)
+- `POST /api/v1/transactions/submit`
+- `POST /api/v1/transactions/upload-receipt`
+- `POST /api/v1/transactions/{transaction_id}/hitl`
+- `GET /api/v1/kpis/current`
+- `GET /api/v1/memory/exceptions`
 
-## API Endpoints
-
-### Transaction Processing
-- `POST /api/v1/transactions/submit` - Submit structured invoice (JSON)
-- `POST /api/v1/transactions/upload-receipt` - Upload receipt/invoice (PDF/Image) with AI extraction + governance
-- `GET /api/v1/transactions/{transaction_id}` - Get transaction status
-- `POST /api/v1/transactions/{transaction_id}/hitl` - Submit human feedback
-
-### KPIs and Analytics
-- `GET /api/v1/kpis/current` - Current KPI values
-- `GET /api/v1/kpis/trend` - KPI trends over time
-
-### Memory Management
-- `GET /api/v1/memory/exceptions` - List learned exceptions
-- `POST /api/v1/memory/exceptions` - Add exception (admin)
-
-### Health Check
-- `GET /api/v1/health` - Service health status
-
-## Project Structure
-
+## Project Layout
 ```
 adaptive_finance_governance_agent/
-├── src/
-│   ├── agents/          # TAA, PAA, EMA agents with A2A integration
-│   ├── api/             # FastAPI gateway
-│   ├── core/            # Config, observability, LLM clients
-│   ├── models/          # Pydantic schemas
-│   ├── services/        # Risk scoring, policy retrieval, KPI tracking
-│   └── db/              # SQLite memory operations
+├── src/                  # Agents, FastAPI gateway, services, persistence
+├── streamlit_app/        # Streamlit UI + workflow visualizations
+├── tests/                # Unit & integration tests
 ├── data/
-│   ├── mock_invoices/   # Synthetic test data
-│   ├── policies/        # Policy documents
-│   └── memory.db        # Adaptive memory (SQLite)
-├── streamlit_app/       # Streamlit UI
-├── tests/               # Unit and integration tests
-└── docs/                # Documentation
+│   ├── mock_invoices/    # Synthetic samples (checked in)
+│   ├── policies/         # Policy corpora (checked in)
+│   └── uploads/          # Runtime uploads (.gitkeep only)
+├── docs/                 # Living docs (A2A, MCP, governance, vision)
+│   └── archive/          # Historical status reports and legacy notes
+├── scripts/              # Developer utilities (DB migrate, mock data)
+├── env.example           # Configuration template (no secrets)
+└── azure_extension/      # Optional Azure/AKS deployment assets
 ```
+Runtime databases (e.g., `data/memory.db`) and uploaded receipts are ignored by git so the repository stays clean.
 
-## Development Roadmap
+## Development Status
+- ✅ Local MVP with hybrid A2A + MCP agents
+- ✅ Adaptive memory + KPI dashboard
+- ✅ Streamlit + FastAPI demo experience
+- ✅ Extensive documentation (see `/docs`)
+- 🚧 Optional Azure/Databricks deployment scripts live under `azure_extension/`
 
-### Phase 1: Local MVP ✅ **COMPLETE**
-- [x] Multi-agent architecture with LangGraph
-- [x] Hybrid A2A + MCP protocol implementation
-- [x] SQLite adaptive memory
-- [x] KPI tracking
-- [x] Streamlit UI with workflow visualization
-- [x] FastAPI gateway (15+ endpoints)
-- [x] 50 mock invoices + 5 policy documents
-- [x] Unit and integration tests
-- [x] Complete documentation
-- [x] Document extraction with Vision LLM
-- [x] AI Governance framework (PII detection, audit logging)
-
-### Phase 2: Databricks Integration (Future)
-- [ ] Memory migration to Delta Lake
-- [ ] Unity Catalog setup
-- [ ] PII detection and governance
-
-### Phase 3: AKS Deployment (Future)
-- [ ] Terraform IaC
-- [ ] Helm charts
-- [ ] Istio service mesh
-- [ ] ArgoCD GitOps
-
-## Success Criteria
-
-- ✅ 3 LangGraph agents with hybrid A2A + MCP architecture
-- ✅ Transaction processing with approve/reject/HITL decisions
-- ✅ Adaptive memory stores and retrieves learned exceptions
-- ✅ KPIs calculated and displayed in Streamlit
-- ✅ Streamlit UI with 4 complete pages
-- ✅ FastAPI gateway with 15+ endpoints
-- ✅ Unit and integration tests passing
-- ✅ 100% audit trail traceability
-- ⏳ H-CR decreases over time (ready to validate with demo)
-
-## Cost Estimate
-
-- **Local Development**: $0 (Mac M2)
-- **With Databricks**: ~$50/month
-- **Full Production (AKS)**: ~$200-250/month
-
-## Documentation
-
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System architecture and design
-- [HYBRID_A2A_MCP.md](docs/HYBRID_A2A_MCP.md) - Hybrid protocol architecture
-- [GOVERNANCE.md](docs/GOVERNANCE.md) - AI governance framework
-- [DOCUMENT_EXTRACTION.md](docs/DOCUMENT_EXTRACTION.md) - Vision LLM extraction
-- [QUICKSTART.md](QUICKSTART.md) - Getting started guide
-
-## License
-
-MIT License
+## Documentation Index
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) – system design
+- [`docs/HYBRID_A2A_MCP.md`](docs/HYBRID_A2A_MCP.md) – protocol deep dive
+- [`docs/A2A_VS_MCP.md`](docs/A2A_VS_MCP.md) – comparison guide
+- [`docs/DOCUMENT_EXTRACTION.md`](docs/DOCUMENT_EXTRACTION.md) – vision pipeline
+- [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md) – AI governance and audit trail
+- [`docs/SETUP_VISION.md`](docs/SETUP_VISION.md) – enabling vision models
+- [`docs/archive`](docs/archive) – historical deliverables and status logs
+- [`azure_extension/README.md`](azure_extension/README.md) – cloud deployment playbooks
 
 ## Contributing
+Pull requests are welcome! Please open an issue describing the change and ensure `uv run pytest` and `ruff` pass locally.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+## License
+MIT License
 

@@ -102,6 +102,9 @@ class PolicyCheckResult(BaseModel):
     rag_metrics: Optional[RAGTriadMetrics] = None
     hallucination_warnings: List[str] = Field(default_factory=list)
     applied_exception_ids: List[str] = Field(default_factory=list)
+    manual_review_required: bool = False
+    manual_exception_ids: List[str] = Field(default_factory=list)
+    manual_exception_labels: List[str] = Field(default_factory=list)
 
 
 class AssistantChatHistoryEntry(BaseModel):
@@ -167,6 +170,7 @@ class TransactionResult(BaseModel):
     audit_trail: List[str]
     trace_id: str
     created_at: datetime
+    source_document_path: Optional[str] = None
 
 
 class KPIMetrics(BaseModel):

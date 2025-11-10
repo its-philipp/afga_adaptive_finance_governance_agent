@@ -93,8 +93,18 @@ class PAAExecutor(AgentExecutor):
 
             # Add artifact with structured result
             if compliance_result:
+                artifact_payload = {
+                    "compliance_result": compliance_result.model_dump(mode="json"),
+                    "audit_trail": result.get("audit_trail", []),
+                    "hallucination_warnings": result.get("hallucination_warnings", []),
+                    "rag_metrics": (
+                        result.get("rag_metrics").model_dump(mode="json")
+                        if result.get("rag_metrics")
+                        else None
+                    ),
+                }
                 await updater.add_artifact(
-                    [Part(root=TextPart(text=compliance_result.model_dump_json()))],
+                    [Part(root=TextPart(text=json.dumps(artifact_payload)))],
                     name="paa_compliance_result",
                 )
 

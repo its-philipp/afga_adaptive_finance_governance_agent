@@ -137,7 +137,7 @@ REASONING: [brief explanation]
                     description = line.split(":", 1)[1].strip()
 
             state["correction_type"] = correction_type
-            state["exception_description"] = description
+            state["exception_description"] = description or feedback.reasoning or "Learned exception"
 
             if self.observability:
                 self.observability.log_llm_call(
@@ -171,7 +171,7 @@ REASONING: [brief explanation]
         feedback = state["feedback"]
         invoice = state.get("invoice")
         correction_type = state.get("correction_type", "one_time_override")
-        description = state.get("exception_description", "")
+        description = state.get("exception_description", "") or feedback.reasoning or "Learned exception"
         audit_trail = state.get("audit_trail", [])
 
         audit_trail.append("Updating adaptive memory via MCP tools")

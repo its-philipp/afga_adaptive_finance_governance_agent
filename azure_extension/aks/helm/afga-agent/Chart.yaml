@@ -1,0 +1,14 @@
+apiVersion: v2
+name: afga-agent
+description: Adaptive Finance Governance AFGA - Azure Native Deployment
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - rag
+  - compliance
+  - ai
+  - langgraph
+maintainers:
+  - name: KPMG Team
+

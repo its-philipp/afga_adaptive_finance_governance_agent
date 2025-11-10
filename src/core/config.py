@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     streamlit_port: int = 8501
     api_base_url: str = "http://localhost:8000/api/v1"
 
+    # A2A Configuration
+    a2a_enabled: bool = True
+    a2a_base_url: str = "http://localhost:8000"
+    a2a_paa_path: str = "/a2a/paa"
+    a2a_ema_path: str = "/a2a/ema"
+    a2a_api_key: str | None = None
+    a2a_request_timeout: float = 30.0
+
     # Agent Temperature Configuration
     taa_temperature: float = 0.3
     paa_temperature: float = 0.1

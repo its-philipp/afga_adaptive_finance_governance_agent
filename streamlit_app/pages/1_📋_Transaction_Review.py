@@ -12,6 +12,18 @@ from components.chat_assistant import render_chat_sidebar
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
+ZERO_WIDTH_PATTERN = re.compile(r"[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]")
+WIDE_SPACE_PATTERN = re.compile(r"[\u00A0\u1680\u180E\u2000-\u200A\u202F\u205F\u3000]")
+
+
+def _normalize_text(value: str | None) -> str:
+    if not value:
+        return ""
+    text = ZERO_WIDTH_PATTERN.sub("", value)
+    text = WIDE_SPACE_PATTERN.sub(" ", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
 
 def render_policy_check_details(policy_check: dict | None, *, expand_sources: bool = False) -> None:
     """Render policy compliance details with RAG transparency."""
@@ -21,9 +33,10 @@ def render_policy_check_details(policy_check: dict | None, *, expand_sources: bo
 
     st.markdown(f"**Is Compliant:** {'✅ Yes' if policy_check.get('is_compliant') else '❌ No'}")
     st.markdown(f"**Confidence:** {policy_check.get('confidence', 0):.2%}")
-    reasoning = policy_check.get("reasoning")
-    cleaned_reasoning = " ".join((reasoning or "").replace("\u200b", "").replace("\u200c", "").replace("\u200d", "").split())
-    st.markdown(f"**Reasoning:** {cleaned_reasoning}")
+    if policy_check.get("manual_review_required"):
+        st.warning("Manual review required due to learned exception(s).")
+    reasoning = _normalize_text(policy_check.get("reasoning", ""))
+    st.markdown(f"**Reasoning:** {reasoning or 'Not provided'}")
 
     if policy_check.get("violated_policies"):
         st.markdown("**Violated Policies:**")
@@ -39,6 +52,9 @@ def render_policy_check_details(policy_check: dict | None, *, expand_sources: bo
                 st.write(f"- {exc} (ID: {applied_ids[idx]})")
             else:
                 st.write(f"- {exc}")
+        manual_labels = policy_check.get("manual_exception_labels") or []
+        if manual_labels:
+            st.info("Manual review triggered by: " + ", ".join(manual_labels))
 
     applied_ids = policy_check.get("applied_exception_ids") or []
     if applied_ids and len(applied_ids) != len(policy_check.get("applied_exceptions", [])):
@@ -90,7 +106,9 @@ def render_policy_check_details(policy_check: dict | None, *, expand_sources: bo
                     st.caption("Matched terms: " + ", ".join(src["matched_terms"]))
                 snippet = src.get("snippet") or src.get("content")
                 if snippet:
-                    st.write(snippet.strip())
+                    normalized_snippet = _normalize_text(snippet)
+                    if normalized_snippet:
+                        st.write(normalized_snippet)
                 st.markdown("---")
 
 def _summarize_policy_check(policy_check: dict | None) -> dict:
@@ -104,6 +122,8 @@ def _summarize_policy_check(policy_check: dict | None) -> dict:
         "applied_exceptions": policy_check.get("applied_exceptions", []),
         "applied_exception_ids": policy_check.get("applied_exception_ids", []),
         "hallucination_warnings": policy_check.get("hallucination_warnings", []),
+        "manual_review_required": policy_check.get("manual_review_required", False),
+        "manual_exception_labels": policy_check.get("manual_exception_labels", []),
     }
 
     retrieved_sources = []
@@ -333,7 +353,8 @@ with tab1:
                     st.info("No policy compliance data returned for this transaction.")
 
                 st.markdown("### 💭 Decision Reasoning")
-                st.info(result.get("decision_reasoning", "No reasoning provided"))
+                receipt_reasoning = _normalize_text(result.get("decision_reasoning"))
+                st.info(receipt_reasoning or "No reasoning provided")
 
                 with st.expander("📜 Complete Audit Trail"):
                     for idx, step in enumerate(result.get("audit_trail", []), 1):
@@ -494,7 +515,8 @@ with tab1:
                             
                             # Decision Reasoning
                             st.markdown("### 💭 Decision Reasoning")
-                            st.info(result.get("decision_reasoning", "No reasoning provided"))
+                            final_reasoning = _normalize_text(result.get("decision_reasoning"))
+                            st.info(final_reasoning or "No reasoning provided")
                             
                             # Audit Trail
                             with st.expander("📜 Complete Audit Trail"):
@@ -562,7 +584,8 @@ with tab2:
                 st.write(f"- Processing Time: {trans.get('processing_time_ms', 0)}ms")
                 
                 st.markdown("**Decision:**")
-                st.info(trans.get('decision_reasoning', "No reasoning available"))
+                decision_reasoning = _normalize_text(trans.get('decision_reasoning'))
+                st.info(decision_reasoning or "No reasoning available")
                 
                 # Show applied exceptions if any
                 audit_trail = trans.get("audit_trail", [])
@@ -583,7 +606,39 @@ with tab2:
                     st.write(f"- Category: {invoice.get('category')}")
                     st.write(f"- PO Number: {invoice.get('po_number', 'N/A')}")
                     st.write(f"- International: {'Yes' if invoice.get('international') else 'No'}")
-                    
+
+                source_path = trans.get("source_document_path")
+                if source_path:
+                    path_obj = Path(source_path)
+                    if path_obj.exists():
+                        st.markdown("**Source Document:**")
+                        suffix = path_obj.suffix.lower()
+                        if suffix in {".png", ".jpg", ".jpeg", ".webp"}:
+                            st.image(str(path_obj), caption=path_obj.name, use_container_width=True)
+                        elif suffix == ".pdf":
+                            try:
+                                with open(path_obj, "rb") as pdf_file:
+                                    st.download_button(
+                                        "Download PDF",
+                                        data=pdf_file,
+                                        file_name=path_obj.name,
+                                        mime="application/pdf",
+                                        use_container_width=True,
+                                    )
+                            except Exception as err:
+                                st.warning(f"Unable to read source document: {err}")
+                        else:
+                            try:
+                                with open(path_obj, "rb") as file_obj:
+                                    st.download_button(
+                                        "Download Source Document",
+                                        data=file_obj,
+                                        file_name=path_obj.name,
+                                        use_container_width=True,
+                                    )
+                            except Exception as err:
+                                st.warning(f"Unable to read source document: {err}")
+
                 # Format timestamps properly
                 from datetime import datetime
                 if trans.get('created_at'):

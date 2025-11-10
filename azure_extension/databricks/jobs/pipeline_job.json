@@ -1,0 +1,72 @@
+{
+  "name": "adaptive-finance-governance-rag-pipeline",
+  "max_concurrent_runs": 1,
+  "timeout_seconds": 3600,
+  "schedule": {
+    "quartz_cron_expression": "0 0 */6 * * ?",
+    "timezone_id": "UTC",
+    "pause_status": "UNPAUSED"
+  },
+  "tasks": [
+    {
+      "task_key": "ingest_raw",
+      "description": "Ingest raw finance transactions from ADLS Gen2 into the bronze layer",
+      "notebook_task": {
+        "notebook_path": "/Repos/${var.repo_path}/azure_extension/databricks/notebooks/01_ingest_raw",
+        "base_parameters": {
+          "storage_account": "${var.storage_account_name}",
+          "raw_container": "${var.raw_container_name}",
+          "catalog_name": "${var.uc_catalog}",
+          "bronze_schema": "${var.bronze_schema}"
+        }
+      },
+      "timeout_seconds": 3600,
+      "retry_on_timeout": false
+    },
+    {
+      "task_key": "validate_transform",
+      "description": "Validate and enrich invoices with governance signals",
+      "depends_on": [
+        {
+          "task_key": "ingest_raw"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Repos/${var.repo_path}/azure_extension/databricks/notebooks/02_validate_transform",
+        "base_parameters": {
+          "catalog_name": "${var.uc_catalog}",
+          "bronze_schema": "${var.bronze_schema}",
+          "silver_schema": "${var.silver_schema}"
+        }
+      },
+      "timeout_seconds": 3600,
+      "retry_on_timeout": false
+    },
+    {
+      "task_key": "chunk_embed_register",
+      "description": "Generate transaction embeddings and sync vector search index",
+      "depends_on": [
+        {
+          "task_key": "validate_transform"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Repos/${var.repo_path}/azure_extension/databricks/notebooks/03_chunk_embed_register",
+        "base_parameters": {
+          "catalog_name": "${var.uc_catalog}",
+          "silver_schema": "${var.silver_schema}",
+          "gold_schema": "${var.gold_schema}",
+          "openai_api_key": "${var.openai_api_key}",
+          "openai_model": "text-embedding-3-small",
+          "vector_index_name": "${var.vector_index_name}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "retry_on_timeout": false
+    }
+  ],
+  "format": "MULTI_TASK",
+  "email_notifications": {},
+  "webhook_notifications": {}
+}
+

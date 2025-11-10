@@ -43,15 +43,17 @@ class MemoryManager:
 
         condition = {k: v for k, v in condition.items() if v is not None}
 
+        normalized_description = self.db._normalize_description(description, vendor_value, condition, exception_type)
+
         exception_id = self.db.add_exception(
             vendor=vendor_value,
             category=category_value,
             rule_type=exception_type,
-            description=description,
+            description=normalized_description,
             condition=condition,
         )
 
-        logger.info(f"Added learned exception {exception_id}: {description}")
+        logger.info(f"Added learned exception {exception_id}: {normalized_description}")
         return exception_id
 
     def query_applicable_exceptions(self, invoice: Invoice) -> list[MemoryException]:

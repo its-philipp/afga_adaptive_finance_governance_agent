@@ -20,6 +20,7 @@ env/
 *.log
 backend.log
 *.out
+*.pid
 
 # Governance audit logs (KEEP these - they're important)
 !governance_audit.jsonl
@@ -51,7 +52,15 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
-!data/memory.db
+# Allow committed schema seeds only (no runtime DB dumps)
+!data/example/*.db
+
+# Uploaded receipts (runtime artifacts)
+data/uploads/
+!data/uploads/.gitkeep
+
+# Runtime databases generated locally
+data/memory.db
 
 # Azure Terraform environment variables
 azure-terraform-env.sh

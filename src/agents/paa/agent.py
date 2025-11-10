@@ -12,7 +12,13 @@ from ...core.observability import Observability
 from ...governance import GovernedLLMClient
 from ...mcp_servers.policy_server import PolicyMCPServer
 from ...models.memory_schemas import MemoryQuery
-from ...models.schemas import Invoice, PolicyCheckResult, RetrievedSource, RAGTriadMetrics
+from ...models.schemas import (
+    Invoice,
+    MemoryException,
+    PolicyCheckResult,
+    RetrievedSource,
+    RAGTriadMetrics,
+)
 from .state import PolicyAdherenceState
 
 
@@ -143,7 +149,12 @@ class PolicyAdherenceAgent:
             if exceptions:
                 audit_trail.append(f"Found {len(exceptions)} applicable memory exceptions")
                 for exc in exceptions[:3]:  # Show first 3
-                    audit_trail.append(f"  - {exc.description} (applied {exc.applied_count} times)")
+                    display_label = exc.description or exc.exception_id
+                    if exc.vendor:
+                        display_label = f"{display_label} – Vendor {exc.vendor}"
+                    audit_trail.append(
+                        f"  - {display_label} (applied {exc.applied_count} times, success {exc.success_rate:.0%})"
+                    )
             else:
                 audit_trail.append("No applicable memory exceptions found")
             
@@ -189,6 +200,29 @@ class PolicyAdherenceAgent:
                 return ""
             return " ".join(value.lower().replace("_", " ").replace("-", " ").split())
 
+        def _requires_manual_review_exception(exc: MemoryException) -> bool:
+            text_parts: list[str] = []
+            if exc.description:
+                text_parts.append(exc.description.lower())
+            condition_reason = None
+            if isinstance(exc.condition, dict):
+                condition_reason = exc.condition.get("reason")
+            if condition_reason:
+                text_parts.append(str(condition_reason).lower())
+            if exc.rule_type:
+                text_parts.append(exc.rule_type.lower())
+            text = " ".join(text_parts)
+            manual_keywords = [
+                "manual",
+                "manually",
+                "human review",
+                "manual review",
+                "manual approval",
+                "h-i-t-l",
+                "human-in-the-loop",
+            ]
+            return any(keyword in text for keyword in manual_keywords)
+
         # Build context for LLM
         policy_context = "\n\n".join([
             f"Policy: {p['policy_name']}\n{p['content']}"
@@ -197,10 +231,14 @@ class PolicyAdherenceAgent:
         
         exception_context = ""
         if exceptions:
-            exception_context = "\n\nLearned Exceptions (from previous human decisions):\n" + "\n".join([
-                f"- {exc.description} (Success rate: {exc.success_rate:.1%})"
-                for exc in exceptions[:3]
-            ])
+            lines: list[str] = []
+            for exc in exceptions[:3]:
+                label = exc.description or exc.exception_id
+                vendor_note = f" – Vendor {exc.vendor}" if exc.vendor else ""
+                lines.append(
+                    f"- {label}{vendor_note} (Success rate: {exc.success_rate:.1%}, Applied {exc.applied_count} times)"
+                )
+            exception_context = "\n\nLearned Exceptions (from previous human decisions):\n" + "\n".join(lines)
 
         prompt = f"""You are a compliance auditor. Check if this invoice complies with company policies.
 
@@ -272,6 +310,8 @@ REASONING: [detailed explanation]
             applied_exception_records: list[tuple[str, str]] = []  # (label, id)
             applied_exception_ids: list[str] = []
             processed_exception_ids: set[str] = set()
+            manual_exception_ids: list[str] = []
+            manual_exception_labels: list[str] = []
 
             memory_exceptions = state.get("memory_exceptions", [])
 
@@ -296,9 +336,15 @@ REASONING: [detailed explanation]
 
                 if matches and exc.exception_id not in processed_exception_ids:
                     processed_exception_ids.add(exc.exception_id)
-                    label = exc.description or f"Learned exception {exc.exception_id}"
+                    base_label = exc.description or f"Learned exception {exc.exception_id}"
                     if exc.vendor:
-                        label = f"{label} – Vendor {exc.vendor}"
+                        base_label = f"{base_label} – Vendor {exc.vendor}"
+                    manual_required = _requires_manual_review_exception(exc)
+                    label = base_label
+                    if manual_required:
+                        manual_exception_ids.append(exc.exception_id)
+                        manual_exception_labels.append(base_label)
+                        label = f"{base_label} (Manual review required)"
                     applied_exception_records.append((label, exc.exception_id))
                     applied_exception_ids.append(exc.exception_id)
                     try:
@@ -364,6 +410,11 @@ REASONING: [detailed explanation]
                     "Applied exceptions not found in adaptive memory: " + ", ".join(hallucinated_exceptions)
                 )
 
+            if manual_exception_labels:
+                audit_trail.append(
+                    "⚠️ Manual review required due to exceptions: " + ", ".join(manual_exception_labels)
+                )
+
             rag_metrics = RAGTriadMetrics(
                 supporting_evidence=supporting_evidence,
                 missing_evidence=missing_evidence,
@@ -385,6 +436,9 @@ REASONING: [detailed explanation]
                 rag_metrics=rag_metrics,
                 hallucination_warnings=hallucination_warnings,
                 applied_exception_ids=applied_exception_ids,
+                manual_review_required=bool(manual_exception_ids),
+                manual_exception_ids=manual_exception_ids,
+                manual_exception_labels=manual_exception_labels,
             )
 
             state["compliance_result"] = compliance_result
