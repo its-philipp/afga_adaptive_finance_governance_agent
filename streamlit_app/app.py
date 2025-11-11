@@ -212,27 +212,72 @@ The **Adaptive Finance Governance Agent (AFGA)** is a sophisticated multi-agent 
 financial transaction compliance checking with continuous learning capabilities.
 
 ### 🎯 System Overview
+""")
 
+# Side-by-side: agents (left) and compact architecture (right)
+col_left, col_right = st.columns([3, 3])
+
+with col_left:
+    st.markdown(
+        """
 AFGA consists of three specialized AI agents that work together:
 
 1. **TAA (Transaction Auditor Agent)** - Orchestrator
    - Receives and assesses transactions
    - Performs risk scoring
-   - Coordinates with other agents
+   - Coordinates with other agents (A2A)
    - Makes final approve/reject/HITL decisions
 
 2. **PAA (Policy Adherence Agent)** - Compliance Checker
-   - Retrieves relevant policies (RAG)
-   - Checks adaptive memory for exceptions
+   - Retrieves relevant policies (MCP + RAG)
+   - Checks adaptive memory for exceptions (MCP tools)
    - Evaluates compliance using LLM
    - Returns confidence-scored results
 
 3. **EMA (Exception Manager Agent)** - Learning System
    - Processes human feedback (HITL)
    - Analyzes correction patterns
-   - Updates adaptive memory
+   - Updates adaptive memory (MCP tools)
    - Tracks learning metrics (H-CR)
+"""
+    )
 
+with col_right:
+    st.markdown("**Compact Architecture**")
+    st.markdown(
+        """
+```
+┌──────────────────────────────┐
+│ Streamlit UI (Frontend)      │
+└──────────────┬───────────────┘
+               │ HTTP
+┌──────────────▼───────────────┐
+│ FastAPI Gateway              │
+└──────────────┬───────────────┘
+┌──────────────▼───────────────┐
+│ AFGA Orchestrator            │
+│ TAA (LangGraph workflow)     │
+└───────┬───────────────┬──────┘
+        │ A2A           │ A2A
+┌───────▼──────┐  ┌─────▼──────┐
+│ PAA Agent    │  │ EMA Agent  │
+│ LangGraph    │  │ LangGraph  │
+└───────┬──────┘  └──────┬─────┘
+        │ MCP            │ MCP
+┌───────▼────────┐  ┌────▼──────┐
+│ Policy MCP     │  │ Memory MCP│
+│ Server (RAG)   │  │ Server    │
+└────────┬───────┘  └────┬──────┘
+         └──────┬────────┘
+┌───────────────▼──────────────┐
+│ SQLite Database (txns, KPIs) │
+└──────────────────────────────┘
+```
+        """
+    )
+
+st.markdown(
+    """
 ### 📊 Key Performance Indicators
 
 The system tracks four critical KPIs:
@@ -241,7 +286,11 @@ The system tracks four critical KPIs:
 - **CRS (Context Retention Score):** Effectiveness of adaptive memory in applying learned rules
 - **ATAR (Automated Transaction Approval Rate):** Percentage of transactions approved automatically
 - **Audit Traceability Score:** Completeness of audit trails (target: 100%)
+"""
+)
 
+st.markdown(
+    """
 ### 🚀 Getting Started
 
 Use the sidebar to navigate to different sections:
@@ -273,7 +322,8 @@ AFGA is designed to demonstrate **adaptive learning**. As you process transactio
 ---
 
 **Start by navigating to 📋 Transaction Review in the sidebar to process your first transaction!**
-""")
+"""
+)
 
 # Quick stats
 st.markdown("### 📊 Quick Stats")

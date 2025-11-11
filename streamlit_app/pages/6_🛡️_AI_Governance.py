@@ -434,7 +434,13 @@ if audit_file.exists():
                         response_text = entry.get('response', entry.get('output', 'Not available'))
                         if response_text and response_text != 'Not available':
                             display_height = min(600, max(200, len(response_text) // 3))
-                            st.text_area("LLM Response", response_text, height=display_height, disabled=True)
+                            st.text_area(
+                                "LLM Response",
+                                response_text,
+                                height=display_height,
+                                disabled=True,
+                                key=f"audit_response_{entry_number}"
+                            )
                             st.caption(f"Total length: {entry.get('response_length', len(response_text))} characters")
                         else:
                             st.info(f"Response not logged (length: {entry.get('response_length', 0)} chars)")
