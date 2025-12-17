@@ -61,7 +61,22 @@ cd adaptive_finance_governance_agent
 ```
 
 ## � Gallery
+### Application Interface
+| Home | Transaction Submission |
+|------|------------------------|
+| ![Home](screenshots/1-home.png) | ![Submit](screenshots/3-submit_transaction.png) |
 
+| Transaction Review | Agent Workflow |
+|--------------------|----------------|
+| ![Review](screenshots/5-transaction_review.png) | ![Workflow](screenshots/7-agent_workflow.png) |
+
+| KPI Dashboard | Memory Browser |
+|---------------|----------------|
+| ![KPI](screenshots/9-kpi_dashboard.png) | ![Memory](screenshots/10-memory_browser.png) |
+
+| Policy Viewer | AI Governance |
+|---------------|---------------|
+| ![Policy](screenshots/12-policy_viewer.png) | ![Governance](screenshots/13-ai_governance.png) |
 ### AKS Deployment
 | Frontend | Backend |
 |----------|---------|
