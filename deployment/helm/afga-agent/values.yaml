@@ -143,9 +143,9 @@ env:
 # Secrets from Azure Key Vault (via CSI driver)
 keyVaultSecrets:
   enabled: true
-  vaultName: "afga-kv-b5171976"  # Set via overlay (e.g., "afga-prod-kv")
-  tenantId: "2beb7b8f-96ca-46a2-b470-db9ae8f24c45"  # Set via overlay
-  clientId: "6494f355-14a5-4b9d-aef1-27c88ebfd39b"
+  vaultName: ""  # Set via --set keyVaultSecrets.vaultName=...
+  tenantId: ""   # Set via --set keyVaultSecrets.tenantId=...
+  clientId: ""   # Set via --set keyVaultSecrets.clientId=...
   objects:
     - objectName: openrouter-api-key
       objectType: secret

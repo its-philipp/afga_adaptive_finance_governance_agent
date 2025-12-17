@@ -60,7 +60,27 @@ cd adaptive_finance_governance_agent
 └─────────────────────┘
 ```
 
-## 📦 Project Structure
+## � Gallery
+
+### AKS Deployment
+| Frontend | Backend |
+|----------|---------|
+| ![Frontend](screenshots/aks/1-frontend_via_aks.png) | ![Backend](screenshots/aks/2-backend_via_aks.png) |
+
+| Workloads | Pod Status |
+|-----------|------------|
+| ![Workloads](screenshots/aks/3-aks_workloads.png) | ![Pod Status](screenshots/aks/4-pod_status_cli.png) |
+
+| ACR Repositories | Key Vault Secrets |
+|------------------|-------------------|
+| ![ACR](screenshots/aks/5-azure_container_registry_repositories.png) | ![Key Vault](screenshots/aks/7-azure_key_vault_secrets.png) |
+
+### Databricks Integration
+| Pipeline | Bronze Table | Gold Table |
+|----------|--------------|------------|
+| ![Pipeline](screenshots/databricks/1-pipeline.png) | ![Bronze](screenshots/databricks/2-bronze_table_raw_transactions.png) | ![Gold](screenshots/databricks/3-gold_table_embeddings.png) |
+
+## �📦 Project Structure
 
 ```
 adaptive_finance_governance_agent/
