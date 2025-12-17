@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class ExceptionManagerAgent:
     """Exception Manager Agent - Handles HITL feedback and updates adaptive memory.
-    
+
     Uses MCP (Model Context Protocol) to access memory tools,
     providing a clean interface for LLM-driven memory management operations.
     """
@@ -34,7 +34,7 @@ class ExceptionManagerAgent:
         self.memory_manager = self.memory_mcp.memory_manager  # Access underlying manager
         self.observability = observability or Observability()
         self.llm_client = GovernedLLMClient(agent_name="EMA")  # Governed LLM with AI governance
-        
+
         # Build LangGraph workflow
         self.graph = self._build_graph()
         logger.info("EMA initialized with MCP memory server and AI governance")
@@ -52,7 +52,7 @@ class ExceptionManagerAgent:
         # Define edges
         workflow.set_entry_point("receive_hitl_request")
         workflow.add_edge("receive_hitl_request", "analyze_correction")
-        
+
         # Conditional edge: only update memory if should_learn is True
         workflow.add_conditional_edges(
             "analyze_correction",
@@ -60,9 +60,9 @@ class ExceptionManagerAgent:
             {
                 "update_memory": "update_memory",
                 "calculate_hcr": "calculate_hcr",
-            }
+            },
         )
-        
+
         workflow.add_edge("update_memory", "calculate_hcr")
         workflow.add_edge("calculate_hcr", END)
 
@@ -72,12 +72,14 @@ class ExceptionManagerAgent:
         """Node 1: Receive HITL feedback."""
         feedback = state["feedback"]
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append(f"EMA received HITL feedback for transaction {feedback.transaction_id}")
-        audit_trail.append(f"Original decision: {feedback.original_decision}, Human decision: {feedback.human_decision}")
-        
+        audit_trail.append(
+            f"Original decision: {feedback.original_decision}, Human decision: {feedback.human_decision}"
+        )
+
         logger.info(f"EMA processing HITL feedback for {feedback.transaction_id}")
-        
+
         state["audit_trail"] = audit_trail
         return state
 
@@ -86,7 +88,7 @@ class ExceptionManagerAgent:
         feedback = state["feedback"]
         invoice = state.get("invoice")
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("Analyzing correction type with LLM")
 
         llm_should_learn: bool | None = None
@@ -101,9 +103,9 @@ Transaction Details:
 - Human Reasoning: {feedback.reasoning}
 
 Invoice Context:
-- Vendor: {invoice.vendor if invoice else 'N/A'}
-- Amount: ${invoice.amount if invoice else 'N/A'}
-- Category: {invoice.category if invoice else 'N/A'}
+- Vendor: {invoice.vendor if invoice else "N/A"}
+- Amount: ${invoice.amount if invoice else "N/A"}
+- Category: {invoice.category if invoice else "N/A"}
 
 Analyze this correction and determine:
 1. Correction Type: Is this a "new_exception" (vendor/category specific rule), "policy_gap" (missing policy coverage), or "one_time_override" (special circumstances)?
@@ -153,7 +155,9 @@ REASONING: [brief explanation]
             state["exception_description"] = feedback.reasoning or ""
             audit_trail.append(f"Error analyzing correction: {str(e)}")
 
-        should_learn_final = feedback.should_create_exception or (llm_should_learn if llm_should_learn is not None else False)
+        should_learn_final = feedback.should_create_exception or (
+            llm_should_learn if llm_should_learn is not None else False
+        )
         state["should_learn"] = should_learn_final
         audit_trail.append(
             f"Correction classified as: {state.get('correction_type', 'one_time_override')}, should_learn={should_learn_final}"
@@ -164,7 +168,7 @@ REASONING: [brief explanation]
 
     def update_memory(self, state: ExceptionManagerState) -> ExceptionManagerState:
         """Node 3: Update adaptive memory via MCP tools.
-        
+
         Uses MCP (Model Context Protocol) to call memory management tools,
         demonstrating how LLM agents can perform operations through standardized protocols.
         """
@@ -184,13 +188,14 @@ REASONING: [brief explanation]
                 category=invoice.category,
                 rule_type=feedback.exception_type or correction_type,
                 description=description,
-                reason=feedback.reasoning
+                reason=feedback.reasoning,
+                auto_decision=feedback.human_decision,
             )
 
             state["memory_update_id"] = exception_id
             audit_trail.append(f"Created memory exception via MCP: {exception_id}")
             audit_trail.append(f"Exception description: {description}")
-            
+
             logger.info(f"Memory updated via MCP with exception {exception_id}")
 
         except Exception as e:
@@ -204,14 +209,14 @@ REASONING: [brief explanation]
     def calculate_hcr(self, state: ExceptionManagerState) -> ExceptionManagerState:
         """Node 4: Update Human Correction Rate KPI."""
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("Updating H-CR KPI")
 
         try:
             # Trigger KPI recalculation (will be done by the KPI tracker service)
             state["hcr_updated"] = True
             audit_trail.append("H-CR KPI marked for update")
-            
+
         except Exception as e:
             logger.error(f"Error updating H-CR: {e}")
             state["hcr_updated"] = False
@@ -227,12 +232,12 @@ REASONING: [brief explanation]
         trace_id: str = "",
     ) -> ExceptionManagerState:
         """Process HITL feedback through the EMA workflow.
-        
+
         Args:
             feedback: HITL feedback from human reviewer
             invoice: Original invoice data
             trace_id: Trace ID for observability
-            
+
         Returns:
             Final state after processing
         """
@@ -245,7 +250,7 @@ REASONING: [brief explanation]
 
         # Run the graph
         final_state = await self.graph.ainvoke(initial_state)
-        
+
         logger.info(f"EMA completed processing for {feedback.transaction_id}")
         return final_state
 
@@ -265,7 +270,6 @@ REASONING: [brief explanation]
 
         # Run the graph synchronously
         final_state = self.graph.invoke(initial_state)
-        
+
         logger.info(f"EMA completed processing for {feedback.transaction_id}")
         return final_state
-

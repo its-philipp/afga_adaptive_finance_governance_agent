@@ -1,152 +1,209 @@
-# Adaptive Finance Governance Agent (AFGA)
+# 📊 Adaptive Finance Governance Agent (AFGA)
+
+> AI-powered multi-agent system for automated invoice compliance and risk assessment
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io/)
 
-## Overview
+## 🚀 Quick Start
 
-Adaptive Finance Governance Agent (AFGA) is a production-ready, multi-agent compliance assistant for finance operations. It automates invoice auditing, enforces policy adherence, and learns from human reviewers via adaptive memory so the Human Correction Rate (H-CR) drops over time.
-
-The system now ships with **real HTTP-based A2A communication** between agents, **MCP resources/tools** for shared knowledge, end-to-end observability, and a Streamlit UI tailored for demos.
-
-## Architecture
-
-AFGA runs three specialized LangGraph agents connected through a hybrid protocol stack:
-
-- **TAA – Transaction Auditor Agent** (client): orchestrates the workflow, scores risk, and calls downstream agents through the A2A protocol.
-- **PAA – Policy Adherence Agent** (server): exposes an A2A executor that consults MCP policy resources + RAG to evaluate compliance.
-- **EMA – Exception Manager Agent** (server): processes HITL feedback, updates adaptive memory through MCP tools, and feeds improvements back into PAA.
-
-**Key technologies**
-- LangGraph state machines for each agent
-- A2A HTTP/JSON-RPC for cross-agent delegation
-- MCP (Model Context Protocol) for policies, adaptive memory, and KPI tooling
-- FastAPI gateway, Streamlit front-end, Langfuse observability
-- SQLite (local) with upgrade path to Databricks Delta for persistence
-
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/HYBRID_A2A_MCP.md`](docs/HYBRID_A2A_MCP.md) for full diagrams.
-
-## Quick Start
-
-### Prerequisites
-- Python 3.11+
-- [uv](https://github.com/astral-sh/uv) package manager
-- OpenRouter API key (or compatible LLM provider)
-
-### Setup & Run
 ```bash
-# Install dependencies
-uv sync --extra all
+# Clone and start
+git clone <repository-url>
+cd adaptive_finance_governance_agent
+./start.sh
 
-# Copy environment template and add secrets (no keys are committed)
-cp .env.example .env
-$EDITOR .env
-
-# Activate virtual environment
-source .venv/bin/activate
-
-# Start FastAPI backend
-uvicorn src.api.main:app --reload
-
-# In a second terminal start Streamlit UI
-streamlit run streamlit_app/app.py
+# Access application
+# Frontend: http://localhost:8501
+# Backend API: http://localhost:8000
 ```
-Navigate to http://localhost:8501 to explore the workflow dashboard.
 
-## Flagship Capabilities
+## 📋 Features
 
-### 🤖 Multi-Agent Orchestration
-- TAA delegates to PAA/EMA over authenticated A2A HTTP calls.
-- Each agent exposes LangGraph nodes with typed state transitions.
+✅ **Multi-Agent Decision Making**
+- Transaction Assessment Agent (TAA) - Risk analysis
+- Policy Alignment Agent (PAA) - Compliance checking  
+- Adaptive Memory Agent (EMA) - Exception learning
 
-### 🧠 Adaptive Memory
-- HITL feedback creates learned exceptions persisted via MCP tools.
-- Context Retention Score (CRS) and Human Correction Rate (H-CR) track learning effectiveness.
+✅ **Human-in-the-Loop (HITL)**
+- Manual review workflow for edge cases
+- Feedback drives adaptive memory
+- Exception rule creation
 
-### 📄 Document Intelligence
-- Upload PDF or image receipts for extraction and validation.
-- Zero-width characters are normalized for clean UI rendering.
+✅ **Automated Classification**
+- Approved, Rejected, or HITL decisions
+- Confidence scoring
+- Audit trail generation
 
-### 🛡️ AI Governance & Auditability
-- Input/output governance, redaction, and KPI tracking.
-- Langfuse captures traces, spans, and LLM generations.
+✅ **Local Database**
+- SQLite for full transaction history
+- No cloud dependencies required
+- Persistent adaptive memory
 
-### 📊 KPIs & Dashboarding
-- Streamlit visualizes KPIs (H-CR, CRS, ATAR), learned exceptions, and RAG transparency.
+## 🏗️ Architecture
 
-## Demo Screenshots
+```
+┌─────────────────────┐
+│  Streamlit Frontend │  (Port 8501)
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│   FastAPI Backend   │  (Port 8000)
+│  ┌───────────────┐  │
+│  │ TAA │ PAA│EMA │  │  Multi-Agent System
+│  └───────────────┘  │
+│  ┌───────────────┐  │
+│  │  SQLite DB    │  │  Local Persistence
+│  └───────────────┘  │
+└─────────────────────┘
+```
 
-| Home (Overview) | Home (Workflow CTA) | Submit Transaction |
-| --- | --- | --- |
-| ![Home Overview](screenshots/1-home.png) | ![Home Workflow CTA](screenshots/2-home2.png) | ![Submit Transaction](screenshots/3-submit_transaction.png) |
+## 📦 Project Structure
 
-| Submit Transaction (Data Entry) | Transaction Review (Summary) | Transaction Review (Details) |
-| --- | --- | --- |
-| ![Submit Transaction Details](screenshots/4-submit-transaction2.png) | ![Transaction Review Summary](screenshots/5-transaction_review.png) | ![Transaction Review Expanded](screenshots/6-transaction_review2.png) |
-
-| Agent Workflow Diagram | Agent Workflow (Protocols) | KPI Dashboard |
-| --- | --- | --- |
-| ![Agent Workflow Diagram](screenshots/7-agent_workflow.png) | ![Agent Workflow Protocol View](screenshots/8-agent_workflow2.png) | ![KPI Dashboard](screenshots/9-kpi_dashboard.png) |
-
-| Memory Browser | Memory Browser (Exceptions) | Policy Viewer |
-| --- | --- | --- |
-| ![Memory Browser](screenshots/10-memory_browser.png) | ![Memory Browser Exceptions](screenshots/11-memory_browser2.png) | ![Policy Viewer](screenshots/12-policy_viewer.png) |
-
-| AI Governance Overview | AI Governance (Trace Detail) |  |
-| --- | --- | --- |
-| ![AI Governance Overview](screenshots/13-ai_governance.png) | ![AI Governance Detail](screenshots/14-ai_governance2.png) |  |
-
-Highlights:
-- Home pages introduce the AFGA architecture and provide quick links into the workflow demo.
-- Transaction submission and review screens demonstrate the A2A delegation, policy compliance reasoning, and adaptive memory surfacing.
-- Workflow, KPI, memory, and policy views visualize the hybrid A2A + MCP protocols and system health.
-- AI Governance pages showcase Langfuse traces, redaction logs, and compliance safeguards.
-
-## API Surface (selected endpoints)
-- `POST /api/v1/transactions/submit`
-- `POST /api/v1/transactions/upload-receipt`
-- `POST /api/v1/transactions/{transaction_id}/hitl`
-- `GET /api/v1/kpis/current`
-- `GET /api/v1/memory/exceptions`
-
-## Project Layout
 ```
 adaptive_finance_governance_agent/
-├── src/                  # Agents, FastAPI gateway, services, persistence
-├── streamlit_app/        # Streamlit UI + workflow visualizations
-├── tests/                # Unit & integration tests
-├── data/
-│   ├── mock_invoices/    # Synthetic samples (checked in)
-│   ├── policies/         # Policy corpora (checked in)
-│   └── uploads/          # Runtime uploads (.gitkeep only)
-├── docs/                 # Living docs (A2A, MCP, governance, vision)
-│   └── archive/          # Historical status reports and legacy notes
-├── scripts/              # Developer utilities (DB migrate, mock data)
-├── env.example           # Configuration template (no secrets)
-└── azure_extension/      # Optional Azure/AKS deployment assets
+├── src/                          # Backend source code
+│   ├── agents/                   # Multi-agent system
+│   ├── api/                      # FastAPI routes
+│   ├── db/                       # Database layer
+│   └── services/                 # Business logic
+├── streamlit_app/                # Frontend UI
+│   ├── app.py                    # Main entry point
+│   └── pages/                    # Multi-page app
+├── deployment/                   # Deployment configs
+│   ├── docker/                   # Docker setup
+│   ├── kubernetes/               # K8s manifests
+│   ├── terraform/                # Infrastructure as Code
+│   └── helm/                     # Helm charts
+├── scripts/                      # Utility scripts
+├── data/                         # Local data storage
+│   ├── mock_invoices/            # Test data
+│   └── policies/                 # Compliance policies
+├── docs/                         # Documentation
+├── tests/                        # Test suite
+├── .env                          # Environment config
+├── start.sh                      # Quick start script
+└── stop.sh                       # Stop script
 ```
-Runtime databases (e.g., `data/memory.db`) and uploaded receipts are ignored by git so the repository stays clean.
 
-## Development Status
-- ✅ Local MVP with hybrid A2A + MCP agents
-- ✅ Adaptive memory + KPI dashboard
-- ✅ Streamlit + FastAPI demo experience
-- ✅ Extensive documentation (see `/docs`)
-- 🚧 Optional Azure/Databricks deployment scripts live under `azure_extension/`
+## ☁️ Deployment
 
-## Documentation Index
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) – system design
-- [`docs/HYBRID_A2A_MCP.md`](docs/HYBRID_A2A_MCP.md) – protocol deep dive
-- [`docs/A2A_VS_MCP.md`](docs/A2A_VS_MCP.md) – comparison guide
-- [`docs/DOCUMENT_EXTRACTION.md`](docs/DOCUMENT_EXTRACTION.md) – vision pipeline
-- [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md) – AI governance and audit trail
-- [`docs/SETUP_VISION.md`](docs/SETUP_VISION.md) – enabling vision models
-- [`docs/archive`](docs/archive) – historical deliverables and status logs
-- [`azure_extension/README.md`](azure_extension/README.md) – cloud deployment playbooks
+For production deployment on Azure Kubernetes Service (AKS), we provide a complete Infrastructure-as-Code (IaC) solution using Terraform and Helm.
 
-## Contributing
-Pull requests are welcome! Please open an issue describing the change and ensure `uv run pytest` and `ruff` pass locally.
+See the [Deployment Guide](deployment/README.md) for detailed instructions on:
+- Provisioning Azure resources (AKS, ACR, Key Vault) with Terraform
+- Building and pushing Docker images
+- Deploying the application using Helm
 
-## License
-MIT License
+## 🔧 Configuration
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+# Required: LLM API Keys
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENAI_API_KEY=sk-proj-...
+
+# Optional: Observability
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
+
+# Optional: Agent-to-Agent
+A2A_ENABLED=true
+A2A_BASE_URL=http://localhost:8000
+```
+
+## 📚 Documentation
+
+- **[Quick Start Guide](./QUICKSTART.md)** - Get running in 5 minutes
+- **[Project Structure](./PROJECT_STRUCTURE.md)** - Complete folder structure and file guide
+- **[Classifications Guide](./docs/CLASSIFICATIONS_GUIDE.md)** - How to use classifications
+- **[API Documentation](http://localhost:8000/docs)** - Interactive API docs
+- **[Deployment Guide](./deployment/README.md)** - Docker, K8s, Helm options
+- **[Architecture](./docs/ARCHITECTURE.md)** - System design and patterns
+- **[Cleanup Summary](./CLEANUP_SUMMARY.md)** - What changed during reorganization
+
+## 🐳 Deployment Options
+
+### Docker
+```bash
+docker build -f deployment/docker/Dockerfile.backend -t afga-backend .
+docker build -f deployment/docker/Dockerfile.frontend -t afga-frontend .
+```
+
+### Kubernetes
+```bash
+kubectl apply -f deployment/kubernetes/
+```
+
+### Helm (Production)
+```bash
+helm install afga deployment/helm/afga-agent \
+  -f deployment/helm/overlays/prod/values.yaml
+```
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest
+
+# Generate mock invoices
+python scripts/generate_mock_invoices.py --count 10
+
+# Batch process invoices
+python scripts/batch_process_invoices.py
+```
+
+## 💰 Cost Optimization
+
+**Current Setup (Databricks Disabled):**
+- Local SQLite database
+- No cloud storage required
+- LLM API costs only (~$10-50/month depending on usage)
+
+**Optional Add-ons:**
+- Azure Blob Storage: ~$2/month
+- Databricks SQL Warehouse: ~$160/month (paused when disabled)
+- AKS Cluster: ~$60-220/month
+
+## 🔐 Security
+
+- Environment variables for sensitive keys
+- Azure Key Vault integration available
+- RBAC for multi-user deployments
+- Audit logging for all decisions
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `pytest`
+5. Submit a pull request
+
+## 📝 License
+
+[License Type] - See LICENSE file for details
+
+## 🆘 Support
+
+- Issues: [GitHub Issues](link)
+- Documentation: [Wiki](link)
+- Email: support@example.com
+
+## 🗺️ Roadmap
+
+- [ ] Multi-tenant support
+- [ ] Advanced analytics dashboard
+- [ ] PDF invoice OCR integration
+- [ ] REST API for third-party integration
+- [ ] Role-based access control (RBAC)
+
+---
+
+**Built with:** Python 3.11+ • FastAPI • Streamlit • LangGraph • SQLite
 

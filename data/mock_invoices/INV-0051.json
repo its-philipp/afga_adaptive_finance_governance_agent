@@ -1,0 +1,23 @@
+{
+  "invoice_id": "INV-0051",
+  "vendor": "HR Solutions Group",
+  "vendor_reputation": 87,
+  "amount": 13679.46,
+  "currency": "EUR",
+  "category": "HR Services",
+  "date": "2025-10-20 16:19:26",
+  "po_number": "PO-6244",
+  "line_items": [
+    {
+      "description": "HR Services item 1",
+      "quantity": 8,
+      "unit_price": 1709.93
+    }
+  ],
+  "tax": 2599.1,
+  "total": 16278.56,
+  "payment_terms": "Net 45",
+  "notes": "International transaction",
+  "compliance_status": "international",
+  "international": true
+}

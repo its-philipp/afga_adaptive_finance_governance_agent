@@ -11,4 +11,3 @@ __all__ = [
     "get_paa_agent_card",
     "PolicyAdherenceState",
 ]
-

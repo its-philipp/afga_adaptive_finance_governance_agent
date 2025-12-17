@@ -22,6 +22,8 @@ dependencies = [
     "pillow>=10.0.0",
     "pdf2image>=1.17.0",
     "python-multipart>=0.0.9",
+    "databricks-sql-connector>=4.2.1",
+    "azure-storage-blob>=12.19.0",
 ]
 
 [project.optional-dependencies]

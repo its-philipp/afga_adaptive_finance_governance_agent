@@ -25,6 +25,67 @@ def _normalize_text(value: str | None) -> str:
     return text.strip()
 
 
+def render_similar_invoices(invoice: dict, transaction_id: str) -> None:
+    """Render similar historical invoices from Databricks embeddings."""
+    st.markdown("---")
+    st.markdown("### 🔍 Similar Historical Invoices")
+    st.caption("Pattern analysis from Databricks embeddings")
+    
+    vendor = invoice.get("vendor", "")
+    category = invoice.get("category", "")
+    amount = invoice.get("amount", 0)
+    
+    query = f"{category} invoice from {vendor} for ${amount}"
+    
+    with st.spinner("Searching similar invoices..."):
+        try:
+            search_response = httpx.post(
+                f"{API_BASE_URL}/databricks/embeddings/search",
+                json={"query": query, "k": 3, "sample_limit": 200},
+                timeout=45.0,
+            )
+            
+            if search_response.status_code == 200:
+                results = search_response.json()
+                similar = results.get("results", [])
+                
+                if similar:
+                    st.success(f"Found {len(similar)} similar invoices (searched {results.get('total_searched', 0)} embeddings)")
+                    
+                    for idx, sim in enumerate(similar, 1):
+                        sim_id = sim.get("invoice_id", "Unknown")
+                        similarity = sim.get("similarity", 0)
+                        
+                        # Skip if it's the same invoice
+                        if sim_id == invoice.get("invoice_id"):
+                            continue
+                        
+                        if similarity >= 0.75:
+                            badge = "🟢 Very Similar"
+                        elif similarity >= 0.5:
+                            badge = "🟡 Similar"
+                        else:
+                            badge = "🔵 Somewhat Similar"
+                        
+                        with st.expander(f"{badge} - {sim_id} ({similarity:.1%} match)"):
+                            st.write(f"**Invoice ID:** {sim_id}")
+                            st.write(f"**Cosine Similarity:** {similarity:.4f}")
+                            st.progress(similarity)
+                            st.caption("💡 This invoice has similar semantic characteristics to the current transaction.")
+                else:
+                    st.info("No similar historical invoices found.")
+                    
+            elif search_response.status_code == 424:
+                st.warning("⚠️ Databricks unavailable. Similarity search disabled.")
+            else:
+                st.error(f"Similarity search failed: HTTP {search_response.status_code}")
+                
+        except httpx.TimeoutException:
+            st.warning("⏱️ Similarity search timed out. Databricks may be slow.")
+        except Exception as e:
+            st.warning(f"Similarity search unavailable: {e}")
+
+
 def render_policy_check_details(policy_check: dict | None, *, expand_sources: bool = False) -> None:
     """Render policy compliance details with RAG transparency."""
     if not policy_check:
@@ -190,6 +251,8 @@ with sidebar_nav:
     st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
+    st.page_link("pages/7_🔍_Embeddings_Browser.py", label="Embeddings Browser", icon="🔍")
+    st.page_link("pages/8_📊_Classifications_Dashboard.py", label="Classifications", icon="📊")
 
 with sidebar_assistant:
     st.markdown("---")
@@ -355,6 +418,11 @@ with tab1:
                 st.markdown("### 💭 Decision Reasoning")
                 receipt_reasoning = _normalize_text(result.get("decision_reasoning"))
                 st.info(receipt_reasoning or "No reasoning provided")
+
+                # Show similar historical invoices
+                invoice_dict = result.get("invoice")
+                if invoice_dict:
+                    render_similar_invoices(invoice_dict, result.get("transaction_id", ""))
 
                 with st.expander("📜 Complete Audit Trail"):
                     for idx, step in enumerate(result.get("audit_trail", []), 1):

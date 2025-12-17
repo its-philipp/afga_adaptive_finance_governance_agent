@@ -7,7 +7,7 @@ from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 
 def get_ema_agent_card() -> AgentCard:
     """Get the A2A Agent Card for EMA (Exception Manager Agent).
-    
+
     The agent card defines EMA's capabilities for A2A service discovery.
     """
     return AgentCard(
@@ -55,4 +55,3 @@ def get_ema_agent_card() -> AgentCard:
             ),
         ],
     )
-

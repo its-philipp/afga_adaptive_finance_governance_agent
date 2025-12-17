@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class ComplianceStatus(str, Enum):
     """Transaction compliance status."""
+
     COMPLIANT = "compliant"
     NON_COMPLIANT = "non_compliant"
     EDGE_CASE = "edge_case"
@@ -19,6 +20,7 @@ class ComplianceStatus(str, Enum):
 
 class DecisionType(str, Enum):
     """Final decision types."""
+
     APPROVED = "approved"
     REJECTED = "rejected"
     HITL = "hitl"  # Human-in-the-loop required
@@ -27,6 +29,7 @@ class DecisionType(str, Enum):
 
 class RiskLevel(str, Enum):
     """Risk assessment levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -35,6 +38,7 @@ class RiskLevel(str, Enum):
 
 class LineItem(BaseModel):
     """Invoice line item."""
+
     description: str
     quantity: int
     unit_price: float
@@ -42,6 +46,7 @@ class LineItem(BaseModel):
 
 class Invoice(BaseModel):
     """Invoice data model."""
+
     invoice_id: str
     vendor: str
     vendor_reputation: int = Field(ge=0, le=100)
@@ -60,12 +65,51 @@ class Invoice(BaseModel):
 
 class TransactionRequest(BaseModel):
     """Request to process a transaction."""
+
     invoice: Invoice
     trace_id: Optional[str] = None
 
 
+class BatchTransactionItem(BaseModel):
+    invoice: Invoice
+    trace_id: Optional[str] = None
+
+
+class BatchTransactionRequest(BaseModel):
+    transactions: List[BatchTransactionItem]
+
+
+class BatchTransactionResponse(BaseModel):
+    accepted: int
+    pending_ids: List[str]
+
+
+class ProcessPendingRequest(BaseModel):
+    limit: int = Field(25, ge=1, le=200)
+    dry_run: bool = False
+
+
+class ProcessPendingItem(BaseModel):
+    pending_id: str
+    status: str
+    transaction_id: Optional[str] = None
+    decision: Optional[DecisionType] = None
+    invoice_id: Optional[str] = None
+    error_message: Optional[str] = None
+
+
+class ProcessPendingResponse(BaseModel):
+    total_pending_before: int
+    remaining_pending: int
+    attempted: int
+    successes: int
+    failures: int
+    items: List[ProcessPendingItem] = Field(default_factory=list)
+
+
 class RiskAssessment(BaseModel):
     """Risk assessment result from TAA."""
+
     risk_score: float = Field(ge=0, le=100)
     risk_level: RiskLevel
     risk_factors: List[str]
@@ -74,6 +118,7 @@ class RiskAssessment(BaseModel):
 
 class RetrievedSource(BaseModel):
     """Metadata about a retrieved policy chunk used as evidence."""
+
     policy_name: str
     policy_filename: Optional[str] = None
     chunk_index: int
@@ -84,6 +129,7 @@ class RetrievedSource(BaseModel):
 
 class RAGTriadMetrics(BaseModel):
     """RAG transparency metrics for policy evidence."""
+
     supporting_evidence: List[str] = Field(default_factory=list)
     missing_evidence: List[str] = Field(default_factory=list)
     hallucinated_references: List[str] = Field(default_factory=list)
@@ -93,6 +139,7 @@ class RAGTriadMetrics(BaseModel):
 
 class PolicyCheckResult(BaseModel):
     """Policy adherence check result from PAA."""
+
     is_compliant: bool
     violated_policies: List[str] = Field(default_factory=list)
     applied_exceptions: List[str] = Field(default_factory=list)
@@ -134,6 +181,7 @@ class AssistantChatResponse(BaseModel):
 
 class HITLFeedback(BaseModel):
     """Human-in-the-loop feedback for EMA."""
+
     transaction_id: str
     invoice_id: str
     original_decision: DecisionType
@@ -145,6 +193,7 @@ class HITLFeedback(BaseModel):
 
 class MemoryException(BaseModel):
     """Learned exception stored in adaptive memory."""
+
     exception_id: str
     vendor: Optional[str] = None
     category: Optional[str] = None
@@ -159,6 +208,7 @@ class MemoryException(BaseModel):
 
 class TransactionResult(BaseModel):
     """Complete transaction processing result."""
+
     transaction_id: str
     invoice: Invoice
     risk_assessment: RiskAssessment
@@ -175,6 +225,7 @@ class TransactionResult(BaseModel):
 
 class KPIMetrics(BaseModel):
     """Key Performance Indicators."""
+
     date: str
     total_transactions: int
     human_corrections: int
@@ -187,6 +238,7 @@ class KPIMetrics(BaseModel):
 
 class TransactionSummary(BaseModel):
     """Summary of a transaction for display."""
+
     transaction_id: str
     invoice_id: str
     vendor: str
@@ -196,4 +248,3 @@ class TransactionSummary(BaseModel):
     final_decision: DecisionType
     human_override: bool
     created_at: datetime
-

@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     medium_risk_amount: float = 5000.0
     low_risk_amount: float = 1000.0
 
+    # Autonomous decision engine
+    auto_decision_enabled: bool = True
+    auto_rule_min_success_rate: float = 0.6
+    auto_low_risk_confidence_threshold: float = 0.78
+    auto_medium_risk_confidence_threshold: float = 0.85
+    auto_low_risk_max_amount: float = 20000.0
+    auto_medium_risk_max_amount: float = 10000.0
+
     # KPI Settings
     kpi_calculation_frequency: str = "daily"  # Options: daily, hourly, realtime
     kpi_retention_days: int = 90
@@ -82,7 +90,7 @@ class Settings(BaseSettings):
         """Return list of fallback models (up to 3 fallbacks)."""
         models = [self.fallback_model_1, self.fallback_model_2]
         # Add fallback_model_3 if it exists (for backward compatibility)
-        if hasattr(self, 'fallback_model_3') and self.fallback_model_3:
+        if hasattr(self, "fallback_model_3") and self.fallback_model_3:
             models.append(self.fallback_model_3)
         return models
 
@@ -90,4 +98,3 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()  # type: ignore[call-arg]
-

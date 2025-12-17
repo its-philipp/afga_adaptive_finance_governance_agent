@@ -1,1345 +1,164 @@
-[
-  {
-    "invoice_id": "INV-0047",
-    "vendor": "IT Infrastructure Pro",
-    "vendor_reputation": 70,
-    "amount": 6012.78,
-    "currency": "EUR",
-    "category": "Office Supplies",
-    "date": "2025-10-26 14:15:59",
-    "po_number": "PO-7576",
-    "line_items": [
-      {
-        "description": "Office Supplies item 1",
-        "quantity": 8,
-        "unit_price": 6012.78
-      }
-    ],
-    "tax": 481.02,
-    "total": 6493.8,
-    "payment_terms": "Net 30",
-    "notes": "Edge case: International transaction, requires compliance check",
-    "compliance_status": "edge_case",
-    "edge_case_reason": "International transaction, requires compliance check",
-    "international": true
-  },
-  {
-    "invoice_id": "INV-0003",
-    "vendor": "Global Services Group",
-    "vendor_reputation": 59,
-    "amount": 3228.48,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-11-01 17:14:47",
-    "po_number": "PO-2128",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 4,
-        "unit_price": 645.7
-      }
-    ],
-    "tax": 258.28,
-    "total": 3486.76,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0045",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 2564.59,
-    "currency": "USD",
-    "category": "Utilities",
-    "date": "2025-10-14 10:21:16",
-    "po_number": "PO-5518",
-    "line_items": [
-      {
-        "description": "Utilities item 1",
-        "quantity": 5,
-        "unit_price": 512.92
-      },
-      {
-        "description": "Utilities item 2",
-        "quantity": 5,
-        "unit_price": 1282.3
-      }
-    ],
-    "tax": 205.17,
-    "total": 2769.76,
-    "payment_terms": "Net 30",
-    "notes": "Edge case: Vendor has history of exceptions, review recommended",
-    "compliance_status": "edge_case",
-    "edge_case_reason": "Vendor has history of exceptions, review recommended",
-    "international": false
-  },
-  {
-    "invoice_id": "INV-0005",
-    "vendor": "Consulting Partners LLC",
-    "vendor_reputation": 68,
-    "amount": 5993.67,
-    "currency": "USD",
-    "category": "Office Supplies",
-    "date": "2025-10-21 18:07:24",
-    "po_number": "PO-6894",
-    "line_items": [
-      {
-        "description": "Office Supplies item 1",
-        "quantity": 2,
-        "unit_price": 2996.84
-      },
-      {
-        "description": "Office Supplies item 2",
-        "quantity": 9,
-        "unit_price": 2996.84
-      }
-    ],
-    "tax": 479.49,
-    "total": 6473.16,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0022",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 5779.86,
-    "currency": "USD",
-    "category": "Office Supplies",
-    "date": "2025-10-24 11:41:28",
-    "po_number": "PO-7947",
-    "line_items": [
-      {
-        "description": "Office Supplies item 1",
-        "quantity": 6,
-        "unit_price": 2889.93
-      },
-      {
-        "description": "Office Supplies item 2",
-        "quantity": 7,
-        "unit_price": 2889.93
-      }
-    ],
-    "tax": 462.39,
-    "total": 6242.25,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0036",
-    "vendor": "Unapproved Vendor LLC",
-    "vendor_reputation": 30,
-    "amount": 7342.64,
-    "currency": "USD",
-    "category": "Professional Services",
-    "date": "2025-10-12 13:24:30",
-    "po_number": "PO-9729",
-    "line_items": [
-      {
-        "description": "Professional Services item 1",
-        "quantity": 3,
-        "unit_price": 7342.64
-      },
-      {
-        "description": "Professional Services item 2",
-        "quantity": 8,
-        "unit_price": 2447.55
-      },
-      {
-        "description": "Professional Services item 3",
-        "quantity": 4,
-        "unit_price": 1835.66
-      }
-    ],
-    "tax": 587.41,
-    "total": 7930.05,
-    "payment_terms": "Net 30",
-    "notes": "Non-compliant: Vendor not on approved vendor list",
-    "compliance_status": "non_compliant",
-    "non_compliance_reason": "Vendor not on approved vendor list"
-  },
-  {
-    "invoice_id": "INV-0026",
-    "vendor": "Acme Corporation",
-    "vendor_reputation": 96,
-    "amount": 2315.67,
-    "currency": "USD",
-    "category": "Hardware",
-    "date": "2025-10-18 08:31:23",
-    "po_number": "PO-2446",
-    "line_items": [
-      {
-        "description": "Hardware item 1",
-        "quantity": 5,
-        "unit_price": 771.89
-      }
-    ],
-    "tax": 185.25,
-    "total": 2500.92,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0007",
-    "vendor": "IT Infrastructure Pro",
-    "vendor_reputation": 70,
-    "amount": 6910.71,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-10-07 11:37:18",
-    "po_number": "PO-5584",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 1,
-        "unit_price": 2303.57
-      },
-      {
-        "description": "Consulting item 2",
-        "quantity": 4,
-        "unit_price": 2303.57
-      }
-    ],
-    "tax": 552.86,
-    "total": 7463.57,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0012",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 2106.46,
-    "currency": "USD",
-    "category": "Professional Services",
-    "date": "2025-11-02 18:47:12",
-    "po_number": "PO-4490",
-    "line_items": [
-      {
-        "description": "Professional Services item 1",
-        "quantity": 8,
-        "unit_price": 1053.23
-      },
-      {
-        "description": "Professional Services item 2",
-        "quantity": 7,
-        "unit_price": 526.62
-      }
-    ],
-    "tax": 168.52,
-    "total": 2274.98,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0049",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 3761.59,
-    "currency": "USD",
-    "category": "Travel",
-    "date": "2025-10-07 08:43:13",
-    "po_number": "PO-6409",
-    "line_items": [
-      {
-        "description": "Travel item 1",
-        "quantity": 10,
-        "unit_price": 1253.86
-      }
-    ],
-    "tax": 300.93,
-    "total": 4062.52,
-    "payment_terms": "Net 30",
-    "notes": "Edge case: Rush payment requested, expedited review needed",
-    "compliance_status": "edge_case",
-    "edge_case_reason": "Rush payment requested, expedited review needed",
-    "international": false
-  },
-  {
-    "invoice_id": "INV-0004",
-    "vendor": "Office Essentials Ltd",
-    "vendor_reputation": 94,
-    "amount": 6248.66,
-    "currency": "USD",
-    "category": "Utilities",
-    "date": "2025-10-16 11:04:26",
-    "po_number": "PO-3626",
-    "line_items": [
-      {
-        "description": "Utilities item 1",
-        "quantity": 9,
-        "unit_price": 1249.73
-      }
-    ],
-    "tax": 499.89,
-    "total": 6748.55,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0034",
-    "vendor": "Office Essentials Ltd",
-    "vendor_reputation": 94,
-    "amount": 3152.46,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-10-15 12:05:47",
-    "po_number": "PO-3635",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 9,
-        "unit_price": 630.49
-      },
-      {
-        "description": "Consulting item 2",
-        "quantity": 8,
-        "unit_price": 3152.46
-      }
-    ],
-    "tax": 252.2,
-    "total": 3404.66,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0028",
-    "vendor": "TechSupply Inc",
-    "vendor_reputation": 96,
-    "amount": 7193.62,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-11-04 12:51:58",
-    "po_number": "PO-7148",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 4,
-        "unit_price": 1798.4
-      },
-      {
-        "description": "Software item 2",
-        "quantity": 6,
-        "unit_price": 7193.62
-      },
-      {
-        "description": "Software item 3",
-        "quantity": 2,
-        "unit_price": 3596.81
-      }
-    ],
-    "tax": 575.49,
-    "total": 7769.11,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0002",
-    "vendor": "Training Academy Ltd",
-    "vendor_reputation": 73,
-    "amount": 6647.18,
-    "currency": "USD",
-    "category": "Professional Services",
-    "date": "2025-10-27 11:46:44",
-    "po_number": "PO-7135",
-    "line_items": [
-      {
-        "description": "Professional Services item 1",
-        "quantity": 9,
-        "unit_price": 6647.18
-      },
-      {
-        "description": "Professional Services item 2",
-        "quantity": 10,
-        "unit_price": 3323.59
-      }
-    ],
-    "tax": 531.77,
-    "total": 7178.95,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0010",
-    "vendor": "Facilities Management Inc",
-    "vendor_reputation": 53,
-    "amount": 7282.98,
-    "currency": "USD",
-    "category": "Hardware",
-    "date": "2025-10-10 11:54:41",
-    "po_number": "PO-8245",
-    "line_items": [
-      {
-        "description": "Hardware item 1",
-        "quantity": 4,
-        "unit_price": 1456.6
-      }
-    ],
-    "tax": 582.64,
-    "total": 7865.62,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0038",
-    "vendor": "Acme Corporation",
-    "vendor_reputation": 96,
-    "amount": 35638.41,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-11-03 10:58:30",
-    "po_number": "PO-3597",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 3,
-        "unit_price": 35638.41
-      },
-      {
-        "description": "Software item 2",
-        "quantity": 9,
-        "unit_price": 7127.68
-      },
-      {
-        "description": "Software item 3",
-        "quantity": 6,
-        "unit_price": 11879.47
-      }
-    ],
-    "tax": 2851.07,
-    "total": 38489.48,
-    "payment_terms": "Net 30",
-    "notes": "Non-compliant: Amount exceeds approval threshold",
-    "compliance_status": "non_compliant",
-    "non_compliance_reason": "Amount exceeds approval threshold"
-  },
-  {
-    "invoice_id": "INV-0044",
-    "vendor": "Office Essentials Ltd",
-    "vendor_reputation": 94,
-    "amount": 3509.29,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-10-16 13:17:05",
-    "po_number": "PO-6674",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 8,
-        "unit_price": 3509.29
-      }
-    ],
-    "tax": 280.74,
-    "total": 3790.03,
-    "payment_terms": "Net 30",
-    "notes": "Edge case: Rush payment requested, expedited review needed",
-    "compliance_status": "edge_case",
-    "edge_case_reason": "Rush payment requested, expedited review needed",
-    "international": false
-  },
-  {
-    "invoice_id": "INV-0037",
-    "vendor": "Training Academy Ltd",
-    "vendor_reputation": 73,
-    "amount": 32430.7,
-    "currency": "USD",
-    "category": "Travel",
-    "date": "2025-10-26 13:35:34",
-    "po_number": "PO-7277",
-    "line_items": [
-      {
-        "description": "Travel item 1",
-        "quantity": 8,
-        "unit_price": 10810.23
-      }
-    ],
-    "tax": 2594.46,
-    "total": 35025.16,
-    "payment_terms": "Net 30",
-    "notes": "Non-compliant: Amount exceeds approval threshold",
-    "compliance_status": "non_compliant",
-    "non_compliance_reason": "Amount exceeds approval threshold"
-  },
-  {
-    "invoice_id": "INV-0006",
-    "vendor": "Marketing Solutions Co",
-    "vendor_reputation": 94,
-    "amount": 6935.65,
-    "currency": "USD",
-    "category": "Hardware",
-    "date": "2025-10-11 17:36:43",
-    "po_number": "PO-7623",
-    "line_items": [
-      {
-        "description": "Hardware item 1",
-        "quantity": 5,
-        "unit_price": 1733.91
-      },
-      {
-        "description": "Hardware item 2",
-        "quantity": 1,
-        "unit_price": 1733.91
-      }
-    ],
-    "tax": 554.85,
-    "total": 7490.5,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0019",
-    "vendor": "Global Services Group",
-    "vendor_reputation": 59,
-    "amount": 6625.37,
-    "currency": "USD",
-    "category": "Facilities",
-    "date": "2025-10-19 12:37:26",
-    "po_number": "PO-7824",
-    "line_items": [
-      {
-        "description": "Facilities item 1",
-        "quantity": 6,
-        "unit_price": 2208.46
-      },
-      {
-        "description": "Facilities item 2",
-        "quantity": 2,
-        "unit_price": 2208.46
-      }
-    ],
-    "tax": 530.03,
-    "total": 7155.4,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0041",
-    "vendor": "Facilities Management Inc",
-    "vendor_reputation": 53,
-    "amount": 2012.33,
-    "currency": "USD",
-    "category": "Prohibited Expense",
-    "date": "2025-10-11 16:58:22",
-    "po_number": "PO-7647",
-    "line_items": [
-      {
-        "description": "Prohibited Expense item 1",
-        "quantity": 9,
-        "unit_price": 670.78
-      },
-      {
-        "description": "Prohibited Expense item 2",
-        "quantity": 9,
-        "unit_price": 670.78
-      }
-    ],
-    "tax": 160.99,
-    "total": 2173.32,
-    "payment_terms": "Net 30",
-    "notes": "Non-compliant: Invalid expense category",
-    "compliance_status": "non_compliant",
-    "non_compliance_reason": "Invalid expense category"
-  },
-  {
-    "invoice_id": "INV-0035",
-    "vendor": "Training Academy Ltd",
-    "vendor_reputation": 73,
-    "amount": 4890.25,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-11-02 11:41:00",
-    "po_number": "PO-2918",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 3,
-        "unit_price": 1222.56
-      }
-    ],
-    "tax": 391.22,
-    "total": 5281.47,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0018",
-    "vendor": "Marketing Solutions Co",
-    "vendor_reputation": 94,
-    "amount": 6440.13,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-10-17 15:19:10",
-    "po_number": "PO-3533",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 3,
-        "unit_price": 6440.13
-      },
-      {
-        "description": "Software item 2",
-        "quantity": 6,
-        "unit_price": 2146.71
-      }
-    ],
-    "tax": 515.21,
-    "total": 6955.34,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0015",
-    "vendor": "Consulting Partners LLC",
-    "vendor_reputation": 68,
-    "amount": 7242.23,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-10-13 12:37:41",
-    "po_number": "PO-3583",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 2,
-        "unit_price": 1448.45
-      }
-    ],
-    "tax": 579.38,
-    "total": 7821.61,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0040",
-    "vendor": "Training Academy Ltd",
-    "vendor_reputation": 73,
-    "amount": 1897.36,
-    "currency": "USD",
-    "category": "Prohibited Expense",
-    "date": "2025-10-08 09:25:23",
-    "po_number": "PO-9803",
-    "line_items": [
-      {
-        "description": "Prohibited Expense item 1",
-        "quantity": 7,
-        "unit_price": 474.34
-      },
-      {
-        "description": "Prohibited Expense item 2",
-        "quantity": 10,
-        "unit_price": 1897.36
-      }
-    ],
-    "tax": 151.79,
-    "total": 2049.15,
-    "payment_terms": "Net 30",
-    "notes": "Non-compliant: Invalid expense category",
-    "compliance_status": "non_compliant",
-    "non_compliance_reason": "Invalid expense category"
-  },
-  {
-    "invoice_id": "INV-0025",
-    "vendor": "Consulting Partners LLC",
-    "vendor_reputation": 68,
-    "amount": 1105.12,
-    "currency": "USD",
-    "category": "Facilities",
-    "date": "2025-10-08 12:30:24",
-    "po_number": "PO-9782",
-    "line_items": [
-      {
-        "description": "Facilities item 1",
-        "quantity": 10,
-        "unit_price": 1105.12
-      }
-    ],
-    "tax": 88.41,
-    "total": 1193.53,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0043",
-    "vendor": "Office Essentials Ltd",
-    "vendor_reputation": 94,
-    "amount": 4125.68,
-    "currency": "GBP",
-    "category": "Professional Services",
-    "date": "2025-10-12 11:48:40",
-    "po_number": "PO-9602",
-    "line_items": [
-      {
-        "description": "Professional Services item 1",
-        "quantity": 6,
-        "unit_price": 4125.68
-      },
-      {
-        "description": "Professional Services item 2",
-        "quantity": 4,
-        "unit_price": 1375.23
-      },
-      {
-        "description": "Professional Services item 3",
-        "quantity": 8,
-        "unit_price": 4125.68
-      }
-    ],
-    "tax": 330.05,
-    "total": 4455.73,
-    "payment_terms": "Net 30",
-    "notes": "Edge case: International transaction, requires compliance check",
-    "compliance_status": "edge_case",
-    "edge_case_reason": "International transaction, requires compliance check",
-    "international": true
-  },
-  {
-    "invoice_id": "INV-0011",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 4560.26,
-    "currency": "USD",
-    "category": "Training",
-    "date": "2025-10-13 10:22:48",
-    "po_number": "PO-4779",
-    "line_items": [
-      {
-        "description": "Training item 1",
-        "quantity": 6,
-        "unit_price": 2280.13
-      },
-      {
-        "description": "Training item 2",
-        "quantity": 7,
-        "unit_price": 2280.13
-      },
-      {
-        "description": "Training item 3",
-        "quantity": 10,
-        "unit_price": 2280.13
-      }
-    ],
-    "tax": 364.82,
-    "total": 4925.08,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0032",
-    "vendor": "Training Academy Ltd",
-    "vendor_reputation": 73,
-    "amount": 4139.54,
-    "currency": "USD",
-    "category": "Hardware",
-    "date": "2025-11-03 11:33:24",
-    "po_number": "PO-2357",
-    "line_items": [
-      {
-        "description": "Hardware item 1",
-        "quantity": 5,
-        "unit_price": 2069.77
-      }
-    ],
-    "tax": 331.16,
-    "total": 4470.7,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0050",
-    "vendor": "TechSupply Inc",
-    "vendor_reputation": 96,
-    "amount": 10401.11,
-    "currency": "USD",
-    "category": "Office Supplies",
-    "date": "2025-11-05 16:50:42",
-    "po_number": "PO-7688",
-    "line_items": [
-      {
-        "description": "Office Supplies item 1",
-        "quantity": 2,
-        "unit_price": 3467.04
-      },
-      {
-        "description": "Office Supplies item 2",
-        "quantity": 8,
-        "unit_price": 3467.04
-      },
-      {
-        "description": "Office Supplies item 3",
-        "quantity": 4,
-        "unit_price": 5200.56
-      }
-    ],
-    "tax": 832.09,
-    "total": 11233.2,
-    "payment_terms": "Net 30",
-    "notes": "Edge case: Amount near approval threshold, requires review",
-    "compliance_status": "edge_case",
-    "edge_case_reason": "Amount near approval threshold, requires review",
-    "international": false
-  },
-  {
-    "invoice_id": "INV-0017",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 5254.69,
-    "currency": "USD",
-    "category": "Marketing",
-    "date": "2025-10-30 17:50:54",
-    "po_number": "PO-4811",
-    "line_items": [
-      {
-        "description": "Marketing item 1",
-        "quantity": 10,
-        "unit_price": 5254.69
-      },
-      {
-        "description": "Marketing item 2",
-        "quantity": 2,
-        "unit_price": 2627.34
-      },
-      {
-        "description": "Marketing item 3",
-        "quantity": 6,
-        "unit_price": 2627.34
-      }
-    ],
-    "tax": 420.38,
-    "total": 5675.07,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0030",
-    "vendor": "Training Academy Ltd",
-    "vendor_reputation": 73,
-    "amount": 3870.18,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-10-21 14:22:15",
-    "po_number": "PO-3094",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 9,
-        "unit_price": 1290.06
-      },
-      {
-        "description": "Software item 2",
-        "quantity": 5,
-        "unit_price": 774.04
-      },
-      {
-        "description": "Software item 3",
-        "quantity": 9,
-        "unit_price": 1290.06
-      }
-    ],
-    "tax": 309.61,
-    "total": 4179.79,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0021",
-    "vendor": "Acme Corporation",
-    "vendor_reputation": 96,
-    "amount": 4350.07,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-10-22 10:07:07",
-    "po_number": "PO-4687",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 9,
-        "unit_price": 4350.07
-      },
-      {
-        "description": "Consulting item 2",
-        "quantity": 10,
-        "unit_price": 2175.03
-      },
-      {
-        "description": "Consulting item 3",
-        "quantity": 8,
-        "unit_price": 1450.02
-      }
-    ],
-    "tax": 348.01,
-    "total": 4698.08,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0020",
-    "vendor": "Consulting Partners LLC",
-    "vendor_reputation": 68,
-    "amount": 523.94,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-11-02 13:08:51",
-    "po_number": "PO-1843",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 10,
-        "unit_price": 130.99
-      }
-    ],
-    "tax": 41.92,
-    "total": 565.86,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0008",
-    "vendor": "Training Academy Ltd",
-    "vendor_reputation": 73,
-    "amount": 544.2,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-10-08 14:33:20",
-    "po_number": "PO-7791",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 5,
-        "unit_price": 181.4
-      },
-      {
-        "description": "Consulting item 2",
-        "quantity": 1,
-        "unit_price": 181.4
-      },
-      {
-        "description": "Consulting item 3",
-        "quantity": 2,
-        "unit_price": 108.84
-      }
-    ],
-    "tax": 43.54,
-    "total": 587.74,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0042",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 133.84,
-    "currency": "USD",
-    "category": "Hardware",
-    "date": "2025-10-14 15:01:56",
-    "po_number": null,
-    "line_items": [
-      {
-        "description": "Hardware item 1",
-        "quantity": 2,
-        "unit_price": 133.84
-      }
-    ],
-    "tax": 10.71,
-    "total": 144.55,
-    "payment_terms": "Net 30",
-    "notes": "Non-compliant: Missing purchase order number",
-    "compliance_status": "non_compliant",
-    "non_compliance_reason": "Missing purchase order number"
-  },
-  {
-    "invoice_id": "INV-0046",
-    "vendor": "Facilities Management Inc",
-    "vendor_reputation": 53,
-    "amount": 2295.65,
-    "currency": "JPY",
-    "category": "Software",
-    "date": "2025-10-24 08:39:34",
-    "po_number": "PO-7740",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 6,
-        "unit_price": 765.22
-      },
-      {
-        "description": "Software item 2",
-        "quantity": 9,
-        "unit_price": 765.22
-      },
-      {
-        "description": "Software item 3",
-        "quantity": 1,
-        "unit_price": 573.91
-      }
-    ],
-    "tax": 183.65,
-    "total": 2479.3,
-    "payment_terms": "Net 30",
-    "notes": "Edge case: International transaction, requires compliance check",
-    "compliance_status": "edge_case",
-    "edge_case_reason": "International transaction, requires compliance check",
-    "international": true
-  },
-  {
-    "invoice_id": "INV-0033",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 7966.58,
-    "currency": "USD",
-    "category": "Utilities",
-    "date": "2025-10-24 16:15:40",
-    "po_number": "PO-9448",
-    "line_items": [
-      {
-        "description": "Utilities item 1",
-        "quantity": 3,
-        "unit_price": 1991.64
-      }
-    ],
-    "tax": 637.33,
-    "total": 8603.91,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0009",
-    "vendor": "Marketing Solutions Co",
-    "vendor_reputation": 94,
-    "amount": 520.61,
-    "currency": "USD",
-    "category": "Office Supplies",
-    "date": "2025-10-28 11:23:16",
-    "po_number": "PO-2188",
-    "line_items": [
-      {
-        "description": "Office Supplies item 1",
-        "quantity": 9,
-        "unit_price": 260.31
-      },
-      {
-        "description": "Office Supplies item 2",
-        "quantity": 8,
-        "unit_price": 520.61
-      }
-    ],
-    "tax": 41.65,
-    "total": 562.26,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0013",
-    "vendor": "IT Infrastructure Pro",
-    "vendor_reputation": 70,
-    "amount": 2736.53,
-    "currency": "USD",
-    "category": "Office Supplies",
-    "date": "2025-11-02 08:28:02",
-    "po_number": "PO-6014",
-    "line_items": [
-      {
-        "description": "Office Supplies item 1",
-        "quantity": 5,
-        "unit_price": 912.18
-      },
-      {
-        "description": "Office Supplies item 2",
-        "quantity": 8,
-        "unit_price": 547.31
-      },
-      {
-        "description": "Office Supplies item 3",
-        "quantity": 9,
-        "unit_price": 684.13
-      }
-    ],
-    "tax": 218.92,
-    "total": 2955.45,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0023",
-    "vendor": "TechSupply Inc",
-    "vendor_reputation": 96,
-    "amount": 4301.8,
-    "currency": "USD",
-    "category": "Office Supplies",
-    "date": "2025-10-12 14:13:37",
-    "po_number": "PO-3687",
-    "line_items": [
-      {
-        "description": "Office Supplies item 1",
-        "quantity": 6,
-        "unit_price": 860.36
-      }
-    ],
-    "tax": 344.14,
-    "total": 4645.94,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0048",
-    "vendor": "IT Infrastructure Pro",
-    "vendor_reputation": 70,
-    "amount": 1959.01,
-    "currency": "EUR",
-    "category": "Consulting",
-    "date": "2025-10-10 11:27:14",
-    "po_number": "PO-1449",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 2,
-        "unit_price": 489.75
-      }
-    ],
-    "tax": 156.72,
-    "total": 2115.73,
-    "payment_terms": "Net 30",
-    "notes": "Edge case: International transaction, requires compliance check",
-    "compliance_status": "edge_case",
-    "edge_case_reason": "International transaction, requires compliance check",
-    "international": true
-  },
-  {
-    "invoice_id": "INV-0014",
-    "vendor": "TechSupply Inc",
-    "vendor_reputation": 96,
-    "amount": 6489.0,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-10-21 14:07:26",
-    "po_number": "PO-5682",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 10,
-        "unit_price": 2163.0
-      }
-    ],
-    "tax": 519.12,
-    "total": 7008.12,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0031",
-    "vendor": "Consulting Partners LLC",
-    "vendor_reputation": 68,
-    "amount": 705.93,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-10-16 08:26:48",
-    "po_number": "PO-8859",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 3,
-        "unit_price": 141.19
-      },
-      {
-        "description": "Software item 2",
-        "quantity": 1,
-        "unit_price": 235.31
-      }
-    ],
-    "tax": 56.47,
-    "total": 762.4,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0024",
-    "vendor": "Office Essentials Ltd",
-    "vendor_reputation": 94,
-    "amount": 5038.93,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-10-16 09:42:30",
-    "po_number": "PO-2443",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 2,
-        "unit_price": 5038.93
-      },
-      {
-        "description": "Consulting item 2",
-        "quantity": 5,
-        "unit_price": 1259.73
-      },
-      {
-        "description": "Consulting item 3",
-        "quantity": 2,
-        "unit_price": 5038.93
-      }
-    ],
-    "tax": 403.11,
-    "total": 5442.04,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0039",
-    "vendor": "Unapproved Vendor LLC",
-    "vendor_reputation": 30,
-    "amount": 3458.04,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-10-30 18:12:58",
-    "po_number": "PO-2093",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 9,
-        "unit_price": 1729.02
-      }
-    ],
-    "tax": 276.64,
-    "total": 3734.68,
-    "payment_terms": "Net 30",
-    "notes": "Non-compliant: Vendor not on approved vendor list",
-    "compliance_status": "non_compliant",
-    "non_compliance_reason": "Vendor not on approved vendor list"
-  },
-  {
-    "invoice_id": "INV-0016",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 997.27,
-    "currency": "USD",
-    "category": "Facilities",
-    "date": "2025-10-25 08:17:42",
-    "po_number": "PO-6986",
-    "line_items": [
-      {
-        "description": "Facilities item 1",
-        "quantity": 1,
-        "unit_price": 498.63
-      },
-      {
-        "description": "Facilities item 2",
-        "quantity": 6,
-        "unit_price": 332.42
-      },
-      {
-        "description": "Facilities item 3",
-        "quantity": 1,
-        "unit_price": 199.45
-      }
-    ],
-    "tax": 79.78,
-    "total": 1077.05,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0001",
-    "vendor": "Consulting Partners LLC",
-    "vendor_reputation": 68,
-    "amount": 4996.91,
-    "currency": "USD",
-    "category": "Software",
-    "date": "2025-10-08 14:55:03",
-    "po_number": "PO-1536",
-    "line_items": [
-      {
-        "description": "Software item 1",
-        "quantity": 8,
-        "unit_price": 1249.23
-      }
-    ],
-    "tax": 399.75,
-    "total": 5396.66,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0029",
-    "vendor": "Training Academy Ltd",
-    "vendor_reputation": 73,
-    "amount": 4573.78,
-    "currency": "USD",
-    "category": "Consulting",
-    "date": "2025-10-09 16:07:32",
-    "po_number": "PO-3980",
-    "line_items": [
-      {
-        "description": "Consulting item 1",
-        "quantity": 6,
-        "unit_price": 1143.44
-      },
-      {
-        "description": "Consulting item 2",
-        "quantity": 8,
-        "unit_price": 914.76
-      }
-    ],
-    "tax": 365.9,
-    "total": 4939.68,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  },
-  {
-    "invoice_id": "INV-0027",
-    "vendor": "Software Licensing Corp",
-    "vendor_reputation": 68,
-    "amount": 2939.23,
-    "currency": "USD",
-    "category": "Facilities",
-    "date": "2025-10-27 08:53:37",
-    "po_number": "PO-4656",
-    "line_items": [
-      {
-        "description": "Facilities item 1",
-        "quantity": 7,
-        "unit_price": 1469.62
-      },
-      {
-        "description": "Facilities item 2",
-        "quantity": 8,
-        "unit_price": 979.74
-      }
-    ],
-    "tax": 235.14,
-    "total": 3174.37,
-    "payment_terms": "Net 30",
-    "notes": "Standard invoice, fully compliant",
-    "compliance_status": "compliant"
-  }
-]
+{
+  "generated_at": "2025-11-30T16:19:26.475827",
+  "total_count": 5,
+  "total_value": 99367.66,
+  "invoices": [
+    {
+      "invoice_id": "INV-0051",
+      "vendor": "HR Solutions Group",
+      "vendor_reputation": 87,
+      "amount": 13679.46,
+      "currency": "EUR",
+      "category": "HR Services",
+      "date": "2025-10-20 16:19:26",
+      "po_number": "PO-6244",
+      "line_items": [
+        {
+          "description": "HR Services item 1",
+          "quantity": 8,
+          "unit_price": 1709.93
+        }
+      ],
+      "tax": 2599.1,
+      "total": 16278.56,
+      "payment_terms": "Net 45",
+      "notes": "International transaction",
+      "compliance_status": "international",
+      "international": true
+    },
+    {
+      "invoice_id": "INV-0052",
+      "vendor": "HR Solutions Group",
+      "vendor_reputation": 87,
+      "amount": 38767.6,
+      "currency": "USD",
+      "category": "HR Services",
+      "date": "2025-10-26 16:19:26",
+      "po_number": "PO-9974",
+      "line_items": [
+        {
+          "description": "HR Services item 1",
+          "quantity": 16,
+          "unit_price": 605.74
+        },
+        {
+          "description": "HR Services item 2",
+          "quantity": 6,
+          "unit_price": 1615.32
+        },
+        {
+          "description": "HR Services item 3",
+          "quantity": 12,
+          "unit_price": 807.66
+        },
+        {
+          "description": "HR Services item 4",
+          "quantity": 18,
+          "unit_price": 538.44
+        }
+      ],
+      "tax": 3101.41,
+      "total": 41869.009999999995,
+      "payment_terms": "Due on Receipt",
+      "notes": "High-value transaction requiring review",
+      "compliance_status": "high_amount"
+    },
+    {
+      "invoice_id": "INV-0053",
+      "vendor": "Legal Advisory LLP",
+      "vendor_reputation": 95,
+      "amount": 3585.29,
+      "currency": "EUR",
+      "category": "Consulting",
+      "date": "2025-10-26 16:19:26",
+      "po_number": "PO-3462",
+      "line_items": [
+        {
+          "description": "Consulting item 1",
+          "quantity": 10,
+          "unit_price": 89.63
+        },
+        {
+          "description": "Consulting item 2",
+          "quantity": 18,
+          "unit_price": 49.8
+        },
+        {
+          "description": "Consulting item 3",
+          "quantity": 20,
+          "unit_price": 44.82
+        },
+        {
+          "description": "Consulting item 4",
+          "quantity": 13,
+          "unit_price": 68.95
+        }
+      ],
+      "tax": 681.21,
+      "total": 4266.5,
+      "payment_terms": "Net 30",
+      "notes": "International transaction",
+      "compliance_status": "international",
+      "international": true
+    },
+    {
+      "invoice_id": "INV-0054",
+      "vendor": "Marketing Agency Pro",
+      "vendor_reputation": 65,
+      "amount": 3070.18,
+      "currency": "USD",
+      "category": "Marketing",
+      "date": "2025-10-02 16:19:26",
+      "po_number": "PO-6947",
+      "line_items": [
+        {
+          "description": "Marketing item 1",
+          "quantity": 6,
+          "unit_price": 127.92
+        },
+        {
+          "description": "Marketing item 2",
+          "quantity": 14,
+          "unit_price": 54.82
+        },
+        {
+          "description": "Marketing item 3",
+          "quantity": 19,
+          "unit_price": 40.4
+        },
+        {
+          "description": "Marketing item 4",
+          "quantity": 14,
+          "unit_price": 54.82
+        }
+      ],
+      "tax": 245.61,
+      "total": 3315.79,
+      "payment_terms": "Net 30",
+      "notes": "Standard invoice, fully compliant",
+      "compliance_status": "compliant"
+    },
+    {
+      "invoice_id": "INV-0055",
+      "vendor": "Marketing Agency Pro",
+      "vendor_reputation": 65,
+      "amount": 40265.13,
+      "currency": "USD",
+      "category": "Advertising",
+      "date": "2025-10-20 16:19:26",
+      "po_number": "PO-8615",
+      "line_items": [
+        {
+          "description": "Advertising item 1",
+          "quantity": 10,
+          "unit_price": 4026.51
+        }
+      ],
+      "tax": 3221.21,
+      "total": 43486.34,
+      "payment_terms": "Net 15",
+      "notes": "High-value transaction requiring review",
+      "compliance_status": "high_amount"
+    }
+  ]
+}

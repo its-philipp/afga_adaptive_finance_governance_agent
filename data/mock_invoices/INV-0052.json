@@ -1,0 +1,37 @@
+{
+  "invoice_id": "INV-0052",
+  "vendor": "HR Solutions Group",
+  "vendor_reputation": 87,
+  "amount": 38767.6,
+  "currency": "USD",
+  "category": "HR Services",
+  "date": "2025-10-26 16:19:26",
+  "po_number": "PO-9974",
+  "line_items": [
+    {
+      "description": "HR Services item 1",
+      "quantity": 16,
+      "unit_price": 605.74
+    },
+    {
+      "description": "HR Services item 2",
+      "quantity": 6,
+      "unit_price": 1615.32
+    },
+    {
+      "description": "HR Services item 3",
+      "quantity": 12,
+      "unit_price": 807.66
+    },
+    {
+      "description": "HR Services item 4",
+      "quantity": 18,
+      "unit_price": 538.44
+    }
+  ],
+  "tax": 3101.41,
+  "total": 41869.009999999995,
+  "payment_terms": "Due on Receipt",
+  "notes": "High-value transaction requiring review",
+  "compliance_status": "high_amount"
+}

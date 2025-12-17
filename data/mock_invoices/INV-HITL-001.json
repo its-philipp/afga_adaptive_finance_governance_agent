@@ -1,0 +1,23 @@
+{
+  "invoice_id": "INV-HITL-001",
+  "vendor": "New Consulting Partners Ltd",
+  "vendor_reputation": 55,
+  "amount": 18500.00,
+  "currency": "EUR",
+  "category": "Consulting",
+  "date": "2025-11-30 10:30:00",
+  "po_number": "PO-8888",
+  "line_items": [
+    {
+      "description": "Strategic consulting services Q4",
+      "quantity": 5,
+      "unit_price": 3700.00
+    }
+  ],
+  "tax": 3515.00,
+  "total": 22015.00,
+  "payment_terms": "Net 30",
+  "notes": "First invoice from new vendor with international currency",
+  "compliance_status": "borderline",
+  "international": true
+}

@@ -147,7 +147,7 @@ policies = self.policy_mcp.search_relevant_policies_sync(invoice, top_k=5)
 **Exposes:**
 ```python
 # MCP Tools
-add_exception(vendor, category, rule_type, description, reason)
+add_exception(vendor, category, rule_type, description, reason, auto_decision=None)
 query_exceptions(vendor, category, rule_type, min_success_rate)
 update_exception_usage(exception_id, success)
 get_memory_stats()
@@ -162,7 +162,8 @@ exception_id = self.memory_mcp.add_exception_sync(
     category=invoice.category,
     rule_type="recurring",
     description="Learned rule",
-    reason="Human override"
+    reason="Human override",
+    auto_decision=feedback.human_decision.value,  # e.g., "approved" or "rejected"
 )
 # Returns: Exception ID
 ```
@@ -355,7 +356,8 @@ class ExceptionManagerAgent:
             category=invoice.category,
             rule_type="recurring",
             description="Learned rule",
-            reason="Human override"
+            reason="Human override",
+            auto_decision=feedback.human_decision.value,
         )
         
         # MCP provides clean tool interface
@@ -688,7 +690,7 @@ class PAA:
 
 ```python
 # EMA calls MCP tools programmatically
-exception_id = self.memory_mcp.add_exception_sync(...)
+exception_id = self.memory_mcp.add_exception_sync(..., auto_decision=feedback.human_decision.value)
 ```
 
 ### Future (LLM-Driven)

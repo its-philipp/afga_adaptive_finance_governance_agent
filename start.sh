@@ -22,7 +22,7 @@ check_processes() {
     return 0
 }
 
-# 1. Check for existing processes
+# 1. Check for existing processes AND free up ports
 echo "1️⃣  Checking for existing AFGA processes..."
 if ! check_processes; then
     echo "   🛑 Stopping all AFGA processes..."
@@ -42,10 +42,29 @@ else
     echo "   ✅ No existing processes found"
 fi
 
-# 2. Clean Python bytecode cache
+# 1b. Force free ports 8000 and 8501 if anything is still using them
+echo "   🔌 Ensuring ports 8000 and 8501 are free..."
+for port in 8000 8501; do
+    pid=$(lsof -ti :$port 2>/dev/null)
+    if [ -n "$pid" ]; then
+        echo "   ⚠️  Port $port in use by PID $pid, killing..."
+        kill -9 $pid 2>/dev/null || true
+        sleep 1
+    fi
+done
+echo "   ✅ Ports are free"
+
+# 2. Clean Python bytecode cache (ALL directories, not just src)
 echo "2️⃣  Cleaning Python bytecode cache..."
-find src -type f -name "*.pyc" -delete 2>/dev/null || true
-find src -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+find . -type f -name "*.pyc" -delete 2>/dev/null || true
+find . -path "./.venv" -prune -o -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+# Also clear any .pyc in the project root
+rm -rf __pycache__ 2>/dev/null || true
+rm -rf src/__pycache__ 2>/dev/null || true
+rm -rf src/*/__pycache__ 2>/dev/null || true
+rm -rf src/*/*/__pycache__ 2>/dev/null || true
+rm -rf streamlit_app/__pycache__ 2>/dev/null || true
+rm -rf streamlit_app/*/__pycache__ 2>/dev/null || true
 echo "   ✅ Cache cleared"
 
 # 3. Verify database exists (don't delete unless --clean flag)

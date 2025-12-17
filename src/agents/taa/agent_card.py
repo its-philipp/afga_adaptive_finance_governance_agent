@@ -7,7 +7,7 @@ from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 
 def get_taa_agent_card() -> AgentCard:
     """Get the A2A Agent Card for TAA (Transaction Auditor Agent).
-    
+
     Note: TAA is primarily a client agent, but we define its card for documentation.
     """
     return AgentCard(
@@ -55,4 +55,3 @@ def get_taa_agent_card() -> AgentCard:
             ),
         ],
     )
-

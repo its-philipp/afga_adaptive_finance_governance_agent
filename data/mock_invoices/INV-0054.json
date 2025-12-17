@@ -1,0 +1,37 @@
+{
+  "invoice_id": "INV-0054",
+  "vendor": "Marketing Agency Pro",
+  "vendor_reputation": 65,
+  "amount": 3070.18,
+  "currency": "USD",
+  "category": "Marketing",
+  "date": "2025-10-02 16:19:26",
+  "po_number": "PO-6947",
+  "line_items": [
+    {
+      "description": "Marketing item 1",
+      "quantity": 6,
+      "unit_price": 127.92
+    },
+    {
+      "description": "Marketing item 2",
+      "quantity": 14,
+      "unit_price": 54.82
+    },
+    {
+      "description": "Marketing item 3",
+      "quantity": 19,
+      "unit_price": 40.4
+    },
+    {
+      "description": "Marketing item 4",
+      "quantity": 14,
+      "unit_price": 54.82
+    }
+  ],
+  "tax": 245.61,
+  "total": 3315.79,
+  "payment_terms": "Net 30",
+  "notes": "Standard invoice, fully compliant",
+  "compliance_status": "compliant"
+}

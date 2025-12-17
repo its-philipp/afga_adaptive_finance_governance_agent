@@ -28,11 +28,11 @@ class TransactionAuditorAgent:
         self.settings = get_settings()
         self.risk_scorer = risk_scorer or RiskScorer()
         self.observability = observability or Observability()
-        
+
         # PAA and EMA clients will be injected during A2A integration
         self.paa_client = None  # Will be set in orchestrator
         self.ema_client = None  # Will be set in orchestrator
-        
+
         # Build LangGraph workflow
         self.graph = self._build_graph()
         logger.info("TAA initialized")
@@ -64,12 +64,12 @@ class TransactionAuditorAgent:
         """Node 1: Receive and validate incoming transaction."""
         invoice = state["invoice"]
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append(f"TAA received transaction: {invoice.invoice_id}")
         audit_trail.append(f"Vendor: {invoice.vendor}, Amount: ${invoice.amount}, Category: {invoice.category}")
-        
+
         logger.info(f"TAA processing transaction {invoice.invoice_id}")
-        
+
         state["audit_trail"] = audit_trail
         return state
 
@@ -77,19 +77,18 @@ class TransactionAuditorAgent:
         """Node 2: Perform risk assessment."""
         invoice = state["invoice"]
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("Performing risk assessment")
 
         try:
             risk_assessment = self.risk_scorer.assess_risk(invoice)
             state["risk_assessment"] = risk_assessment
-            
+
             audit_trail.append(
-                f"Risk assessed: {risk_assessment.risk_level.value} "
-                f"(score: {risk_assessment.risk_score:.1f}/100)"
+                f"Risk assessed: {risk_assessment.risk_level.value} (score: {risk_assessment.risk_score:.1f}/100)"
             )
             audit_trail.append(f"Risk factors: {', '.join(risk_assessment.risk_factors)}")
-            
+
             if self.observability:
                 self.observability.log_agent_step(
                     trace_id=state.get("trace_id", ""),
@@ -111,18 +110,21 @@ class TransactionAuditorAgent:
         invoice = state["invoice"]
         risk_assessment = state.get("risk_assessment")
         audit_trail = state.get("audit_trail", [])
-        
+
         # Note: A2A delegation is handled by the orchestrator
         # This node prepares the state for PAA delegation
         audit_trail.append("Preparing for PAA policy check (A2A)")
         state["paa_request_sent"] = True
-        
+
         if self.observability:
             self.observability.log_a2a_communication(
                 trace_id=state.get("trace_id", ""),
                 from_agent="TAA",
                 to_agent="PAA",
-                message={"invoice_id": invoice.invoice_id, "risk_level": risk_assessment.risk_level.value if risk_assessment else "unknown"},
+                message={
+                    "invoice_id": invoice.invoice_id,
+                    "risk_level": risk_assessment.risk_level.value if risk_assessment else "unknown",
+                },
             )
 
         state["audit_trail"] = audit_trail
@@ -132,7 +134,7 @@ class TransactionAuditorAgent:
         """Node 4: Evaluate PAA's policy check response."""
         audit_trail = state.get("audit_trail", [])
         paa_response = state.get("paa_response")
-        
+
         audit_trail.append("Evaluating PAA response")
 
         if paa_response:
@@ -142,7 +144,7 @@ class TransactionAuditorAgent:
                 audit_trail.append(f"❌ Non-compliant")
                 if paa_response.violated_policies:
                     audit_trail.append(f"Violated policies: {', '.join(paa_response.violated_policies)}")
-            
+
             if paa_response.applied_exceptions:
                 audit_trail.append(f"✅ Applied {len(paa_response.applied_exceptions)} learned exception(s)")
         else:
@@ -157,7 +159,7 @@ class TransactionAuditorAgent:
         risk_assessment = state.get("risk_assessment")
         paa_response = state.get("paa_response")
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("Making final decision")
 
         # Decision logic
@@ -201,22 +203,22 @@ class TransactionAuditorAgent:
         state["final_decision"] = decision
         state["decision_reasoning"] = reasoning
         state["requires_hitl"] = requires_hitl
-        
+
         audit_trail.append(f"Final decision: {decision.value}")
         audit_trail.append(f"Reasoning: {reasoning}")
-        
+
         state["audit_trail"] = audit_trail
         return state
 
     def log_audit_trail(self, state: TransactionAuditorState) -> TransactionAuditorState:
         """Node 6: Log complete audit trail."""
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("TAA workflow completed")
-        
+
         logger.info(f"TAA completed processing for {state['invoice'].invoice_id}")
         logger.debug(f"Audit trail: {audit_trail}")
-        
+
         state["audit_trail"] = audit_trail
         return state
 
@@ -226,11 +228,11 @@ class TransactionAuditorAgent:
         trace_id: str = "",
     ) -> TransactionAuditorState:
         """Process a transaction through the TAA workflow.
-        
+
         Args:
             invoice: Invoice to process
             trace_id: Trace ID for observability
-            
+
         Returns:
             Final state after processing
         """
@@ -242,7 +244,7 @@ class TransactionAuditorAgent:
 
         # Run the graph
         final_state = await self.graph.ainvoke(initial_state)
-        
+
         logger.info(f"TAA completed processing for {invoice.invoice_id}")
         return final_state
 
@@ -260,7 +262,6 @@ class TransactionAuditorAgent:
 
         # Run the graph synchronously
         final_state = self.graph.invoke(initial_state)
-        
+
         logger.info(f"TAA completed processing for {invoice.invoice_id}")
         return final_state
-

@@ -49,6 +49,25 @@ else
     fi
 fi
 
+# Force free ports 8000 and 8501 if anything is still using them
+echo "🔌 Ensuring ports 8000 and 8501 are free..."
+for port in 8000 8501; do
+    pid=$(lsof -ti :$port 2>/dev/null)
+    if [ -n "$pid" ]; then
+        echo "   ⚠️  Port $port still in use by PID $pid, killing..."
+        kill -9 $pid 2>/dev/null || true
+        sleep 1
+    fi
+done
+echo "   ✅ Ports are free"
+
+# Clean Python bytecode cache to ensure fresh code on next start
+echo "🧹 Cleaning Python bytecode cache..."
+find . -path "./.venv" -prune -o -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+rm -rf __pycache__ src/__pycache__ src/*/__pycache__ src/*/*/__pycache__ 2>/dev/null || true
+rm -rf streamlit_app/__pycache__ streamlit_app/*/__pycache__ 2>/dev/null || true
+echo "   ✅ Cache cleared"
+
 echo ""
 echo "🏁 AFGA is now stopped."
 echo ""

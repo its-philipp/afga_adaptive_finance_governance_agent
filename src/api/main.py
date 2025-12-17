@@ -1,4 +1,9 @@
-"""FastAPI application for AFGA."""
+"""FastAPI application for AFGA.
+
+Enhancement: automatically load environment variables from a `.env` file so
+Databricks + other integrations work without manual shell export before app start.
+This ensures similarity search endpoint sees Databricks vars that tests rely on.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +11,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..a2a_integration.servers import create_ema_a2a_app, create_paa_a2a_app
@@ -42,6 +48,12 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
+    # Load .env early (non-destructive: does not override already-set vars)
+    try:
+        load_dotenv(override=False)
+        logger.info("Loaded .env for application environment variables")
+    except Exception as env_err:  # pragma: no cover
+        logger.warning(f"Failed to load .env: {env_err}")
     settings = get_settings()
     app = FastAPI(
         title="Adaptive Finance Governance Agent (AFGA)",
@@ -92,6 +104,5 @@ def read_root():
             "transactions": "/api/v1/transactions",
             "kpis": "/api/v1/kpis",
             "memory": "/api/v1/memory",
-        }
+        },
     }
-

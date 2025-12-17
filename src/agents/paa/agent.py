@@ -19,6 +19,7 @@ from ...models.schemas import (
     RetrievedSource,
     RAGTriadMetrics,
 )
+from ...services.similarity_advisor import get_similarity_advisor
 from .state import PolicyAdherenceState
 
 
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 class PolicyAdherenceAgent:
     """Policy Adherence Agent - Checks transactions against policies and memory.
-    
+
     Uses MCP (Model Context Protocol) to access policy resources and memory,
     providing a clean abstraction layer for LLM-driven compliance checking.
     """
@@ -43,10 +44,11 @@ class PolicyAdherenceAgent:
         self.memory_manager = memory_manager or MemoryManager()
         self.observability = observability or Observability()
         self.llm_client = GovernedLLMClient(agent_name="PAA")  # Governed LLM with AI governance
-        
+        self.similarity_advisor = get_similarity_advisor()  # Historical invoice patterns
+
         # Build LangGraph workflow
         self.graph = self._build_graph()
-        logger.info("PAA initialized with MCP policy server and AI governance")
+        logger.info("PAA initialized with MCP policy server, similarity advisor, and AI governance")
 
     def _build_graph(self) -> StateGraph:
         """Build the LangGraph workflow for PAA."""
@@ -73,24 +75,24 @@ class PolicyAdherenceAgent:
         """Node 1: Receive compliance check request from TAA."""
         invoice = state["invoice"]
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append(f"PAA received request for invoice {invoice.invoice_id}")
         audit_trail.append(f"Checking: {invoice.vendor}, ${invoice.amount}, {invoice.category}")
-        
+
         logger.info(f"PAA checking compliance for {invoice.invoice_id}")
-        
+
         state["audit_trail"] = audit_trail
         return state
 
     def retrieve_policies(self, state: PolicyAdherenceState) -> PolicyAdherenceState:
         """Node 2: Retrieve relevant policy documents via MCP.
-        
+
         Uses MCP (Model Context Protocol) to access policy resources,
         demonstrating how LLM agents can access external data through standardized protocols.
         """
         invoice = state["invoice"]
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("Retrieving relevant policies (RAG via MCP)")
 
         try:
@@ -116,7 +118,7 @@ class PolicyAdherenceAgent:
             audit_trail.append(
                 f"Retrieved {len(relevant_policies)} policy chunks via MCP from: {', '.join(policy_names) if policy_names else 'N/A'}"
             )
-            
+
             if self.observability:
                 self.observability.log_agent_step(
                     trace_id=state.get("trace_id", ""),
@@ -138,14 +140,14 @@ class PolicyAdherenceAgent:
         """Node 3: Query adaptive memory for learned exceptions."""
         invoice = state["invoice"]
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("Checking adaptive memory for exceptions")
 
         try:
             # Query memory for applicable exceptions
             exceptions = self.memory_manager.query_applicable_exceptions(invoice)
             state["memory_exceptions"] = exceptions
-            
+
             if exceptions:
                 audit_trail.append(f"Found {len(exceptions)} applicable memory exceptions")
                 for exc in exceptions[:3]:  # Show first 3
@@ -157,7 +159,7 @@ class PolicyAdherenceAgent:
                     )
             else:
                 audit_trail.append("No applicable memory exceptions found")
-            
+
             if self.observability:
                 self.observability.log_agent_step(
                     trace_id=state.get("trace_id", ""),
@@ -224,11 +226,13 @@ class PolicyAdherenceAgent:
             return any(keyword in text for keyword in manual_keywords)
 
         # Build context for LLM
-        policy_context = "\n\n".join([
-            f"Policy: {p['policy_name']}\n{p['content']}"
-            for p in policies[:3]  # Top 3 most relevant
-        ])
-        
+        policy_context = "\n\n".join(
+            [
+                f"Policy: {p['policy_name']}\n{p['content']}"
+                for p in policies[:3]  # Top 3 most relevant
+            ]
+        )
+
         exception_context = ""
         if exceptions:
             lines: list[str] = []
@@ -240,6 +244,30 @@ class PolicyAdherenceAgent:
                 )
             exception_context = "\n\nLearned Exceptions (from previous human decisions):\n" + "\n".join(lines)
 
+        # Query similar historical invoices from Databricks
+        similarity_context = ""
+        similar_invoices = []
+        try:
+            invoice_summary = f"{invoice.category} invoice from {invoice.vendor} for ${invoice.amount}"
+            similarity_results = self.similarity_advisor.get_similar_invoices(
+                invoice_summary=invoice_summary,
+                k=3,
+                sample_limit=500,
+            )
+            if similarity_results.get("results"):
+                similar_invoices = similarity_results["results"]
+                similarity_context = "\n\n" + self.similarity_advisor.format_for_llm_context(similar_invoices)
+                audit_trail.append(
+                    f"Found {len(similar_invoices)} similar historical invoices (avg similarity: "
+                    f"{sum(inv.get('similarity', 0) for inv in similar_invoices) / len(similar_invoices):.1%})"
+                )
+            else:
+                note = similarity_results.get("note", "No similar invoices found")
+                audit_trail.append(f"Similarity search: {note}")
+        except Exception as exc:
+            logger.warning(f"Similarity search failed: {exc}")
+            audit_trail.append(f"⚠️ Similarity search unavailable: {exc}")
+
         prompt = f"""You are a compliance auditor. Check if this invoice complies with company policies.
 
 Invoice Details:
@@ -247,13 +275,14 @@ Invoice Details:
 - Vendor: {invoice.vendor} (reputation: {invoice.vendor_reputation}/100)
 - Amount: ${invoice.amount} {invoice.currency}
 - Category: {invoice.category}
-- PO Number: {invoice.po_number or 'MISSING'}
+- PO Number: {invoice.po_number or "MISSING"}
 - International: {invoice.international}
 - Line Items: {len(invoice.line_items)} items
 
 Relevant Company Policies:
 {policy_context}
 {exception_context}
+{similarity_context}
 
 Analyze this invoice against the policies and learned exceptions. Determine:
 1. Is this invoice COMPLIANT or NON-COMPLIANT?
@@ -385,9 +414,7 @@ REASONING: [detailed explanation]
                 else (1.0 if retrieved_sources else 0.0)
             )
             average_relevance = (
-                sum(src.score for src in retrieved_sources) / len(retrieved_sources)
-                if retrieved_sources
-                else 0.0
+                sum(src.score for src in retrieved_sources) / len(retrieved_sources) if retrieved_sources else 0.0
             )
 
             known_exceptions = {}
@@ -395,9 +422,7 @@ REASONING: [detailed explanation]
                 known_exceptions[label.lower()] = exc_id
                 known_exceptions[exc_id.lower()] = exc_id
             hallucinated_exceptions = [
-                exc_name
-                for exc_name in applied_exceptions
-                if exc_name and exc_name.lower() not in known_exceptions
+                exc_name for exc_name in applied_exceptions if exc_name and exc_name.lower() not in known_exceptions
             ]
 
             hallucination_warnings: list[str] = []
@@ -411,9 +436,7 @@ REASONING: [detailed explanation]
                 )
 
             if manual_exception_labels:
-                audit_trail.append(
-                    "⚠️ Manual review required due to exceptions: " + ", ".join(manual_exception_labels)
-                )
+                audit_trail.append("⚠️ Manual review required due to exceptions: " + ", ".join(manual_exception_labels))
 
             rag_metrics = RAGTriadMetrics(
                 supporting_evidence=supporting_evidence,
@@ -506,11 +529,11 @@ REASONING: [detailed explanation]
     def return_response(self, state: PolicyAdherenceState) -> PolicyAdherenceState:
         """Node 5: Return compliance result to TAA."""
         audit_trail = state.get("audit_trail", [])
-        
+
         audit_trail.append("PAA compliance check completed")
-        
+
         logger.info(f"PAA completed check for {state['invoice'].invoice_id}")
-        
+
         state["audit_trail"] = audit_trail
         return state
 
@@ -520,11 +543,11 @@ REASONING: [detailed explanation]
         trace_id: str = "",
     ) -> PolicyAdherenceState:
         """Check compliance for an invoice.
-        
+
         Args:
             invoice: Invoice to check
             trace_id: Trace ID for observability
-            
+
         Returns:
             Final state with compliance result
         """
@@ -536,7 +559,7 @@ REASONING: [detailed explanation]
 
         # Run the graph
         final_state = await self.graph.ainvoke(initial_state)
-        
+
         logger.info(f"PAA completed compliance check for {invoice.invoice_id}")
         return final_state
 
@@ -554,7 +577,6 @@ REASONING: [detailed explanation]
 
         # Run the graph synchronously
         final_state = self.graph.invoke(initial_state)
-        
+
         logger.info(f"PAA completed compliance check for {invoice.invoice_id}")
         return final_state
-

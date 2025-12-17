@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class EMAExecutor(AgentExecutor):
     """A2A Executor for Exception Manager Agent.
-    
+
     Enables EMA to receive HITL feedback via A2A protocol and process it.
     """
 
@@ -39,18 +39,18 @@ class EMAExecutor(AgentExecutor):
             raise ValueError("RequestContext must have a message")
 
         updater = TaskUpdater(event_queue, context.task_id, context.context_id)
-        
+
         # Submit task
         if not context.current_task:
             await updater.submit()
-        
+
         # Start working
         await updater.start_work()
 
         try:
             # Parse input message
             user_input = context.get_user_input()
-            
+
             # Expected format: JSON with feedback and invoice data
             input_data = json.loads(user_input)
             feedback = HITLFeedback(**input_data["feedback"])
@@ -60,9 +60,9 @@ class EMAExecutor(AgentExecutor):
             # Send status update
             await updater.update_status(
                 TaskState.working,
-                message=updater.new_agent_message([
-                    Part(root=TextPart(text=f"Processing HITL feedback for transaction {feedback.transaction_id}"))
-                ]),
+                message=updater.new_agent_message(
+                    [Part(root=TextPart(text=f"Processing HITL feedback for transaction {feedback.transaction_id}"))]
+                ),
             )
 
             # Process feedback through EMA
@@ -72,10 +72,10 @@ class EMAExecutor(AgentExecutor):
             response_text = f"✅ HITL feedback processed\n"
             response_text += f"Correction type: {result.get('correction_type', 'N/A')}\n"
             response_text += f"Should learn: {result.get('should_learn', False)}\n"
-            
+
             if result.get("memory_update_id"):
                 response_text += f"Memory updated: {result['memory_update_id']}\n"
-            
+
             response_text += f"H-CR KPI updated: {result.get('hcr_updated', False)}\n"
 
             # Send audit trail
@@ -99,9 +99,9 @@ class EMAExecutor(AgentExecutor):
             logger.error(f"Error in EMA execution: {e}", exc_info=True)
             await updater.update_status(
                 TaskState.working,
-                message=updater.new_agent_message([
-                    Part(root=TextPart(text=f"❌ Error processing HITL feedback: {str(e)}"))
-                ]),
+                message=updater.new_agent_message(
+                    [Part(root=TextPart(text=f"❌ Error processing HITL feedback: {str(e)}"))]
+                ),
             )
             raise
 
@@ -110,4 +110,3 @@ class EMAExecutor(AgentExecutor):
         logger.info(f"EMA task {context.task_id} cancelled")
         # EMA doesn't support cancellation - just log it
         raise NotImplementedError("EMA does not support task cancellation")
-

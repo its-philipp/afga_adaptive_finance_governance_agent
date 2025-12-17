@@ -32,25 +32,25 @@ class InvoiceExtractor:
         source: str = "uploaded",
     ) -> Invoice:
         """Extract invoice data from a document (PDF or image).
-        
+
         Args:
             file_bytes: Document content as bytes
             filename: Original filename
             source: Source identifier
-            
+
         Returns:
             Structured Invoice object
-            
+
         Raises:
             ValueError: If extraction fails or document is invalid
         """
         logger.info(f"Extracting invoice data from {filename}")
         file_ext = Path(filename).suffix.lower()
 
-        if file_ext == '.pdf':
+        if file_ext == ".pdf":
             images = self._pdf_to_images(file_bytes)
             image = images[0]
-        elif file_ext in ['.png', '.jpg', '.jpeg', '.webp']:
+        elif file_ext in [".png", ".jpg", ".jpeg", ".webp"]:
             image = Image.open(io.BytesIO(file_bytes))
         else:
             raise ValueError(f"Unsupported file type: {file_ext}. Supported: PDF, PNG, JPG, JPEG, WEBP")
@@ -186,4 +186,3 @@ Return ONLY JSON:
         except Exception as e:
             logger.error(f"Error parsing invoice text: {e}")
             raise
-

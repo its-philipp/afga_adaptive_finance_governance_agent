@@ -7,7 +7,7 @@ from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 
 def get_paa_agent_card() -> AgentCard:
     """Get the A2A Agent Card for PAA (Policy Adherence Agent).
-    
+
     The agent card defines PAA's capabilities for A2A service discovery.
     """
     return AgentCard(
@@ -55,4 +55,3 @@ def get_paa_agent_card() -> AgentCard:
             ),
         ],
     )
-

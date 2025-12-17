@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: afga-backend
+  namespace: afga
+  labels:
+    app: afga-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: afga-backend
+  template:
+    metadata:
+      labels:
+        app: afga-backend
+    spec:
+      containers:
+      - name: backend
+        image: IMAGE_PLACEHOLDER/afga-backend:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: afga-secrets
+              key: OPENROUTER_API_KEY
+        - name: PRIMARY_MODEL
+          valueFrom:
+            secretKeyRef:
+              name: afga-secrets
+              key: PRIMARY_MODEL
+        - name: LANGFUSE_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: afga-secrets
+              key: LANGFUSE_PUBLIC_KEY
+        - name: LANGFUSE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: afga-secrets
+              key: LANGFUSE_SECRET_KEY
+        - name: LANGFUSE_HOST
+          valueFrom:
+            secretKeyRef:
+              name: afga-secrets
+              key: LANGFUSE_HOST
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: afga-secrets
+              key: GOOGLE_API_KEY
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: afga-secrets
+              key: OPENAI_API_KEY
+        - name: A2A_ENABLED
+          value: "true"
+        - name: A2A_BASE_URL
+          value: "http://afga-backend:8000"
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: afga-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: afga-backend
+  namespace: afga
+spec:
+  type: ClusterIP
+  selector:
+    app: afga-backend
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000

@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: afga-frontend
+  namespace: afga
+  labels:
+    app: afga-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: afga-frontend
+  template:
+    metadata:
+      labels:
+        app: afga-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: IMAGE_PLACEHOLDER/afga-frontend:latest
+        ports:
+        - containerPort: 8501
+          name: http
+        env:
+        - name: API_BASE_URL
+          value: "http://afga-backend:8000"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8501
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: afga-frontend
+  namespace: afga
+spec:
+  type: LoadBalancer
+  selector:
+    app: afga-frontend
+  ports:
+  - name: http
+    port: 8501
+    targetPort: 8501

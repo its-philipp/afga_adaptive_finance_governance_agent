@@ -9,7 +9,7 @@ from src.services.risk_scorer import RiskScorer
 def test_risk_scorer_high_amount():
     """Test risk scoring for high amount invoices."""
     scorer = RiskScorer()
-    
+
     invoice = Invoice(
         invoice_id="TEST-001",
         vendor="Test Vendor",
@@ -23,9 +23,9 @@ def test_risk_scorer_high_amount():
         tax=1200.0,
         total=16200.0,
     )
-    
+
     assessment = scorer.assess_risk(invoice)
-    
+
     assert assessment.risk_level in {RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL}
     assert assessment.risk_score >= 45.0
     assert len(assessment.risk_factors) > 0
@@ -34,7 +34,7 @@ def test_risk_scorer_high_amount():
 def test_risk_scorer_low_amount():
     """Test risk scoring for low amount invoices."""
     scorer = RiskScorer()
-    
+
     invoice = Invoice(
         invoice_id="TEST-002",
         vendor="Test Vendor",
@@ -48,9 +48,9 @@ def test_risk_scorer_low_amount():
         tax=40.0,
         total=540.0,
     )
-    
+
     assessment = scorer.assess_risk(invoice)
-    
+
     assert assessment.risk_level == RiskLevel.LOW
     assert assessment.risk_score <= 10.0
 
@@ -58,7 +58,7 @@ def test_risk_scorer_low_amount():
 def test_risk_scorer_missing_po():
     """Test risk scoring for missing PO."""
     scorer = RiskScorer()
-    
+
     invoice = Invoice(
         invoice_id="TEST-003",
         vendor="Test Vendor",
@@ -72,9 +72,9 @@ def test_risk_scorer_missing_po():
         tax=160.0,
         total=2160.0,
     )
-    
+
     assessment = scorer.assess_risk(invoice)
-    
+
     # Should have additional risk due to missing PO
     assert any("purchase order" in factor.lower() for factor in assessment.risk_factors)
     assert assessment.risk_score > 20.0
@@ -83,7 +83,7 @@ def test_risk_scorer_missing_po():
 def test_risk_scorer_low_vendor_reputation():
     """Test risk scoring for low vendor reputation."""
     scorer = RiskScorer()
-    
+
     invoice = Invoice(
         invoice_id="TEST-004",
         vendor="Risky Vendor",
@@ -97,9 +97,9 @@ def test_risk_scorer_low_vendor_reputation():
         tax=80.0,
         total=1080.0,
     )
-    
+
     assessment = scorer.assess_risk(invoice)
-    
+
     # Should have additional risk due to low reputation
     assert any("reputation" in factor.lower() for factor in assessment.risk_factors)
     assert assessment.risk_score >= 30.0
@@ -108,7 +108,7 @@ def test_risk_scorer_low_vendor_reputation():
 def test_risk_scorer_international():
     """Test risk scoring for international transactions."""
     scorer = RiskScorer()
-    
+
     invoice = Invoice(
         invoice_id="TEST-005",
         vendor="International Vendor",
@@ -123,10 +123,9 @@ def test_risk_scorer_international():
         total=3240.0,
         international=True,
     )
-    
+
     assessment = scorer.assess_risk(invoice)
-    
+
     # Should have additional risk due to international
     assert any("international" in factor.lower() or "EUR" in factor for factor in assessment.risk_factors)
     assert assessment.risk_score > 10.0
-

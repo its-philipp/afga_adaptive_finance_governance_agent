@@ -1,0 +1,208 @@
+# Default values for afga-agent (2-service architecture)
+# Backend service (FastAPI)
+backend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: afgaacrb5171976.azurecr.io/afga-backend
+    pullPolicy: Always
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+# Frontend service (Streamlit)
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: afgaacrb5171976.azurecr.io/afga-frontend
+    pullPolicy: Always
+    tag: "latest"
+  service:
+    type: LoadBalancer
+    port: 8501
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+# Persistent storage for SQLite database
+persistence:
+  enabled: true
+  storageClass: managed-csi
+  size: 5Gi
+  accessMode: ReadWriteOnce
+
+# imagePullSecrets:
+#   - name: acr-secret
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    azure.workload.identity/client-id: ""  # Set via overlay
+  name: ""
+
+podAnnotations:
+  azure.workload.identity/use: "true"
+
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false  # SQLite needs write access
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+
+ingress:
+  enabled: false
+  className: "istio"
+  annotations:
+    istio.io/ingress-gateway: "istio-gateway"
+  hosts:
+    - host: afga.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          backend: backend
+        - path: /
+          pathType: Prefix
+          backend: frontend
+  tls: []
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Environment variables (Databricks DISABLED)
+env:
+  # Application
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  
+  # LLM Configuration
+  PRIMARY_MODEL: "openai/gpt-4o-mini"
+  FALLBACK_MODEL_1: "meta-llama/llama-3.1-70b-instruct"
+  FALLBACK_MODEL_2: "mistralai/mistral-large"
+  FALLBACK_MODEL_3: "anthropic/claude-3.5-sonnet"
+  
+  # A2A (Agent-to-Agent)
+  A2A_ENABLED: "true"
+  A2A_BASE_URL: "http://afga-backend:8000"
+  A2A_PAA_PATH: "/a2a/paa"
+  A2A_EMA_PATH: "/a2a/ema"
+  A2A_REQUEST_TIMEOUT: "30"
+  
+  # Langfuse Observability
+  LANGFUSE_HOST: "https://cloud.langfuse.com"
+  
+  # Databricks (DISABLED - costs too high)
+  # DATABRICKS_SERVER_HOSTNAME: ""
+  # DATABRICKS_HTTP_PATH: ""
+  # DATABRICKS_TOKEN: ""
+  # DATABRICKS_CATALOG: ""
+  # DATABRICKS_GOLD_TABLE: ""
+  
+  # Azure Storage (DISABLED - only needed for Databricks)
+  # AZURE_STORAGE_CONNECTION_STRING: ""
+
+# Secrets from Azure Key Vault (via CSI driver)
+keyVaultSecrets:
+  enabled: true
+  vaultName: "afga-kv-b5171976"  # Set via overlay (e.g., "afga-prod-kv")
+  tenantId: "2beb7b8f-96ca-46a2-b470-db9ae8f24c45"  # Set via overlay
+  clientId: "6494f355-14a5-4b9d-aef1-27c88ebfd39b"
+  objects:
+    - objectName: openrouter-api-key
+      objectType: secret
+      envVarName: OPENROUTER_API_KEY
+    
+    - objectName: openai-api-key
+      objectType: secret
+      envVarName: OPENAI_API_KEY
+    
+    - objectName: google-api-key
+      objectType: secret
+      envVarName: GOOGLE_API_KEY
+    
+    - objectName: a2a-api-key
+      objectType: secret
+      envVarName: A2A_API_KEY
+    
+    - objectName: langfuse-public-key
+      objectType: secret
+      envVarName: LANGFUSE_PUBLIC_KEY
+    
+    - objectName: langfuse-secret-key
+      objectType: secret
+      envVarName: LANGFUSE_SECRET_KEY
+
+# Istio configuration
+istio:
+  enabled: true
+  gateway:
+    name: afga-agent-gateway
+    hosts:
+      - afga-agent.example.com
+  virtualService:
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+  destinationRule:
+    mTLS:
+      mode: STRICT
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+

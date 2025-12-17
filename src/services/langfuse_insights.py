@@ -28,9 +28,7 @@ class LangfuseInsights:
     def get_summary(self, limit: int = 200) -> Dict[str, Any]:
         local_metrics = self._compute_local_metrics(limit=limit)
         langfuse_status = self._ping_langfuse()
-        remote_metrics = self._fetch_remote_metrics() if langfuse_status.get("status") == "ok" else {
-            "available": False
-        }
+        remote_metrics = self._fetch_remote_metrics() if langfuse_status.get("status") == "ok" else {"available": False}
 
         return {
             "enabled": self.enabled,
@@ -86,18 +84,24 @@ class LangfuseInsights:
                 if event.get("input_valid") is False:
                     input_failures_audit += 1
                     if event_ts:
-                        last_input_violation_ts = max(last_input_violation_ts, event_ts) if last_input_violation_ts else event_ts
+                        last_input_violation_ts = (
+                            max(last_input_violation_ts, event_ts) if last_input_violation_ts else event_ts
+                        )
 
             if "output_valid" in event:
                 output_checks += 1
                 if event.get("output_valid") is False:
                     output_failures_audit += 1
                     if event_ts:
-                        last_output_violation_ts = max(last_output_violation_ts, event_ts) if last_output_violation_ts else event_ts
+                        last_output_violation_ts = (
+                            max(last_output_violation_ts, event_ts) if last_output_violation_ts else event_ts
+                        )
 
         violation_events = self._load_violation_events(limit=limit)
         input_violation_events = [evt for evt in violation_events if evt.get("event_type") == "input_validation_failed"]
-        output_violation_events = [evt for evt in violation_events if evt.get("event_type") == "output_validation_failed"]
+        output_violation_events = [
+            evt for evt in violation_events if evt.get("event_type") == "output_validation_failed"
+        ]
         policy_violation_events = [evt for evt in violation_events if evt.get("event_type") == "policy_violation"]
 
         for evt in input_violation_events:
@@ -122,7 +126,9 @@ class LangfuseInsights:
                 "checks": input_checks + len(input_violation_events),
                 "violations": input_failures_audit + len(input_violation_events),
                 "last_violation": (last_input_violation_ts.isoformat() if last_input_violation_ts else None),
-                "status": _status(input_failures_audit + len(input_violation_events), input_checks + len(input_violation_events)),
+                "status": _status(
+                    input_failures_audit + len(input_violation_events), input_checks + len(input_violation_events)
+                ),
             },
             "output": {
                 "label": "Output Governance",
@@ -130,7 +136,9 @@ class LangfuseInsights:
                 "checks": output_checks + len(output_violation_events),
                 "violations": output_failures_audit + len(output_violation_events),
                 "last_violation": (last_output_violation_ts.isoformat() if last_output_violation_ts else None),
-                "status": _status(output_failures_audit + len(output_violation_events), output_checks + len(output_violation_events)),
+                "status": _status(
+                    output_failures_audit + len(output_violation_events), output_checks + len(output_violation_events)
+                ),
             },
             "policy": {
                 "label": "Policy Enforcement",
@@ -138,7 +146,10 @@ class LangfuseInsights:
                 "checks": max(stats.get("total_calls", len(events)), len(policy_violation_events)),
                 "violations": len(policy_violation_events),
                 "last_violation": None,
-                "status": _status(len(policy_violation_events), max(stats.get("total_calls", len(events)), len(policy_violation_events))),
+                "status": _status(
+                    len(policy_violation_events),
+                    max(stats.get("total_calls", len(events)), len(policy_violation_events)),
+                ),
             },
             "audit": {
                 "label": "Audit Logging",
@@ -152,7 +163,9 @@ class LangfuseInsights:
 
         # Track last policy violation timestamp if available
         if policy_violation_events:
-            last_policy_ts = max(filter(None, (_parse_timestamp(evt.get("timestamp")) for evt in policy_violation_events)), default=None)
+            last_policy_ts = max(
+                filter(None, (_parse_timestamp(evt.get("timestamp")) for evt in policy_violation_events)), default=None
+            )
             if last_policy_ts:
                 guardrail_summary["policy"]["last_violation"] = last_policy_ts.isoformat()
 

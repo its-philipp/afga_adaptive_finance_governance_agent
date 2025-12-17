@@ -29,7 +29,7 @@ class MemoryDatabase:
         """Create database and tables if they don't exist."""
         # Ensure data directory exists
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
-        
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -50,13 +50,13 @@ class MemoryDatabase:
                 is_active INTEGER DEFAULT 1
             )
         """)
-        
+
         # Add deleted_at and is_active columns if they don't exist (for existing databases)
         try:
             cursor.execute("ALTER TABLE adaptive_memory ADD COLUMN deleted_at TIMESTAMP")
         except sqlite3.OperationalError:
             pass  # Column already exists
-        
+
         try:
             cursor.execute("ALTER TABLE adaptive_memory ADD COLUMN is_active INTEGER DEFAULT 1")
         except sqlite3.OperationalError:
@@ -84,16 +84,30 @@ class MemoryDatabase:
                 audit_trail TEXT,
                 trace_id TEXT,
                 created_at TIMESTAMP,
+                updated_at TIMESTAMP,
+                source_document_path TEXT
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pending_transactions (
+                pending_id TEXT PRIMARY KEY,
+                invoice_data TEXT NOT NULL,
+                trace_id TEXT,
+                status TEXT NOT NULL DEFAULT 'pending',
+                error_message TEXT,
+                transaction_id TEXT,
+                created_at TIMESTAMP,
                 updated_at TIMESTAMP
             )
         """)
-        
+
         # Add columns if they don't exist (for existing databases)
         try:
             cursor.execute("ALTER TABLE transactions ADD COLUMN decision_reasoning TEXT")
         except sqlite3.OperationalError:
             pass  # Column already exists
-            
+
         try:
             cursor.execute("ALTER TABLE transactions ADD COLUMN updated_at TIMESTAMP")
         except sqlite3.OperationalError:
@@ -103,6 +117,11 @@ class MemoryDatabase:
             cursor.execute("ALTER TABLE transactions ADD COLUMN policy_check_json TEXT")
         except sqlite3.OperationalError:
             pass  # Column already exists
+
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_pending_status
+            ON pending_transactions(status)
+        """)
 
         # Create kpis table
         cursor.execute("""
@@ -204,72 +223,81 @@ class MemoryDatabase:
         """Add a new exception to adaptive memory."""
         exception_id = str(uuid.uuid4())[:8]
         normalized_description = self._normalize_description(description, vendor, condition, rule_type)
-        
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             INSERT INTO adaptive_memory 
             (exception_id, vendor, category, rule_type, description, condition, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (exception_id, vendor, category, rule_type, normalized_description, json.dumps(condition), datetime.now()))
-        
+        """,
+            (exception_id, vendor, category, rule_type, normalized_description, json.dumps(condition), datetime.now()),
+        )
+
         conn.commit()
         conn.close()
-        
+
         logger.info(f"Added exception {exception_id}: {normalized_description}")
         return exception_id
 
     def delete_exception(self, exception_id: str) -> bool:
         """Soft-delete an exception from adaptive memory (mark as inactive).
-        
+
         Returns:
             True if exception was deleted, False if not found
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             UPDATE adaptive_memory 
             SET is_active = 0, deleted_at = ?
             WHERE exception_id = ? AND is_active = 1
-        """, (datetime.now(), exception_id))
+        """,
+            (datetime.now(), exception_id),
+        )
         deleted = cursor.rowcount > 0
-        
+
         conn.commit()
         conn.close()
-        
+
         if deleted:
             logger.info(f"Soft-deleted exception {exception_id}")
         else:
             logger.warning(f"Exception {exception_id} not found or already deleted")
-        
+
         return deleted
-    
+
     def restore_exception(self, exception_id: str) -> bool:
         """Restore a soft-deleted exception.
-        
+
         Returns:
             True if exception was restored, False if not found
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             UPDATE adaptive_memory 
             SET is_active = 1, deleted_at = NULL
             WHERE exception_id = ? AND is_active = 0
-        """, (exception_id,))
+        """,
+            (exception_id,),
+        )
         restored = cursor.rowcount > 0
-        
+
         conn.commit()
         conn.close()
-        
+
         if restored:
             logger.info(f"Restored exception {exception_id}")
         else:
             logger.warning(f"Exception {exception_id} not found or already active")
-        
+
         return restored
 
     def query_exceptions(self, query: MemoryQuery) -> List[MemoryException]:
@@ -285,26 +313,29 @@ class MemoryDatabase:
         if query.vendor:
             where_clauses.append("vendor = ?")
             params.append(query.vendor)
-        
+
         if query.category:
             where_clauses.append("category = ?")
             params.append(query.category)
-        
+
         if query.rule_type:
             where_clauses.append("rule_type = ?")
             params.append(query.rule_type)
-        
+
         if query.min_success_rate:
             where_clauses.append("success_rate >= ?")
             params.append(query.min_success_rate)
 
         where_clause = " AND ".join(where_clauses) if where_clauses else "1=1"
-        
-        cursor.execute(f"""
+
+        cursor.execute(
+            f"""
             SELECT * FROM adaptive_memory
             WHERE {where_clause}
             ORDER BY applied_count DESC, created_at DESC
-        """, params)
+        """,
+            params,
+        )
 
         rows = cursor.fetchall()
         conn.close()
@@ -312,18 +343,22 @@ class MemoryDatabase:
         exceptions = []
         for row in rows:
             condition = json.loads(row["condition"]) if row["condition"] else {}
-            exceptions.append(MemoryException(
-                exception_id=row["exception_id"],
-                vendor=row["vendor"],
-                category=row["category"],
-                rule_type=row["rule_type"],
-                description=self._normalize_description(row["description"], row["vendor"], condition, row["rule_type"]),
-                condition=condition,
-                applied_count=row["applied_count"],
-                success_rate=row["success_rate"],
-                created_at=datetime.fromisoformat(row["created_at"]),
-                last_applied_at=datetime.fromisoformat(row["last_applied_at"]) if row["last_applied_at"] else None,
-            ))
+            exceptions.append(
+                MemoryException(
+                    exception_id=row["exception_id"],
+                    vendor=row["vendor"],
+                    category=row["category"],
+                    rule_type=row["rule_type"],
+                    description=self._normalize_description(
+                        row["description"], row["vendor"], condition, row["rule_type"]
+                    ),
+                    condition=condition,
+                    applied_count=row["applied_count"],
+                    success_rate=row["success_rate"],
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                    last_applied_at=datetime.fromisoformat(row["last_applied_at"]) if row["last_applied_at"] else None,
+                )
+            )
 
         return exceptions
 
@@ -333,11 +368,14 @@ class MemoryDatabase:
         cursor = conn.cursor()
 
         # Get current stats
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT applied_count, success_rate FROM adaptive_memory
             WHERE exception_id = ?
-        """, (exception_id,))
-        
+        """,
+            (exception_id,),
+        )
+
         row = cursor.fetchone()
         if not row:
             logger.warning(f"Exception {exception_id} not found")
@@ -346,22 +384,27 @@ class MemoryDatabase:
 
         applied_count, success_rate = row
         new_applied_count = applied_count + 1
-        
+
         # Calculate new success rate using moving average
         new_success_rate = ((success_rate * applied_count) + (1.0 if success else 0.0)) / new_applied_count
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE adaptive_memory
             SET applied_count = ?,
                 success_rate = ?,
                 last_applied_at = ?
             WHERE exception_id = ?
-        """, (new_applied_count, new_success_rate, datetime.now(), exception_id))
+        """,
+            (new_applied_count, new_success_rate, datetime.now(), exception_id),
+        )
 
         conn.commit()
         conn.close()
-        
-        logger.info(f"Updated exception {exception_id}: applied={new_applied_count}, success_rate={new_success_rate:.2f}")
+
+        logger.info(
+            f"Updated exception {exception_id}: applied={new_applied_count}, success_rate={new_success_rate:.2f}"
+        )
 
     def get_memory_stats(self) -> MemoryStats:
         """Get statistics about adaptive memory."""
@@ -455,39 +498,160 @@ class MemoryDatabase:
 
     # ========== TRANSACTION OPERATIONS ==========
 
+    def enqueue_pending_transactions(self, items: list[Dict[str, Any]]) -> list[str]:
+        """Add invoices to the pending queue for later batch processing."""
+        if not items:
+            return []
+
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        now = datetime.now()
+        pending_ids: list[str] = []
+
+        for item in items:
+            invoice_payload = item.get("invoice")
+            trace_id = item.get("trace_id")
+            if not invoice_payload:
+                continue
+
+            pending_id = str(uuid.uuid4())[:12]
+            cursor.execute(
+                """
+                INSERT INTO pending_transactions (
+                    pending_id,
+                    invoice_data,
+                    trace_id,
+                    status,
+                    created_at,
+                    updated_at
+                )
+                VALUES (?, ?, ?, 'pending', ?, ?)
+                """,
+                (pending_id, json.dumps(invoice_payload), trace_id, now, now),
+            )
+            pending_ids.append(pending_id)
+
+        conn.commit()
+        conn.close()
+
+        if pending_ids:
+            logger.info("Enqueued %s pending transaction(s)", len(pending_ids))
+        return pending_ids
+
+    def fetch_pending_transactions(self, limit: int = 25, mark_processing: bool = True) -> list[Dict[str, Any]]:
+        """Fetch pending transactions and optionally mark them as processing."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT pending_id, invoice_data, trace_id
+            FROM pending_transactions
+            WHERE status = 'pending'
+            ORDER BY created_at ASC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+        rows = cursor.fetchall()
+        pending_ids = [row["pending_id"] for row in rows]
+
+        if pending_ids and mark_processing:
+            now = datetime.now()
+            cursor.executemany(
+                """
+                UPDATE pending_transactions
+                SET status = 'processing', updated_at = ?
+                WHERE pending_id = ?
+                """,
+                [(now, pending_id) for pending_id in pending_ids],
+            )
+            conn.commit()
+
+        conn.close()
+
+        pending: list[Dict[str, Any]] = []
+        for row in rows:
+            pending.append(
+                {
+                    "pending_id": row["pending_id"],
+                    "invoice_data": row["invoice_data"],
+                    "trace_id": row["trace_id"],
+                }
+            )
+        return pending
+
+    def update_pending_transaction(
+        self,
+        pending_id: str,
+        *,
+        status: str,
+        transaction_id: Optional[str] = None,
+        error_message: Optional[str] = None,
+    ) -> None:
+        """Update the final status of a pending transaction."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE pending_transactions
+            SET status = ?,
+                transaction_id = ?,
+                error_message = ?,
+                updated_at = ?
+            WHERE pending_id = ?
+            """,
+            (status, transaction_id, error_message, datetime.now(), pending_id),
+        )
+        conn.commit()
+        conn.close()
+
+    def count_pending_transactions(self) -> int:
+        """Return the number of transactions still pending execution."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM pending_transactions WHERE status = 'pending'")
+        result = cursor.fetchone()
+        conn.close()
+        return (result[0] or 0) if result else 0
+
     def save_transaction(self, result: TransactionResult) -> None:
         """Save transaction result to database."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO transactions
             (transaction_id, invoice_id, invoice_data, risk_score, risk_level, 
              paa_decision, policy_check_json, final_decision, decision_reasoning, human_override, processing_time_ms, 
              audit_trail, trace_id, created_at, updated_at, source_document_path)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            result.transaction_id,
-            result.invoice.invoice_id,
-            result.invoice.model_dump_json(),
-            result.risk_assessment.risk_score,
-            result.risk_assessment.risk_level.value,
-            "compliant" if result.policy_check.is_compliant else "non_compliant",
-            result.policy_check.model_dump_json(),
-            result.final_decision.value,
-            result.decision_reasoning,
-            1 if result.human_override else 0,
-            result.processing_time_ms,
-            json.dumps(result.audit_trail),
-            result.trace_id,
-            result.created_at,
-            result.created_at,  # updated_at initially same as created_at
-            result.source_document_path,
-        ))
+        """,
+            (
+                result.transaction_id,
+                result.invoice.invoice_id,
+                result.invoice.model_dump_json(),
+                result.risk_assessment.risk_score,
+                result.risk_assessment.risk_level.value,
+                "compliant" if result.policy_check.is_compliant else "non_compliant",
+                result.policy_check.model_dump_json(),
+                result.final_decision.value,
+                result.decision_reasoning,
+                1 if result.human_override else 0,
+                result.processing_time_ms,
+                json.dumps(result.audit_trail),
+                result.trace_id,
+                result.created_at,
+                result.created_at,  # updated_at initially same as created_at
+                result.source_document_path,
+            ),
+        )
 
         conn.commit()
         conn.close()
-        
+
         logger.info(f"Saved transaction {result.transaction_id}")
 
     def update_transaction_source(self, transaction_id: str, path: str) -> None:
@@ -523,7 +687,7 @@ class MemoryDatabase:
         if transaction.get("policy_check_json"):
             transaction["policy_check"] = json.loads(transaction["policy_check_json"])
             del transaction["policy_check_json"]
-    
+
         return transaction
 
     def get_recent_transactions(self, limit: int = 10) -> List[Dict[str, Any]]:
@@ -532,11 +696,14 @@ class MemoryDatabase:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM transactions
             ORDER BY created_at DESC
             LIMIT ?
-        """, (limit,))
+        """,
+            (limit,),
+        )
 
         rows = cursor.fetchall()
         conn.close()
@@ -551,40 +718,38 @@ class MemoryDatabase:
             if trans.get("policy_check_json"):
                 trans["policy_check"] = json.loads(trans["policy_check_json"])
                 del trans["policy_check_json"]
-    
+
             transactions.append(trans)
         return transactions
 
-    def update_transaction_after_hitl(
-        self,
-        transaction_id: str,
-        human_decision: str,
-        final_reasoning: str
-    ) -> None:
+    def update_transaction_after_hitl(self, transaction_id: str, human_decision: str, final_reasoning: str) -> None:
         """Update transaction record after HITL feedback."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Use datetime.now() to ensure same timezone as created_at
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE transactions
             SET human_override = 1,
                 final_decision = ?,
                 decision_reasoning = ?,
                 updated_at = ?
             WHERE transaction_id = ?
-        """, (human_decision, final_reasoning, datetime.now(), transaction_id))
-        
+        """,
+            (human_decision, final_reasoning, datetime.now(), transaction_id),
+        )
+
         conn.commit()
         conn.close()
-        
+
         logger.info(f"Updated transaction {transaction_id} with HITL feedback")
 
     # ========== KPI OPERATIONS ==========
 
     def calculate_and_save_kpis(self, date: Optional[str] = None) -> KPIMetrics:
         """Calculate KPIs for a specific date and save to database.
-        
+
         If no transactions exist for the date, calculates across ALL transactions
         to provide meaningful metrics.
         """
@@ -595,7 +760,8 @@ class MemoryDatabase:
         cursor = conn.cursor()
 
         # Get transactions for the date
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) as total,
                    SUM(CASE WHEN human_override = 1 THEN 1 ELSE 0 END) as human_corrections,
                    SUM(CASE WHEN final_decision = 'approved' AND human_override = 0 THEN 1 ELSE 0 END) as auto_approved,
@@ -603,7 +769,9 @@ class MemoryDatabase:
                    SUM(CASE WHEN audit_trail IS NOT NULL AND audit_trail != '[]' THEN 1 ELSE 0 END) as with_audit
             FROM transactions
             WHERE DATE(created_at) = ?
-        """, (date,))
+        """,
+            (date,),
+        )
 
         row = cursor.fetchone()
         total_transactions = row[0] or 0
@@ -639,12 +807,15 @@ class MemoryDatabase:
         crs = crs_calc.crs_score
 
         # Save KPIs
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO kpis
             (date, total_transactions, human_corrections, hcr, crs, atar, 
              avg_processing_time_ms, audit_traceability_score)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (date, total_transactions, human_corrections, hcr, crs, atar, avg_time, audit_traceability))
+        """,
+            (date, total_transactions, human_corrections, hcr, crs, atar, avg_time, audit_traceability),
+        )
 
         conn.commit()
         conn.close()
@@ -665,7 +836,7 @@ class MemoryDatabase:
 
     def calculate_crs(self, date: Optional[str] = None) -> CRSCalculation:
         """Calculate Context Retention Score.
-        
+
         If date is None, calculates across ALL exceptions (all-time).
         """
         conn = sqlite3.connect(self.db_path)
@@ -673,20 +844,26 @@ class MemoryDatabase:
 
         if date:
             # Get exceptions applied on this date
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT COUNT(*) FROM adaptive_memory
                 WHERE DATE(last_applied_at) = ? AND applied_count > 0
-            """, (date,))
-            
+            """,
+                (date,),
+            )
+
             applications_today = cursor.fetchone()[0] or 0
 
             # Get successful applications (where success_rate > 0.5)
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT SUM(applied_count * success_rate) / SUM(applied_count)
                 FROM adaptive_memory
                 WHERE DATE(last_applied_at) = ? AND applied_count > 0
-            """, (date,))
-            
+            """,
+                (date,),
+            )
+
             avg_success = cursor.fetchone()[0] or 0.0
         else:
             # Calculate across ALL exceptions (all-time)
@@ -694,7 +871,7 @@ class MemoryDatabase:
                 SELECT COUNT(*) FROM adaptive_memory
                 WHERE applied_count > 0
             """)
-            
+
             applications_today = cursor.fetchone()[0] or 0
 
             # Get successful applications (weighted by applied_count)
@@ -708,7 +885,7 @@ class MemoryDatabase:
                 FROM adaptive_memory
                 WHERE applied_count > 0
             """)
-            
+
             avg_success = cursor.fetchone()[0] or 0.0
 
         conn.close()
@@ -720,7 +897,7 @@ class MemoryDatabase:
             applicable_scenarios=applications_today,
             successful_applications=int(applications_today * avg_success) if applications_today > 0 else 0,
             crs_score=crs_score,
-            details=f"Applied memory {applications_today} times with {crs_score:.1f}% success rate"
+            details=f"Applied memory {applications_today} times with {crs_score:.1f}% success rate",
         )
 
     def get_kpis(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> List[KPIMetrics]:
@@ -730,17 +907,23 @@ class MemoryDatabase:
         cursor = conn.cursor()
 
         if start_date and end_date:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT * FROM kpis
                 WHERE date BETWEEN ? AND ?
                 ORDER BY date DESC
-            """, (start_date, end_date))
+            """,
+                (start_date, end_date),
+            )
         elif start_date:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT * FROM kpis
                 WHERE date >= ?
                 ORDER BY date DESC
-            """, (start_date,))
+            """,
+                (start_date,),
+            )
         else:
             cursor.execute("""
                 SELECT * FROM kpis
@@ -757,4 +940,3 @@ class MemoryDatabase:
         """Get the most recent KPI metrics."""
         kpis = self.get_kpis()
         return kpis[0] if kpis else None
-

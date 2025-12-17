@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 
 class Observability:
     """Observability layer for tracing and logging with Langfuse.
-    
+
     Provides comprehensive audit trail for AFGA workflows:
     - Traces: Top-level workflow tracking (transaction processing)
     - Spans: Individual step tracking (risk assessment, policy check, memory update)
     - Generations: LLM call tracking with token usage and cost
-    
+
     Gracefully falls back to standard logging if Langfuse is not configured.
     """
 
@@ -27,11 +27,12 @@ class Observability:
         self.enabled = False
         self.client = None
         self._current_trace = None  # Store current trace context
-        
+
         # Try to initialize Langfuse if credentials are provided
         if settings.langfuse_public_key and settings.langfuse_secret_key:
             try:
                 from langfuse import Langfuse
+
                 self.client = Langfuse(
                     public_key=settings.langfuse_public_key,
                     secret_key=settings.langfuse_secret_key,
@@ -53,18 +54,18 @@ class Observability:
         self, name: str, metadata: Dict[str, Any] | None = None, user_id: Optional[str] = None
     ) -> Generator[str, None, None]:
         """Create a trace for the entire transaction workflow.
-        
+
         Args:
             name: Name of the trace (e.g., "transaction_processing")
             metadata: Additional metadata (e.g., transaction_id, invoice data)
             user_id: Optional user identifier for multi-tenant tracking
-            
+
         Yields:
             trace_id: Unique identifier for this trace
         """
         metadata = metadata or {}
         trace_id = str(uuid.uuid4())
-        
+
         if self.enabled and self.client:
             try:
                 trace = self.client.trace(
@@ -96,7 +97,7 @@ class Observability:
         self, trace_id: str, agent_name: str, step_name: str, input_data: Dict[str, Any], output_data: Dict[str, Any]
     ) -> None:
         """Log an agent step as a span.
-        
+
         Args:
             trace_id: ID of the parent trace
             agent_name: Name of the agent (TAA, PAA, EMA)
@@ -131,7 +132,7 @@ class Observability:
         model_parameters: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Log LLM generation as a specialized generation observation.
-        
+
         Args:
             trace_id: ID of the parent trace
             prompt: Input prompt to the LLM
@@ -143,7 +144,7 @@ class Observability:
         """
         model_parameters = model_parameters or {}
         usage = None
-        
+
         # Prepare usage details if available
         if prompt_tokens is not None and completion_tokens is not None:
             usage = {
@@ -151,7 +152,7 @@ class Observability:
                 "output": completion_tokens,
                 "total": prompt_tokens + completion_tokens,
             }
-        
+
         if self.enabled and self.client and self._current_trace:
             try:
                 generation = self._current_trace.generation(
@@ -177,11 +178,9 @@ class Observability:
         else:
             logger.info(f"LLM call [{trace_id}]: model={model}")
 
-    def log_a2a_communication(
-        self, trace_id: str, from_agent: str, to_agent: str, message: Dict[str, Any]
-    ) -> None:
+    def log_a2a_communication(self, trace_id: str, from_agent: str, to_agent: str, message: Dict[str, Any]) -> None:
         """Log A2A inter-agent communication.
-        
+
         Args:
             trace_id: ID of the parent trace
             from_agent: Source agent name
@@ -206,7 +205,7 @@ class Observability:
 
     def flush(self) -> None:
         """Flush all pending events to Langfuse.
-        
+
         Call this before shutdown to ensure all events are sent.
         """
         if self.enabled and self.client:
@@ -215,4 +214,3 @@ class Observability:
                 logger.info("Langfuse events flushed")
             except Exception as e:
                 logger.warning(f"Failed to flush Langfuse events: {e}")
-

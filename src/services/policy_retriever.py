@@ -32,7 +32,7 @@ class PolicyRetriever:
 
         for policy_file in self.policies_dir.glob("*.txt"):
             try:
-                with open(policy_file, 'r') as f:
+                with open(policy_file, "r") as f:
                     content = f.read()
                     self.policies[policy_file.stem] = {
                         "filename": policy_file.name,
@@ -48,7 +48,7 @@ class PolicyRetriever:
         # Simple chunking by paragraphs or sentences
         paragraphs = content.split("\n\n")
         chunks = []
-        
+
         current_chunk = ""
         for para in paragraphs:
             if len(current_chunk) + len(para) < chunk_size:
@@ -57,19 +57,19 @@ class PolicyRetriever:
                 if current_chunk:
                     chunks.append(current_chunk.strip())
                 current_chunk = para + "\n\n"
-        
+
         if current_chunk:
             chunks.append(current_chunk.strip())
-        
+
         return chunks
 
     def retrieve_relevant_policies(self, invoice: Invoice, top_k: int = 5) -> List[dict]:
         """Retrieve the most relevant policy chunks for an invoice.
-        
+
         Args:
             invoice: Invoice to check
             top_k: Number of relevant chunks to return
-            
+
         Returns:
             List of relevant policy chunks with metadata
         """
@@ -79,61 +79,63 @@ class PolicyRetriever:
 
         # Build query from invoice characteristics
         query = self._build_query(invoice)
-        
+
         # Simple keyword-based retrieval (can be upgraded to embeddings later)
         relevant_chunks = []
-        
+
         for policy_name, policy_data in self.policies.items():
             for chunk_idx, chunk in enumerate(policy_data["chunks"]):
                 score, matched_terms = self._calculate_relevance_score(query, chunk)
-                relevant_chunks.append({
-                    "policy_name": policy_name,
-                    "policy_filename": policy_data.get("filename"),
-                    "chunk_index": chunk_idx,
-                    "content": chunk,
-                    "score": score,
-                    "snippet": chunk[:400],
-                    "matched_terms": matched_terms,
-                })
-        
+                relevant_chunks.append(
+                    {
+                        "policy_name": policy_name,
+                        "policy_filename": policy_data.get("filename"),
+                        "chunk_index": chunk_idx,
+                        "content": chunk,
+                        "score": score,
+                        "snippet": chunk[:400],
+                        "matched_terms": matched_terms,
+                    }
+                )
+
         # Sort by relevance score and return top_k
         relevant_chunks.sort(key=lambda x: x["score"], reverse=True)
         top_chunks = relevant_chunks[:top_k]
-        
+
         logger.info(f"Retrieved {len(top_chunks)} relevant policy chunks for {invoice.invoice_id}")
         return top_chunks
 
     def _build_query(self, invoice: Invoice) -> str:
         """Build a search query from invoice characteristics."""
         query_parts = []
-        
+
         # Add vendor if present
         if invoice.vendor:
             query_parts.append(f"vendor {invoice.vendor}")
-        
+
         # Add category
         if invoice.category:
             query_parts.append(invoice.category)
-        
+
         # Add amount-related terms
         if invoice.amount > 10000:
             query_parts.append("approval threshold high amount")
         elif invoice.amount > 5000:
             query_parts.append("approval medium amount")
-        
+
         # Add PO-related terms
         if not invoice.po_number:
             query_parts.append("purchase order PO requirement")
-        
+
         # Add international terms
         if invoice.international or invoice.currency != "USD":
             query_parts.append("international foreign currency")
-        
+
         return " ".join(query_parts).lower()
 
     def _calculate_relevance_score(self, query: str, chunk: str) -> tuple[float, List[str]]:
         """Calculate relevance score and matched terms using simple keyword matching.
-        
+
         This is a basic implementation. Can be upgraded to embeddings-based similarity.
         """
         query_terms = set(query.lower().split())
@@ -185,4 +187,3 @@ class PolicyRetriever:
 
         relevant_chunks.sort(key=lambda item: item["score"], reverse=True)
         return relevant_chunks[:top_k]
-

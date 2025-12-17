@@ -37,6 +37,7 @@ from ..models.schemas import (
 from .ema import ExceptionManagerAgent
 from .paa import PolicyAdherenceAgent
 from .taa import TransactionAuditorAgent
+from ..services.auto_decision_engine import AutoDecisionEngine
 
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class AFGAOrchestrator:
         self.settings = get_settings()
         self.observability = observability or Observability()
         self.memory_db = memory_db or MemoryDatabase()
-        
+
         self.a2a_enabled = self.settings.a2a_enabled
         self._paa_endpoint = self._compose_endpoint(self.settings.a2a_paa_path)
         self._ema_endpoint = self._compose_endpoint(self.settings.a2a_ema_path)
@@ -63,7 +64,7 @@ class AFGAOrchestrator:
         # MCP servers remain available for direct policy browsing and memory stats.
         self.policy_mcp = PolicyMCPServer()
         self.memory_mcp = MemoryMCPServer()
-        
+
         self.taa = TransactionAuditorAgent(observability=self.observability)
         self.paa: PolicyAdherenceAgent | None = None
         self.ema: ExceptionManagerAgent | None = None
@@ -74,9 +75,7 @@ class AFGAOrchestrator:
                 self._ema_card = self._resolve_agent_card(self._ema_endpoint)
                 logger.info("Initialized HTTP A2A clients for PAA and EMA.")
             except Exception:
-                logger.exception(
-                    "Failed to initialize HTTP-based A2A clients; falling back to in-process execution."
-                )
+                logger.exception("Failed to initialize HTTP-based A2A clients; falling back to in-process execution.")
                 self.a2a_enabled = False
 
         if not self.a2a_enabled:
@@ -90,6 +89,8 @@ class AFGAOrchestrator:
             )
             logger.info("Initialized in-process PAA and EMA agents.")
 
+        self.auto_decision_engine = AutoDecisionEngine(memory_db=self.memory_db, settings=self.settings)
+
     def process_transaction(
         self,
         invoice: Invoice,
@@ -101,7 +102,7 @@ class AFGAOrchestrator:
 
         start_time = time.time()
         logger.info("Processing transaction %s [trace: %s]", invoice.invoice_id, trace_id)
-        
+
         with self.observability.trace(
             name="transaction_processing",
             metadata={
@@ -111,7 +112,7 @@ class AFGAOrchestrator:
             },
         ):
             taa_state = self.taa.process_transaction_sync(invoice, trace_id=trace_id)
-            
+
             if self.observability:
                 self.observability.log_a2a_communication(
                     trace_id=trace_id,
@@ -122,7 +123,7 @@ class AFGAOrchestrator:
                         "action": "check_compliance",
                     },
                 )
-            
+
             if self.a2a_enabled and self._paa_card:
                 paa_state = self._invoke_paa_via_a2a(invoice, trace_id)
             elif self.paa:
@@ -134,10 +135,24 @@ class AFGAOrchestrator:
             taa_state["paa_response"] = paa_result
             taa_state["paa_request_sent"] = True
             taa_state = self._update_taa_decision(taa_state)
-            
+
+            auto_outcome = self.auto_decision_engine.evaluate(
+                invoice=invoice,
+                current_decision=taa_state.get("final_decision", DecisionType.HITL),
+                policy_check=paa_result,
+                risk_assessment=taa_state.get("risk_assessment"),
+            )
+            if auto_outcome.should_override:
+                taa_state["final_decision"] = auto_outcome.decision
+                taa_state["decision_reasoning"] = auto_outcome.reason
+                taa_state["requires_hitl"] = auto_outcome.decision == DecisionType.HITL
+                audit_trail = taa_state.get("audit_trail", [])
+                audit_trail.append(auto_outcome.audit_message())
+                taa_state["audit_trail"] = audit_trail
+
             processing_time_ms = int((time.time() - start_time) * 1000)
             transaction_id = str(uuid.uuid4())[:8]
-            
+
             result = TransactionResult(
                 transaction_id=transaction_id,
                 invoice=invoice,
@@ -152,7 +167,7 @@ class AFGAOrchestrator:
                 created_at=datetime.now(),
                 source_document_path=source_document_path,
             )
-            
+
             self.memory_db.save_transaction(result)
             logger.info(
                 "Transaction %s processed: %s in %sms",
@@ -172,7 +187,7 @@ class AFGAOrchestrator:
             trace_id = str(uuid.uuid4())
 
         logger.info("Processing HITL feedback for %s [trace: %s]", feedback.transaction_id, trace_id)
-        
+
         with self.observability.trace(
             name="hitl_feedback_processing",
             metadata={
@@ -190,13 +205,11 @@ class AFGAOrchestrator:
                         "action": "process_hitl",
                     },
                 )
-            
+
             if self.a2a_enabled and self._ema_card:
                 ema_state = self._invoke_ema_via_a2a(feedback, invoice, trace_id)
             elif self.ema:
-                ema_state = self.ema.process_hitl_feedback_sync(
-                    feedback, invoice, trace_id=trace_id
-                )
+                ema_state = self.ema.process_hitl_feedback_sync(feedback, invoice, trace_id=trace_id)
             else:
                 raise RuntimeError("No Exception Manager Agent available.")
 
@@ -208,7 +221,7 @@ class AFGAOrchestrator:
             )
             self.memory_db.calculate_and_save_kpis()
             logger.info("HITL feedback processed for %s", feedback.transaction_id)
-            
+
             return {
                 "transaction_id": feedback.transaction_id,
                 "ema_result": ema_state,
@@ -228,13 +241,9 @@ class AFGAOrchestrator:
             if manual_exception_ids:
                 label_text = ", ".join(manual_exception_labels or manual_exception_ids)
                 taa_state["final_decision"] = DecisionType.HITL
-                taa_state["decision_reasoning"] = (
-                    "Manual review required due to learned exception(s): " + label_text
-                )
+                taa_state["decision_reasoning"] = "Manual review required due to learned exception(s): " + label_text
                 taa_state["requires_hitl"] = True
-                audit_trail.append(
-                    "TAA: Manual review required based on learned exception(s)"
-                )
+                audit_trail.append("TAA: Manual review required based on learned exception(s)")
                 taa_state["audit_trail"] = audit_trail
                 return taa_state
 
@@ -253,7 +262,9 @@ class AFGAOrchestrator:
             # If PAA uncertain, escalate to HITL
             else:
                 taa_state["final_decision"] = DecisionType.HITL
-                taa_state["decision_reasoning"] = f"Low confidence ({paa_response.confidence:.2f}), requires human review"
+                taa_state["decision_reasoning"] = (
+                    f"Low confidence ({paa_response.confidence:.2f}), requires human review"
+                )
                 taa_state["requires_hitl"] = True
                 audit_trail.append("TAA: Decision updated based on PAA - HITL required")
 
@@ -267,23 +278,23 @@ class AFGAOrchestrator:
     ) -> list[str]:
         taa_trail = taa_state.get("audit_trail", [])
         paa_trail = paa_state.get("audit_trail", [])
-        
+
         warnings_to_remove = {
             "⚠️ PAA A2A integration pending - using mock response",
             "⚠️ No PAA response available (using risk-based decision)",
             "Delegating to PAA for policy check (A2A)",
             "Preparing for PAA policy check (A2A)",
         }
-        
+
         merged: list[str] = []
         for step in taa_trail:
             if paa_trail and any(marker in step for marker in warnings_to_remove):
                 continue
             merged.append(f"[TAA] {step}")
-        
+
         for step in paa_trail:
             merged.append(f"[PAA] {step}")
-        
+
         return merged
 
     def get_transaction(self, transaction_id: str) -> Optional[Dict[str, Any]]:
@@ -317,14 +328,10 @@ class AFGAOrchestrator:
 
         cards: Dict[str, Any] = {"taa": get_taa_agent_card().model_dump(mode="json")}
         if self.a2a_enabled:
-            cards["paa"] = (
-                self._paa_card.model_dump(mode="json") if self._paa_card else {}
-            )
+            cards["paa"] = self._paa_card.model_dump(mode="json") if self._paa_card else {}
             cards["paa"]["endpoint"] = self._paa_endpoint
             cards["paa"]["agentCardUrl"] = urljoin(self._paa_endpoint, ".well-known/agent-card.json")
-            cards["ema"] = (
-                self._ema_card.model_dump(mode="json") if self._ema_card else {}
-            )
+            cards["ema"] = self._ema_card.model_dump(mode="json") if self._ema_card else {}
             cards["ema"]["endpoint"] = self._ema_endpoint
             cards["ema"]["agentCardUrl"] = urljoin(self._ema_endpoint, ".well-known/agent-card.json")
         else:
@@ -378,9 +385,7 @@ class AFGAOrchestrator:
             raise RuntimeError("Agent card not initialized for A2A request.")
 
         async def _send() -> Task:
-            async with httpx.AsyncClient(
-                timeout=self.settings.a2a_request_timeout
-            ) as client:
+            async with httpx.AsyncClient(timeout=self.settings.a2a_request_timeout) as client:
                 client_instance = A2AClient(client, card, url=url)
                 request = self._build_send_message_request(payload)
                 response: SendMessageResponse = await client_instance.send_message(
@@ -453,7 +458,7 @@ class AFGAOrchestrator:
 
         compliance_result = PolicyCheckResult.model_validate(compliance_payload)
         audit_trail = payload.get("audit_trail", [])
-        
+
         return {
             "compliance_result": compliance_result,
             "audit_trail": audit_trail,
@@ -485,4 +490,3 @@ class AFGAOrchestrator:
         path = agent_path.lstrip("/")
         endpoint = f"{base}/{path}"
         return endpoint if endpoint.endswith("/") else f"{endpoint}/"
-

@@ -9,4 +9,3 @@ __all__ = [
     "get_taa_agent_card",
     "TransactionAuditorState",
 ]
-

@@ -27,16 +27,16 @@ class OpenRouterClient:
         temperature: float = 0.3,
     ) -> str:
         """Generate completion with automatic fallback to backup models.
-        
+
         Args:
             prompt: The prompt to send to the model
             model: Specific model to use (optional, uses primary_model if not specified)
             context: Conversation context (list of message dicts)
             temperature: Sampling temperature for the model
-            
+
         Returns:
             Generated text response
-            
+
         Raises:
             RuntimeError: If all models fail to generate a completion
         """
@@ -62,23 +62,23 @@ class OpenRouterClient:
             "HTTP-Referer": "https://afga-demo",
             "Content-Type": "application/json",
         }
-        
+
         messages = context + [{"role": "user", "content": prompt}] if context else [{"role": "user", "content": prompt}]
-        
+
         payload: Dict[str, Any] = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
         }
-        
+
         response = self.client.post(
             f"{self.settings.openrouter_base_url}/chat/completions", headers=headers, content=json.dumps(payload)
         )
-        
+
         # Log response for debugging
         if response.status_code != 200:
             logger.error(f"OpenRouter error {response.status_code}: {response.text}")
-        
+
         response.raise_for_status()
         data = response.json()
         choices = data.get("choices", [])
@@ -90,4 +90,3 @@ class OpenRouterClient:
     def close(self) -> None:
         """Close the HTTP client."""
         self.client.close()
-

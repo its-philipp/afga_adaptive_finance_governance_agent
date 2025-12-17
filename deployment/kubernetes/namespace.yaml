@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: afga
+  labels:
+    app: afga
+    environment: production

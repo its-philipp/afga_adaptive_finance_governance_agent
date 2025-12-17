@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class PAAExecutor(AgentExecutor):
     """A2A Executor for Policy Adherence Agent.
-    
+
     Enables PAA to receive compliance check requests via A2A protocol.
     """
 
@@ -39,18 +39,18 @@ class PAAExecutor(AgentExecutor):
             raise ValueError("RequestContext must have a message")
 
         updater = TaskUpdater(event_queue, context.task_id, context.context_id)
-        
+
         # Submit task
         if not context.current_task:
             await updater.submit()
-        
+
         # Start working
         await updater.start_work()
 
         try:
             # Parse input message
             user_input = context.get_user_input()
-            
+
             # Expected format: JSON with invoice data
             input_data = json.loads(user_input)
             invoice = Invoice(**input_data["invoice"])
@@ -59,9 +59,9 @@ class PAAExecutor(AgentExecutor):
             # Send status update
             await updater.update_status(
                 TaskState.working,
-                message=updater.new_agent_message([
-                    Part(root=TextPart(text=f"Checking compliance for invoice {invoice.invoice_id}"))
-                ]),
+                message=updater.new_agent_message(
+                    [Part(root=TextPart(text=f"Checking compliance for invoice {invoice.invoice_id}"))]
+                ),
             )
 
             # Check compliance through PAA
@@ -69,20 +69,20 @@ class PAAExecutor(AgentExecutor):
 
             # Get compliance result
             compliance_result = result.get("compliance_result")
-            
+
             # Prepare response
             if compliance_result:
                 status_icon = "✅" if compliance_result.is_compliant else "❌"
                 response_text = f"{status_icon} Compliance Check Complete\n"
                 response_text += f"Result: {'Compliant' if compliance_result.is_compliant else 'Non-compliant'}\n"
                 response_text += f"Confidence: {compliance_result.confidence:.2f}\n"
-                
+
                 if compliance_result.violated_policies:
                     response_text += f"Violated Policies: {', '.join(compliance_result.violated_policies)}\n"
-                
+
                 if compliance_result.applied_exceptions:
                     response_text += f"Applied Exceptions: {', '.join(compliance_result.applied_exceptions)}\n"
-                
+
                 response_text += f"\nReasoning: {compliance_result.reasoning}\n"
             else:
                 response_text = "❌ Error: No compliance result generated"
@@ -98,9 +98,7 @@ class PAAExecutor(AgentExecutor):
                     "audit_trail": result.get("audit_trail", []),
                     "hallucination_warnings": result.get("hallucination_warnings", []),
                     "rag_metrics": (
-                        result.get("rag_metrics").model_dump(mode="json")
-                        if result.get("rag_metrics")
-                        else None
+                        result.get("rag_metrics").model_dump(mode="json") if result.get("rag_metrics") else None
                     ),
                 }
                 await updater.add_artifact(
@@ -119,9 +117,9 @@ class PAAExecutor(AgentExecutor):
             logger.error(f"Error in PAA execution: {e}", exc_info=True)
             await updater.update_status(
                 TaskState.working,
-                message=updater.new_agent_message([
-                    Part(root=TextPart(text=f"❌ Error checking compliance: {str(e)}"))
-                ]),
+                message=updater.new_agent_message(
+                    [Part(root=TextPart(text=f"❌ Error checking compliance: {str(e)}"))]
+                ),
             )
             raise
 
@@ -130,4 +128,3 @@ class PAAExecutor(AgentExecutor):
         logger.info(f"PAA task {context.task_id} cancelled")
         # PAA doesn't support cancellation - just log it
         raise NotImplementedError("PAA does not support task cancellation")
-

@@ -172,6 +172,8 @@ with sidebar_nav:
     st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
+    st.page_link("pages/7_🔍_Embeddings_Browser.py", label="Embeddings Browser", icon="🔍")
+    st.page_link("pages/8_📊_Classifications_Dashboard.py", label="Classifications", icon="📊")
     
     st.markdown("---")
     st.info("""
@@ -227,19 +229,20 @@ AFGA consists of three specialized AI agents that work together:
    - Performs risk scoring
    - Coordinates with other agents (A2A)
    - Makes final approve/reject/HITL decisions
-
+<br><br>
 2. **PAA (Policy Adherence Agent)** - Compliance Checker
    - Retrieves relevant policies (MCP + RAG)
    - Checks adaptive memory for exceptions (MCP tools)
    - Evaluates compliance using LLM
    - Returns confidence-scored results
-
+<br><br>
 3. **EMA (Exception Manager Agent)** - Learning System
    - Processes human feedback (HITL)
    - Analyzes correction patterns
    - Updates adaptive memory (MCP tools)
    - Tracks learning metrics (H-CR)
-"""
+""",
+        unsafe_allow_html=True,
     )
 
 with col_right:

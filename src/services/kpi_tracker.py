@@ -29,10 +29,10 @@ class KPITracker:
 
     def calculate_current_kpis(self, date: Optional[str] = None) -> KPIMetrics:
         """Calculate KPIs for a specific date (defaults to today).
-        
+
         Args:
             date: Date string in YYYY-MM-DD format
-            
+
         Returns:
             KPIMetrics with all calculated values
         """
@@ -40,16 +40,16 @@ class KPITracker:
 
     def get_kpi_trend(self, days: int = 30) -> List[KPIMetrics]:
         """Get KPI trend over the last N days.
-        
+
         Args:
             days: Number of days to retrieve
-            
+
         Returns:
             List of KPIMetrics, most recent first
         """
         end_date = datetime.now().strftime("%Y-%m-%d")
         start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
-        
+
         return self.db.get_kpis(start_date, end_date)
 
     def get_latest_kpis(self) -> Optional[KPIMetrics]:
@@ -58,10 +58,10 @@ class KPITracker:
 
     def get_hcr_trend(self, days: int = 30) -> List[Dict[str, Any]]:
         """Get H-CR (Human Correction Rate) trend.
-        
+
         Args:
             days: Number of days to retrieve
-            
+
         Returns:
             List of date/H-CR pairs
         """
@@ -70,10 +70,10 @@ class KPITracker:
 
     def get_crs_trend(self, days: int = 30) -> List[Dict[str, Any]]:
         """Get CRS (Context Retention Score) trend.
-        
+
         Args:
             days: Number of days to retrieve
-            
+
         Returns:
             List of date/CRS pairs
         """
@@ -82,10 +82,10 @@ class KPITracker:
 
     def get_atar_trend(self, days: int = 30) -> List[Dict[str, Any]]:
         """Get ATAR (Automated Transaction Approval Rate) trend.
-        
+
         Args:
             days: Number of days to retrieve
-            
+
         Returns:
             List of date/ATAR pairs
         """
@@ -94,25 +94,22 @@ class KPITracker:
 
     def get_kpi_summary(self) -> Dict[str, Any]:
         """Get a comprehensive KPI summary.
-        
+
         Returns:
             Dictionary with current KPIs and trends
         """
         latest = self.get_latest_kpis()
         trend_7d = self.get_kpi_trend(7)
         trend_30d = self.get_kpi_trend(30)
-        
+
         if not latest:
-            return {
-                "current": None,
-                "message": "No KPI data available yet"
-            }
-        
+            return {"current": None, "message": "No KPI data available yet"}
+
         # Calculate trend direction (improving or declining)
         hcr_improving = self._is_improving_trend([kpi.hcr for kpi in trend_7d], lower_is_better=True)
         crs_improving = self._is_improving_trend([kpi.crs for kpi in trend_7d], lower_is_better=False)
         atar_improving = self._is_improving_trend([kpi.atar for kpi in trend_7d], lower_is_better=False)
-        
+
         return {
             "current": {
                 "date": latest.date,
@@ -145,27 +142,27 @@ class KPITracker:
                 "hcr_reducing": hcr_improving,
                 "crs_increasing": crs_improving,
                 "system_learning": hcr_improving and crs_improving,
-            }
+            },
         }
 
     def _is_improving_trend(self, values: List[float], lower_is_better: bool = True) -> bool:
         """Determine if a trend is improving.
-        
+
         Args:
             values: List of KPI values (chronological order)
             lower_is_better: True if lower values indicate improvement
-            
+
         Returns:
             True if trend is improving
         """
         if len(values) < 2:
             return False
-        
+
         # Simple trend: compare first half to second half
         mid = len(values) // 2
         first_half_avg = sum(values[:mid]) / mid if mid > 0 else 0
         second_half_avg = sum(values[mid:]) / (len(values) - mid) if len(values) > mid else 0
-        
+
         if lower_is_better:
             return second_half_avg < first_half_avg
         else:
@@ -174,14 +171,14 @@ class KPITracker:
     def get_transaction_stats(self) -> Dict[str, Any]:
         """Get transaction statistics."""
         import sqlite3
-        
+
         conn = sqlite3.connect(self.db.db_path)
         cursor = conn.cursor()
-        
+
         # Total transactions
         cursor.execute("SELECT COUNT(*) FROM transactions")
         total = cursor.fetchone()[0]
-        
+
         # By decision type
         cursor.execute("""
             SELECT final_decision, COUNT(*) 
@@ -189,7 +186,7 @@ class KPITracker:
             GROUP BY final_decision
         """)
         by_decision = dict(cursor.fetchall())
-        
+
         # By risk level
         cursor.execute("""
             SELECT risk_level, COUNT(*) 
@@ -197,13 +194,13 @@ class KPITracker:
             GROUP BY risk_level
         """)
         by_risk = dict(cursor.fetchall())
-        
+
         # Average processing time
         cursor.execute("SELECT AVG(processing_time_ms) FROM transactions")
         avg_time = cursor.fetchone()[0] or 0
-        
+
         conn.close()
-        
+
         return {
             "total_transactions": total,
             "by_decision": by_decision,
@@ -213,17 +210,17 @@ class KPITracker:
 
     def force_recalculate_all_kpis(self) -> Dict[str, Any]:
         """Recalculate KPIs for all dates with transactions.
-        
+
         Useful for backfilling after system changes.
-        
+
         Returns:
             Summary of recalculation
         """
         import sqlite3
-        
+
         conn = sqlite3.connect(self.db.db_path)
         cursor = conn.cursor()
-        
+
         # Get all unique dates
         cursor.execute("""
             SELECT DISTINCT DATE(created_at) as date 
@@ -232,21 +229,22 @@ class KPITracker:
         """)
         dates = [row[0] for row in cursor.fetchall()]
         conn.close()
-        
+
         recalculated = []
         for date in dates:
             kpi = self.db.calculate_and_save_kpis(date)
-            recalculated.append({
-                "date": date,
-                "hcr": kpi.hcr,
-                "crs": kpi.crs,
-                "atar": kpi.atar,
-            })
-        
+            recalculated.append(
+                {
+                    "date": date,
+                    "hcr": kpi.hcr,
+                    "crs": kpi.crs,
+                    "atar": kpi.atar,
+                }
+            )
+
         logger.info(f"Recalculated KPIs for {len(dates)} dates")
-        
+
         return {
             "recalculated_dates": len(dates),
             "kpis": recalculated,
         }
-

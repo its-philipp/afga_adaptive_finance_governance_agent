@@ -69,9 +69,7 @@ def create_paa_a2a_app(settings: Settings) -> Starlette:
         url=base_url,
         skill_id="policy_checking",
         skill_name="Policy Checking",
-        skill_description=(
-            "Evaluate a finance transaction against company policies using RAG and adaptive memory."
-        ),
+        skill_description=("Evaluate a finance transaction against company policies using RAG and adaptive memory."),
     )
     return _build_server(executor_factory=PAAExecutor, agent_card=agent_card)
 
@@ -89,4 +87,3 @@ def create_ema_a2a_app(settings: Settings) -> Starlette:
         ),
     )
     return _build_server(executor_factory=EMAExecutor, agent_card=agent_card)
-

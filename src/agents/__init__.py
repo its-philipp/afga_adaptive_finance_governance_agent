@@ -16,4 +16,3 @@ __all__ = [
     "get_ema_agent_card",
     "AFGAOrchestrator",
 ]
-

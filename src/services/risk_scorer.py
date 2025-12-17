@@ -20,10 +20,10 @@ class RiskScorer:
 
     def assess_risk(self, invoice: Invoice) -> RiskAssessment:
         """Assess the risk level of a transaction.
-        
+
         Args:
             invoice: Invoice to assess
-            
+
         Returns:
             RiskAssessment with score, level, and factors
         """
@@ -85,9 +85,8 @@ class RiskScorer:
                 "has_po": bool(invoice.po_number),
                 "international": invoice.international,
                 "category": invoice.category,
-            }
+            },
         )
 
         logger.info(f"Risk assessment for {invoice.invoice_id}: {risk_level.value} ({risk_score:.1f})")
         return assessment
-

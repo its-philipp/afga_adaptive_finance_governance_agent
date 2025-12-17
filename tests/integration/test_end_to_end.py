@@ -15,7 +15,7 @@ def temp_orchestrator():
     """Create an orchestrator with temporary database."""
     from src.db.memory_db import MemoryDatabase
     from src.core.observability import Observability
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test.db"
         db = MemoryDatabase(db_path=str(db_path))
@@ -39,9 +39,9 @@ def test_process_compliant_transaction(temp_orchestrator):
         tax=160.0,
         total=2160.0,
     )
-    
+
     result = temp_orchestrator.process_transaction(invoice)
-    
+
     # Verify result
     assert result is not None
     assert result.transaction_id is not None
@@ -68,9 +68,9 @@ def test_process_high_risk_transaction(temp_orchestrator):
         tax=2000.0,
         total=27000.0,
     )
-    
+
     result = temp_orchestrator.process_transaction(invoice)
-    
+
     # High risk transaction should require HITL or be rejected
     assert result.risk_assessment.risk_level.value in ["high", "critical"]
     assert result.final_decision in [DecisionType.HITL, DecisionType.REJECTED]
@@ -92,9 +92,9 @@ def test_hitl_feedback_and_memory_learning(temp_orchestrator):
         tax=440.0,
         total=5940.0,
     )
-    
+
     result = temp_orchestrator.process_transaction(invoice)
-    
+
     # Step 2: Provide HITL feedback
     feedback = HITLFeedback(
         transaction_id=result.transaction_id,
@@ -103,16 +103,16 @@ def test_hitl_feedback_and_memory_learning(temp_orchestrator):
         human_decision=DecisionType.APPROVED,
         reasoning="Special Vendor is a trusted partner, approved despite medium risk",
         should_create_exception=True,
-        exception_type="recurring"
+        exception_type="recurring",
     )
-    
+
     hitl_result = temp_orchestrator.process_hitl_feedback(feedback, invoice)
-    
+
     # Verify HITL processing
     assert hitl_result is not None
     assert hitl_result.get("transaction_id") == result.transaction_id
     assert hitl_result.get("memory_updated") is not None
-    
+
     # Step 3: Verify memory was updated
     memory_stats = temp_orchestrator.get_memory_stats()
     assert memory_stats.total_exceptions >= 1
@@ -135,12 +135,12 @@ def test_kpi_calculation(temp_orchestrator):
             tax=80.0 + i * 40,
             total=1080.0 + i * 540,
         )
-        
+
         temp_orchestrator.process_transaction(invoice)
-    
+
     # Calculate KPIs
     kpis = temp_orchestrator.calculate_current_kpis()
-    
+
     # Verify KPIs
     assert kpis is not None
     assert kpis.total_transactions == 5
@@ -165,12 +165,12 @@ def test_transaction_retrieval(temp_orchestrator):
         tax=120.0,
         total=1620.0,
     )
-    
+
     result = temp_orchestrator.process_transaction(invoice)
-    
+
     # Retrieve the transaction
     retrieved = temp_orchestrator.get_transaction(result.transaction_id)
-    
+
     # Verify retrieval
     assert retrieved is not None
     assert retrieved.get("transaction_id") == result.transaction_id
@@ -180,16 +180,15 @@ def test_transaction_retrieval(temp_orchestrator):
 def test_agent_cards(temp_orchestrator):
     """Test that agent cards are properly defined."""
     cards = temp_orchestrator.get_agent_cards()
-    
+
     # Verify all three agents have cards
     assert "taa" in cards
     assert "paa" in cards
     assert "ema" in cards
-    
+
     # Verify card structure
     for agent_name, card in cards.items():
         assert card.get("name") is not None
         assert card.get("description") is not None
         assert card.get("capabilities") is not None
         assert len(card.get("capabilities", [])) > 0
-

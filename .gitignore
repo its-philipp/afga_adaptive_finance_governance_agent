@@ -19,8 +19,12 @@ env/
 # Logs
 *.log
 backend.log
+afga_*.log
 *.out
 *.pid
+
+# Archive (not for version control)
+archive/
 
 # Governance audit logs (KEEP these - they're important)
 !governance_audit.jsonl

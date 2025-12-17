@@ -87,6 +87,8 @@ with sidebar_nav:
     st.page_link("pages/4_🧠_Memory_Browser.py", label="Memory Browser", icon="🧠")
     st.page_link("pages/5_📖_Policy_Viewer.py", label="Policy Viewer", icon="📖")
     st.page_link("pages/6_🛡️_AI_Governance.py", label="AI Governance", icon="🛡️")
+    st.page_link("pages/7_🔍_Embeddings_Browser.py", label="Embeddings Browser", icon="🔍")
+    st.page_link("pages/8_📊_Classifications_Dashboard.py", label="Classifications", icon="📊")
 
 with sidebar_assistant:
     st.markdown("---")

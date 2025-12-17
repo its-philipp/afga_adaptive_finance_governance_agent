@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class PolicyMCPServer:
     """MCP Server that exposes policy documents as resources.
-    
+
     This allows PAA to access policies through the Model Context Protocol,
     providing a standardized interface for LLM access to company policies.
     """
@@ -34,39 +34,41 @@ class PolicyMCPServer:
 
     def _setup_handlers(self):
         """Set up MCP server handlers for resources."""
-        
+
         @self.server.list_resources()
         async def list_resources() -> List[Resource]:
             """List all available policy resources."""
             policies = self.policy_retriever.get_all_policies_summary()
-            
+
             resources = []
             for policy in policies:
-                resources.append(Resource(
-                    uri=f"policy://{policy['policy_name']}",
-                    name=policy['filename'],
-                    description=f"Company policy: {policy['filename']} ({policy['chunk_count']} chunks)",
-                    mimeType="text/plain"
-                ))
-            
+                resources.append(
+                    Resource(
+                        uri=f"policy://{policy['policy_name']}",
+                        name=policy["filename"],
+                        description=f"Company policy: {policy['filename']} ({policy['chunk_count']} chunks)",
+                        mimeType="text/plain",
+                    )
+                )
+
             logger.info(f"MCP: Listed {len(resources)} policy resources")
             return resources
 
         @self.server.read_resource()
         async def read_resource(uri: str) -> str:
             """Read a specific policy resource.
-            
+
             Args:
                 uri: Resource URI (e.g., policy://vendor_approval_policy)
-                
+
             Returns:
                 Policy content as text
             """
             if not uri.startswith("policy://"):
                 raise ValueError(f"Invalid policy URI: {uri}")
-            
+
             policy_name = uri.replace("policy://", "")
-            
+
             # Get policy content
             if policy_name in self.policy_retriever.policies:
                 content = self.policy_retriever.policies[policy_name]["content"]
@@ -88,7 +90,7 @@ class PolicyMCPServer:
 
     def search_relevant_policies_sync(self, invoice, top_k: int = 5) -> List[dict]:
         """Search for relevant policies (RAG-style) synchronously.
-        
+
         This is the primary method PAA uses - combines MCP resource access
         with intelligent retrieval based on invoice context.
         """
@@ -96,7 +98,4 @@ class PolicyMCPServer:
 
     def get_all_policies_sync(self) -> dict:
         """Get all policies as a dictionary."""
-        return {
-            name: data["content"]
-            for name, data in self.policy_retriever.policies.items()
-        }
+        return {name: data["content"] for name, data in self.policy_retriever.policies.items()}

@@ -8,7 +8,7 @@ from typing import Dict, Optional, Any
 from ...core.config import get_settings
 from ...db.memory_db import MemoryDatabase
 from ...models.memory_schemas import MemoryQuery
-from ...models.schemas import MemoryException, Invoice
+from ...models.schemas import DecisionType, MemoryException, Invoice
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,7 @@ class MemoryManager:
         exception_type: str,
         description: str,
         reason: str,
+        auto_decision: DecisionType | str | None = None,
     ) -> str:
         """Add a new learned exception to adaptive memory."""
         vendor_value = invoice.vendor or None
@@ -42,6 +43,12 @@ class MemoryManager:
         }
 
         condition = {k: v for k, v in condition.items() if v is not None}
+
+        if auto_decision:
+            if isinstance(auto_decision, DecisionType):
+                condition["auto_decision"] = auto_decision.value
+            else:
+                condition["auto_decision"] = str(auto_decision)
 
         normalized_description = self.db._normalize_description(description, vendor_value, condition, exception_type)
 
@@ -58,22 +65,18 @@ class MemoryManager:
 
     def query_applicable_exceptions(self, invoice: Invoice) -> list[MemoryException]:
         """Query exceptions that might apply to this invoice.
-        
+
         Args:
             invoice: Invoice to check against memory
-            
+
         Returns:
             List of applicable exceptions
         """
         # Query by vendor
-        vendor_exceptions = self.db.query_exceptions(
-            MemoryQuery(vendor=invoice.vendor, min_success_rate=0.5)
-        )
+        vendor_exceptions = self.db.query_exceptions(MemoryQuery(vendor=invoice.vendor, min_success_rate=0.5))
 
         # Query by category
-        category_exceptions = self.db.query_exceptions(
-            MemoryQuery(category=invoice.category, min_success_rate=0.5)
-        )
+        category_exceptions = self.db.query_exceptions(MemoryQuery(category=invoice.category, min_success_rate=0.5))
 
         # Combine and deduplicate
         all_exceptions = {exc.exception_id: exc for exc in vendor_exceptions + category_exceptions}
@@ -110,7 +113,7 @@ class MemoryManager:
 
     def get_context_retention_score(self) -> float:
         """Calculate the current Context Retention Score (CRS).
-        
+
         Returns:
             CRS as a percentage (0-100)
         """
@@ -120,4 +123,3 @@ class MemoryManager:
     def get_memory_stats(self):
         """Get statistics about the adaptive memory."""
         return self.db.get_memory_stats()
-
