@@ -60,7 +60,7 @@ cd adaptive_finance_governance_agent
 └─────────────────────┘
 ```
 
-## � Gallery
+## 🖼️ Gallery
 ### Application Interface
 | Home | Transaction Submission |
 |------|------------------------|
@@ -95,7 +95,7 @@ cd adaptive_finance_governance_agent
 |----------|--------------|------------|
 | ![Pipeline](screenshots/databricks/1-pipeline.png) | ![Bronze](screenshots/databricks/2-bronze_table_raw_transactions.png) | ![Gold](screenshots/databricks/3-gold_table_embeddings.png) |
 
-## �📦 Project Structure
+## 📦 Project Structure
 
 ```
 adaptive_finance_governance_agent/
