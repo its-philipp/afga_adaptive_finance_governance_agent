@@ -125,12 +125,27 @@ adaptive_finance_governance_agent/
 
 ## ☁️ Deployment
 
-For production deployment on Azure Kubernetes Service (AKS), we provide a complete Infrastructure-as-Code (IaC) solution using Terraform and Helm.
+### 🏢 Choose Your Deployment Method
 
-See the [Deployment Guide](deployment/README.md) for detailed instructions on:
-- Provisioning Azure resources (AKS, ACR, Key Vault) with Terraform
-- Building and pushing Docker images
-- Deploying the application using Helm
+| Scenario | Best Option | Monthly Cost | Access Method |
+|----------|-------------|--------------|---------------|
+| **Development/Testing** | Local (`./start.sh`) | $0 | `http://localhost:8501` |
+| **Small Team (5-20 users)** | Azure App Service | $50-100 | `https://afga.azurewebsites.net` |
+| **Department (20-100 users)** | Azure App Service + VNet | $100-200 | Internal URL |
+| **On-Premises** | Docker Compose on VM | Server cost | `https://afga.company.local` |
+| **Enterprise (100+ users)** | AKS (Terraform + Helm) | $150-300 | Public/Private URL |
+
+**📖 See [Deployment Options Guide](docs/DEPLOYMENT_OPTIONS.md) for detailed instructions on:**
+- Azure App Service (easiest for internal apps)
+- Azure Container Instances (simplest cloud option)
+- Azure VM with Docker Compose
+- On-Premises deployment
+- AKS with Terraform + Helm (current setup)
+
+**Quick Links:**
+- [Terraform + Helm Guide](deployment/terraform/README.md) - Infrastructure as Code
+- [Helm Deployment](deployment/helm/README.md) - Kubernetes deployment
+- [Docker Deployment](deployment/docker/README.md) - Container setup
 
 ## 🔧 Configuration
 
